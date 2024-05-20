@@ -1,0 +1,63 @@
+body {
+    padding: 0;
+    margin: 0;
+    user-select: none;
+    background-color: #ffffff00;
+    width: 100%;
+    height: 100vh;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+}
+#app {
+    background-color: #ffffff;
+    border-radius: 6px;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.el-table {
+    user-select: text;
+}
+
+.draggable {
+    -webkit-app-region: drag;
+}
+
+.non-draggable {
+    -webkit-app-region: no-drag;
+}
+
+/* 滚动条整体样式 */
+::-webkit-scrollbar {
+    width: 2px;
+    background-color: transparent;
+}
+
+/*定义滑块
+    内阴影+圆角*/
+/*  鼠标hover的时候才显示滚动条 */
+:hover::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+/*页面布局*/
+.viewbox {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+.wrapbox {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
