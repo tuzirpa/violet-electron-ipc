@@ -8,8 +8,6 @@ import { ref } from 'vue';
 
 // 定义变量
 const directive = ref(null);
-const size = useElementSize(directive);
-
 
 
 // 添加逻辑

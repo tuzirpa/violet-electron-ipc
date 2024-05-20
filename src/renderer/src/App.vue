@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { RouterView, useRoute } from 'vue-router';
+import { RouterView } from 'vue-router';
 // 添加逻辑
-
-const route = useRoute();
 
 </script>
 
