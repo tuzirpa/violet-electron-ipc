@@ -74,10 +74,7 @@ function initDrag(side: string, event: MouseEvent) {
         // 根据拖动的方向调整元素的尺寸
         if (side === "right" && props.resizeRight) {
             // 向右拖动时，增加宽度
-
             const dWidth = startWidth + dx;
-
-
             if (dWidth <= minWidth.value) {
                 width.value = minWidth.value;
             } else if (dWidth >= maxWidth.value) {
@@ -111,7 +108,6 @@ function initDrag(side: string, event: MouseEvent) {
         } else if (side === "top" && props.resizeTop) {
             // 向上拖动时，减少高度并调整元素的上边界位置
             const dHeight = startHeight - dy;
-            console.log(dHeight);
             if (dHeight <= minHeight.value) {
                 height.value = minHeight.value;
             } else if (dHeight >= maxHeight.value) {
@@ -146,6 +142,7 @@ function initDrag(side: string, event: MouseEvent) {
 
 .resize-handle {
     position: absolute;
+    z-index: 1;
     /* background: rgba(0, 0, 0, 0); */
 }
 

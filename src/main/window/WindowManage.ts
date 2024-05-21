@@ -29,8 +29,10 @@ export class WindowManage {
             return this.getWindow(name);
         }
         const window = new BrowserWindow({
-            width: 800,
-            height: 600,
+            width: 1400,
+            height: 860,
+            minWidth: 1280,
+            minHeight: 800,
             show: true,
             resizable: true,
             frame: false,

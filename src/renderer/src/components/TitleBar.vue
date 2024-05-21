@@ -59,7 +59,6 @@ defineProps({
     .title-bar-description {
         margin-left: 10px;
         font-size: 14px;
-        font-weight: bold;
         color: #333333;
         flex: 1;
         display: flex;
