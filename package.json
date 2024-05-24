@@ -1,5 +1,5 @@
 {
-    "name": "chatvtool",
+    "name": "tuzu_robot",
     "version": "1.0.3",
     "description": "An Electron application with Vue and TypeScript",
     "main": "./out/main/index.js",
@@ -25,6 +25,7 @@
         "@electron-toolkit/preload": "^3.0.0",
         "@electron-toolkit/utils": "^3.0.0",
         "electron-store": "^8.2.0",
+        "jsonwebtoken": "^9.0.2",
         "node-abi": "^3.27.0",
         "node-fetch": "^2.7.0",
         "node-machine-id": "^1.1.12",

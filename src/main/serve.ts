@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { ProtocolRequest, ProtocolResponse, protocol } from 'electron';
-import { AppConfig } from './config/appConfig';
 
 const rendererDir = path.join(__dirname, '../renderer');
 
@@ -51,20 +50,6 @@ export const registerAssetsProtocol = () => {
         if (host === 'file') {
             const filepath = searchParams.get('path');
             if (filepath) {
-                return callback({ path: filepath });
-            }
-        }
-        if (host === 'company') {
-            const fileName = searchParams.get('fileName');
-            if (fileName) {
-                const filepath = AppConfig.curLoginUser.company?.getFilePath(fileName);
-                return callback({ path: filepath });
-            }
-        }
-        if (host === 'private') {
-            const fileName = searchParams.get('fileName');
-            if (fileName) {
-                const filepath = AppConfig.curLoginUser.getFilePath(fileName);
                 return callback({ path: filepath });
             }
         }

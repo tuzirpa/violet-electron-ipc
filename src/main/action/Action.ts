@@ -1,3 +1,4 @@
+import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import { WindowManage, WindowNameType } from '../window/WindowManage';
 
 class Action {
@@ -24,6 +25,27 @@ class Action {
 
     static async windowClose(name: WindowNameType) {
         WindowManage.getWindow(name).close();
+    }
+
+    /**
+     * 获取注册信息
+     * @returns 注册信息
+     */
+    static async getRegStatus() {
+        return getRegStatus();
+    }
+    /**
+     * 获取机器码
+     */
+    static async getMachineCode() {
+        return getMachineCode();
+    }
+
+    /**
+     * 注册机器
+     */
+    static async verifyToken(token: string) {
+        return verifyToken(token);
     }
 }
 

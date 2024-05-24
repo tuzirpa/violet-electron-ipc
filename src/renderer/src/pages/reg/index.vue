@@ -56,7 +56,7 @@ init();
                 </el-form-item>
 
                 <div class="reg-btn-container">
-                    <ElButton class="reg-btn" @click="Action.mainWindowClose">关闭</ElButton>
+                    <ElButton class="reg-btn" @click="Action.windowClose('login')">关闭</ElButton>
                     <ElButton class="reg-btn" type="primary" @click="verifyToken">注册</ElButton>
                 </div>
                 <!-- <ElButton class="reg-btn" v-if="!isTrialed" @click="tryItForADay">试用一天</ElButton> -->

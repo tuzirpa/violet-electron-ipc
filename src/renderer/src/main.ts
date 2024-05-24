@@ -9,6 +9,9 @@ import 'dayjs/locale/zh-cn';
 
 import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css';
 import './assets/main.css';
+
+import ContextMenuPlugin from './components/contextmenu/ContextMenuPlugin';
+
 const app = createApp(App);
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
@@ -20,5 +23,7 @@ app.use(router);
 app.use(ElementPlus, {
     locale: zhCn
 });
+
+app.use(ContextMenuPlugin);
 
 app.mount('#app');

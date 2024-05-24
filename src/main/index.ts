@@ -5,7 +5,7 @@ import MethodsUtils from '@shared/MethodsUtils';
 import { registerAssetsProtocol } from './serve';
 import { WindowManage } from './window/WindowManage';
 
-let mainWindow: MainWindow;
+let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
 
 if (!gotTheLock) {
@@ -34,47 +34,25 @@ function start() {
         });
     });
 
-    // function createWindow(): void {
-    //     // Create the browser window.
-    //     mainWindow = WindowManage.getWindow('main');
-
-    //     mainWindow.on('ready-to-show', () => {
-    //         // mainWindow.show();
-    //     });
-
-    //     mainWindow.webContents.setWindowOpenHandler((details) => {
-    //         shell.openExternal(details.url);
-    //         return { action: 'deny' };
-    //     });
-
-    //     // HMR for renderer base on electron-vite cli.
-    //     // Load the remote URL for development or the local html file for production.
-    //     // if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    //     //     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
-    //     // } else {
-    //     //     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
-    //     // }
-    //     const url = import.meta.env.DEV ? process.env['ELECTRON_RENDERER_URL'] : 'assets://app';
-    //     mainWindow.loadURL(url + '/');
-    // }
+    function createWindow() {
+        //判断是否登录
+        const url = import.meta.env.DEV ? process.env['ELECTRON_RENDERER_URL'] : 'assets://app';
+        //创建登录窗口
+        mainWindow = WindowManage.createWindow('login');
+        mainWindow.loadURL(url + '/#/login/index');
+        if (import.meta.env.DEV) {
+            mainWindow.webContents.openDevTools();
+        }
+    }
 
     // This method will be called when Electron has finished
     // initialization and is ready to create browser windows.
     // Some APIs can only be used after this event occurs.
     app.whenReady().then(() => {
         registerAssetsProtocol();
-
-        //判断是否登录
-        const url = import.meta.env.DEV ? process.env['ELECTRON_RENDERER_URL'] : 'assets://app';
-        //创建登录窗口
-        const loginWindow = WindowManage.createWindow('login');
-        loginWindow.loadURL(url + '/#/login/index');
-        if (import.meta.env.DEV) {
-            loginWindow.webContents.openDevTools();
-        }
-
+        createWindow();
         // Set app user model id for windows
-        electronApp.setAppUserModelId('com.chat-vtool.app');
+        electronApp.setAppUserModelId('com.tuzi_robot.app');
 
         // Default open or close DevTools by F12 in development
         // and ignore CommandOrControl + R in production.
@@ -91,7 +69,9 @@ function start() {
         app.on('activate', function () {
             // On macOS it's common to re-create a window in the app when the
             // dock icon is clicked and there are no other windows open.
-            if (BrowserWindow.getAllWindows().length === 0) WindowManage.init();
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createWindow();
+            }
         });
     });
 

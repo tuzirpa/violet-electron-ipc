@@ -1,5 +1,5 @@
-appId: com.chatvtool.app
-productName: chatvtool
+appId: com.tuzi_robot.app
+productName: 兔子机器人
 directories:
     buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
     - resources/**
 win:
-    executableName: 聊天宝
+    executableName: tuzi_robot
 nsis:
     oneClick: false
     allowToChangeInstallationDirectory: true #是否允许修改安装目录
