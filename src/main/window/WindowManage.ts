@@ -38,7 +38,8 @@ export class WindowManage {
             frame: false,
             webPreferences: {
                 preload: join(__dirname, '../preload/index.js'),
-                sandbox: false
+                sandbox: false,
+                contextIsolation: false
             }
         });
         this.addWindow(name, window);

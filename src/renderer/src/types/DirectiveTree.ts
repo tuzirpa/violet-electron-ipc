@@ -9,7 +9,7 @@ export interface DirectiveInput {
     /**
      * 输入值
      */
-    value: string;
+    value: any;
     /**
      * 描述显示的值 (可选) 不填则显示value
      */

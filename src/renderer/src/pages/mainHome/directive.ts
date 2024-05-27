@@ -2,7 +2,6 @@ import { DirectiveTree } from '@renderer/types/DirectiveTree';
 import { ref } from 'vue';
 const directives = ref<DirectiveTree[]>([]);
 
-//网络加载数据
 directives.value = [
     {
         id: '0',
@@ -13,17 +12,18 @@ directives.value = [
         outputs: {},
         children: [
             {
-                id: '9',
+                id: 'web.create',
                 name: '启动浏览器',
+                icon: 'icon-web-create',
                 isControl: false,
                 isControlEnd: false,
                 comment: '启动${webType},保存至：${browser}',
                 inputs: {
                     webType: {
-                        name: '',
+                        name: 'webType',
                         label: '浏览器类型',
                         value: '内置浏览器',
-                        type: '',
+                        type: 'string',
                         required: true
                     }
                 },
@@ -36,11 +36,43 @@ directives.value = [
                 }
             },
             {
-                id: '2',
+                id: 'web.openUrl',
                 name: '访问网页地址',
                 isControl: false,
                 isControlEnd: false,
-                inputs: {},
+                icon: 'icon-dakaiwangye',
+                comment:
+                    '访问${url}，${webPage}，等待页面加载时间：${waitLoadTime}秒，超时时间：${timeout}秒',
+                inputs: {
+                    webPage: {
+                        name: 'webPage',
+                        label: '网页标签对象',
+                        value: '',
+                        type: 'text',
+                        required: true
+                    },
+                    url: {
+                        name: 'url',
+                        label: '网址',
+                        value: '',
+                        type: 'string',
+                        required: true
+                    },
+                    isWaitLoad: {
+                        name: 'isWaitLoad',
+                        label: '等待页面加载时间',
+                        value: true,
+                        type: 'boolean',
+                        required: true
+                    },
+                    timeout: {
+                        name: 'timeout',
+                        label: '超时时间',
+                        value: 10,
+                        type: 'number',
+                        required: true
+                    }
+                },
                 outputs: {}
             },
             {
@@ -1096,6 +1128,10 @@ directives.value = [
         ]
     }
 ];
+
+/**
+ * 服务器加载的指令列表
+ */
 
 /**
  * 获取一个指令列表

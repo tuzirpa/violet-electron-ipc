@@ -7,6 +7,7 @@ import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlu
 import { ElMessage } from 'element-plus';
 import { useDirective } from '../directive';
 import { Shortcut } from './ShortcutRegister'
+import AddDirective from './AddDirective.vue';
 
 // 添加逻辑
 
@@ -41,13 +42,13 @@ const curOpenFile = ref(openFiles.value[0]);
 
 function commentCompute(block: DirectiveData) {
     if (block.comment) {
-        const comment = block.comment.replace(/\${.*?}/g, (substring: string, ...args: any[]) => {
+        const comment = block.comment.replace(/\${.*?}/g, (substring: string, ..._args: any[]) => {
             const valKey = substring.substring(2, substring.length - 1);
             let val = '';
             for (const key in block.inputs) {
                 if (Object.prototype.hasOwnProperty.call(block.inputs, key)) {
                     if (key === valKey) {
-                        val = block.inputs[key].value;
+                        val = block.inputs[key].display || block.inputs[key].value;
                         break;
                     }
                 }
@@ -180,10 +181,6 @@ async function flowEditDrag(event: any) {
         // curOpenFile.value.blocks.splice(oldIndex + 1, 0, directive);
         addBlock(dragData.value.data, oldIndex + 1);
 
-        //添加完节点如果只有一个自动选中
-        if (curOpenFile.value.blocks.length === 1) {
-            curBlocks.value = [curOpenFile.value.blocks[0]];
-        }
     } else {
         /**
          * 移动，中间节点往后推
@@ -321,6 +318,20 @@ function blockClick(event: MouseEvent, block: DirectiveData, _index: number) {
 }
 
 /**
+ * 双击进入编辑模式
+ * @param _event
+ * @param block 
+ * @param _index 
+ */
+function blockDbClick(_event: MouseEvent, block: DirectiveData, index: number) {
+    directiveAddTemp.value = JSON.parse(JSON.stringify(block));
+    addTempIndex.value = index;
+    addTempDialogVisible.value = true;
+}
+
+
+
+/**
  * 添加指令
  * @param directive 指令
  * @param index 插入的位置
@@ -335,9 +346,9 @@ function addBlock(directive: DirectiveTree, index?: number) {
         }
     }
 
-    const addDirective: DirectiveData = JSON.parse(JSON.stringify(directive));
-    addDirective.id = uuid();
-    curOpenFile.value.blocks.splice(index, 0, addDirective);
+    directiveAddTemp.value = JSON.parse(JSON.stringify(directive));
+    addTempIndex.value = index;
+    addTempDialogVisible.value = true;
 }
 
 /**
@@ -456,6 +467,34 @@ function addBlockComfig() {
     addBlockDialogVisible.value = false;
 }
 
+const directiveAddTemp = ref<DirectiveTree>();
+const addTempDialogVisible = ref(false);
+const addTempIndex = ref(0);
+
+function addBlockTemp() {
+
+    const addDirective: DirectiveData = JSON.parse(JSON.stringify(directiveAddTemp.value));
+    console.log(addDirective);
+    if (!addDirective.id) {
+        addDirective.id = uuid();
+        curOpenFile.value.blocks.splice(addTempIndex.value, 0, addDirective);
+        addTempDialogVisible.value = false;
+        //添加完节点如果只有一个自动选中
+        if (curOpenFile.value.blocks.length === 1) {
+            curBlocks.value = [curOpenFile.value.blocks[0]];
+        } else {
+            curBlocks.value = [curOpenFile.value.blocks[addTempIndex.value]];
+        }
+    } else {
+        //有id 说明是编辑节点
+        const index = curOpenFile.value.blocks.findIndex((block) => block.id === addDirective.id);
+        curOpenFile.value.blocks.splice(index, 1, addDirective);
+        addTempDialogVisible.value = false;
+        curBlocks.value = [addDirective];
+    }
+
+}
+
 </script>
 
 <template>
@@ -499,7 +538,8 @@ function addBlockComfig() {
                                             dragenterBlock && dragenterBlock.id === element.id ?
                                                 (dragDirection === 'top' ? 'border-t-2 border-red-500' : 'border-b-2 border-blue-500') : '',
 
-                                        ]" @click="blockClick($event, element, index)">
+                                        ]" @click="blockClick($event, element, index)"
+                                        @dblclick="blockDbClick($event, element, index)">
 
                                         <div class="flex h-full">
                                             <div class="flex h-full">
@@ -509,7 +549,7 @@ function addBlockComfig() {
                                             </div>
                                             <div class="py-2 felx flex-col w-0 flex-1 pl-3">
                                                 <div class="operation flex items-center gap-1">
-                                                    <i class="iconfont icon-gugeliulanqi text-xl"></i>
+                                                    <i class="iconfont" :class="element.icon"></i>
                                                     <div class="font-bold ">{{ element.name }}
                                                         <span v-show="element.isFold && !element.open">
                                                             <span>[...]</span>
@@ -559,6 +599,22 @@ function addBlockComfig() {
                 <div class="dialog-footer">
                     <el-button @click="addBlockDialogVisible = false">取消</el-button>
                     <el-button type="primary" @click="addBlockComfig">
+                        确定
+                    </el-button>
+                </div>
+            </template>
+        </el-dialog>
+        <!-- 确认添加指令弹框 -->
+        <el-dialog v-if="directiveAddTemp" v-model="addTempDialogVisible" :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`"
+            width="500" align-center>
+            <div class="flex flex-col">
+                {{ directiveAddTemp.id }}
+                <AddDirective :directive="directiveAddTemp" />
+            </div>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="addTempDialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="addBlockTemp">
                         确定
                     </el-button>
                 </div>
