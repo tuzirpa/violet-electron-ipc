@@ -1,0 +1,68 @@
+<script setup lang="ts">
+import type { DirectiveInput, FlowVariable } from 'src/main/userApp/types';
+import { ElInput } from 'element-plus';
+import { ref } from 'vue';
+
+// 添加逻辑
+defineProps<{
+    inputItem: DirectiveInput,
+    variables: FlowVariable[]
+}>()
+
+const model = defineModel<string>({ required: true })
+
+
+const varSelectVal = ref('');
+
+const variableSelect = ref();
+const varShow = ref(false);
+
+function varClick() {
+    varShow.value = !varShow.value;
+}
+
+function varSelectValChange(val: string) {
+    console.log(val);
+    varShow.value = false;
+    model.value = model.value + `\${${val}}`;
+}
+
+</script>
+
+<template>
+    <div class="relative">
+        <el-input v-model="model" :placeholder="inputItem.placeholder">
+            <template #append>
+                <div class="text-gray-500 text-sm cursor-pointer" @click="varClick">
+                    使用变量</div>
+            </template>
+        </el-input>
+        <div ref="variableSelect" v-if="varShow" filterable tabindex="-1" @blur="varShow = false"
+            class="absolute active flex flex-col gap-2 mt-1 left-0 p-1 bg-white text-gray-500 text-sm border border-gray-200 border-solid rounded-md w-full">
+            <div>
+                <ElInput v-model="varSelectVal" placeholder="搜索变量"></ElInput>
+            </div>
+            <div class="viewbox min-h-10 max-h-60 overflow-y-auto">
+                <div class="wrapbox">
+                    <template v-for="variable in variables">
+                        <div class="hover:bg-gray-100 p-1 cursor-pointer rounded"
+                            v-show="varSelectVal.length === 0 || variable.name.includes(varSelectVal)">
+                            <div class="item" @click="varSelectValChange(variable.name)">
+                                {{ variable.name }}
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<style lang="less" scoped>
+// 添加样式
+.active {
+    z-index: 1000;
+}
+</style>

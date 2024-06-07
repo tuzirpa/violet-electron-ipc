@@ -6,12 +6,30 @@ import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
 import { ElButton } from 'element-plus';
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { Action } from '@renderer/lib/action';
+import type UserApp from 'src/main/userApp/UserApp';
 
+const route = useRoute();
+const id = route.query.appId as string;
 
 // 定义变量
-const directive = ref(null);
+const userAppDetail = ref<UserApp>();
 
+async function getAppDetail() {
+    // 获取应用详情
+    // 这里应该调用后端接口获取应用详情
+    const res = await Action.getUserApp(id);
+    userAppDetail.value = res;
+    console.log(userAppDetail.value, 'userAppDetail');
+    if (userAppDetail.value?.flows && userAppDetail.value.flows.length > 0) {
+        curActiveFlowIndex.value = 0;
+    }
+}
 
+const curActiveFlowIndex = ref(-1);
+
+getAppDetail();
 
 // 添加逻辑
 </script>
@@ -71,22 +89,27 @@ const directive = ref(null);
         <div class="viewbox">
             <div class="flex flex-1 flex-row viewbox">
                 <!-- 指令区 -->
-                <BoxDraggable class=" viewbox left-sidebar border-r" :width="250" :resize-right="true" ref="directive">
+                <BoxDraggable class=" viewbox left-sidebar border-r" :width="250" :resize-right="true">
                     <DirectiveTree class="directive-edit flex-1 wrapbox p-1"></DirectiveTree>
                 </BoxDraggable>
                 <div class="main-content viewbox flex-1 bg-gray-100">
                     <div class="flow-edit flex-1 viewbox p-2 ">
-                        <FlowEdit></FlowEdit>
+                        <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"></FlowEdit>
                     </div>
-                    <BoxDraggable class="left-sidebar border-t" :height="270" :resize-top="true" ref="directive">
+                    <BoxDraggable class="left-sidebar border-t" :height="270" :resize-top="true">
                         运行日志
                     </BoxDraggable>
                 </div>
-                <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true" ref="directive">
-                    <div class="property-edit flex-1 viewbox">
-
+                <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true">
+                    <div class="property-edit flex-1 p-2">
+                        <div>流程</div>
+                        <div class="flow-list flex flex-1" v-for="(flow, index) in userAppDetail?.flows" :key="index">
+                            <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
+                                :class="{ 'bg-slate-100': curActiveFlowIndex === index }">{{ flow.name }}
+                            </div>
+                        </div>
                     </div>
-                    <BoxDraggable class="left-sidebar border-t" :height="400" :resize-top="true" ref="directive">
+                    <BoxDraggable class="left-sidebar border-t" :height="400" :resize-top="true">
                         <div class="viewbox">
                             <div class="flex flex-row justify-between p-2">
                                 <div>全局变量</div>

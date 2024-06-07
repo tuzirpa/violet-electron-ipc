@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 // 添加逻辑
 const router = useRouter();
 
-router.push('/mainHome/index');
+router.push('/userAppHome/index');
 </script>
 
 <template>

@@ -1,3 +1,20 @@
+export type DataType = 'string' | 'number' | 'boolean' | 'conditions' | 'object' | 'array' | 'any';
+
+export interface FlowVariable {
+    /**
+     * 变量名称
+     */
+    name: string;
+    /**
+     * 变量类型
+     */
+    type: string;
+    /**
+     * 变量描述
+     */
+    comment?: string;
+}
+
 /**
  * 指令输入对象
  */
@@ -5,7 +22,7 @@ export interface DirectiveInput {
     /**
      * 输入字段名称
      */
-    name: string;
+    name?: string;
     /**
      * 输入值
      */
@@ -17,15 +34,8 @@ export interface DirectiveInput {
     /**
      * 输入类型
      */
-    type: string;
-    /**
-     * 输入标签 添加弹框时字段标签
-     */
-    label: string;
-    /**
-     * 是否必填
-     */
-    required: boolean;
+    type: DataType;
+
     /**
      * 输入提示
      */
@@ -94,6 +104,7 @@ export interface DirectiveOutput {
         [key: string]: any;
     };
 }
+
 /**
  * 指令树
  */
@@ -101,12 +112,12 @@ export interface DirectiveTree {
     /**
      * 指令名称 需要全局唯一
      */
-    name: string;
+    displayName: string;
 
     /**
-     * id
+     * name
      */
-    id: string;
+    name: string;
 
     /**
      * 指令描述 支持变量占位符
@@ -141,14 +152,10 @@ export interface DirectiveTree {
     };
 
     children?: DirectiveTree[];
-    // paretObjName: string;
-    // paretObjIcon?: string;
-    // childenList?: DirectiveTree[];
-    // parentIndex?: number;
-    // task_id: number;
-    // need_edit?: boolean;
-    // enable?: boolean; // 是否启用
-    // sub_task?: boolean; // 是否是子任务
-    // remark?: string; // 备注
-    // endid?: number;
+
+    open?: boolean;
+    hide?: boolean;
+    pdLvn?: number;
+    isFold?: boolean;
+    id?: string;
 }

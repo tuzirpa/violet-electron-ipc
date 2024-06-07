@@ -4,6 +4,7 @@ import Action from './action/Action';
 import MethodsUtils from '@shared/MethodsUtils';
 import { registerAssetsProtocol } from './serve';
 import { WindowManage } from './window/WindowManage';
+import nodeEvbitonment from './nodeEnvironment/NodeEvbitonment';
 
 let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
@@ -51,6 +52,7 @@ function start() {
     app.whenReady().then(() => {
         registerAssetsProtocol();
         createWindow();
+        nodeEvbitonment.autoInstallNode();
         // Set app user model id for windows
         electronApp.setAppUserModelId('com.tuzi_robot.app');
 

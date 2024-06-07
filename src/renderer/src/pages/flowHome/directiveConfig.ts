@@ -1,5 +1,5 @@
 type InputType =
-    | 'text'
+    | 'string'
     | 'number'
     | 'boolean'
     | 'array'
@@ -17,6 +17,7 @@ type InputType =
     | 'checkbox'
     | 'textarea'
     | 'password';
+
 type OutputType = 'variable' | 'event';
 
 export interface DirectiveConfig {
@@ -28,10 +29,6 @@ export interface DirectiveConfig {
      * 指令描述
      */
     description: string;
-    /**
-     * 指令图标
-     */
-    icon: string;
     /**
      * 指令输入参数
      */
@@ -50,7 +47,7 @@ export interface DirectiveConfig {
     /**
      * 指令输出参数
      */
-    outputs: {
+    outputs?: {
         [key: string]: {
             label: string;
             type: OutputType;
@@ -63,7 +60,7 @@ export interface DirectiveConfig {
 /**
  * 指令对应的配置
  */
-const directiveConfig = {
+const directiveConfig: { [key: string]: DirectiveConfig } = {
     'web.create': {
         name: '启动浏览器',
         description: '启动一个浏览器',
@@ -98,7 +95,6 @@ const directiveConfig = {
             browser: {
                 label: '保存浏览器对象至',
                 type: 'variable',
-                default: 'browser',
                 tip: '保存浏览器对象至变量，可用于后续在操作'
             }
         }
@@ -106,17 +102,15 @@ const directiveConfig = {
     'web.openUrl': {
         name: '打开网页',
         description: '打开一个网页',
-        icon: '',
         inputs: {
             webPage: {
                 label: '标签页对象',
-                type: 'text',
-                default: 'browser',
+                type: 'string',
                 tip: '标签页对象，可从web.create指令的输出中获取'
             },
             url: {
                 label: '网页地址',
-                type: 'text',
+                type: 'string',
                 default: '',
                 tip: '输入网页地址'
             },
@@ -133,9 +127,56 @@ const directiveConfig = {
                 tip: '超时时间，单位为秒'
             }
         }
+    },
+    'flowControls.if': {
+        name: '判断',
+        description: '判断条件是否成立',
+        inputs: {
+            operand1: {
+                label: '对象1',
+                type: 'string',
+                tip: '输入需要判断的对象1'
+            },
+            operator: {
+                label: '条件',
+                type: 'select',
+                tip: '选择判断条件',
+                options: [
+                    {
+                        label: '等于',
+                        value: '=='
+                    },
+                    {
+                        label: '不等于',
+                        value: '!='
+                    },
+                    {
+                        label: '大于',
+                        value: '>'
+                    },
+                    {
+                        label: '大于等于',
+                        value: '>='
+                    },
+                    {
+                        label: '小于',
+                        value: '<'
+                    },
+                    {
+                        label: '小于等于',
+                        value: '<='
+                    }
+                ]
+            },
+            operand2: {
+                label: '对象2',
+                type: 'string',
+                tip: '输入需要判断的对象2'
+            }
+        }
     }
 };
 
-export function getDirectiveConfig(id: string): DirectiveConfig {
-    return directiveConfig[id];
+export function getDirectiveConfig(name: string): DirectiveConfig {
+    return directiveConfig[name];
 }

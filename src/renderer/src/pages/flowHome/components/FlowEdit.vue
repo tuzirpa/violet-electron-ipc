@@ -1,40 +1,73 @@
 <script setup lang="ts">
-import { DirectiveTree } from '@renderer/types/DirectiveTree';
+import { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin'
 import { ElMessage } from 'element-plus';
 import { useDirective } from '../directive';
 import { Shortcut } from './ShortcutRegister'
 import AddDirective from './AddDirective.vue';
+import { Action } from '@renderer/lib/action';
+import type Flow from 'src/main/userApp/Flow';
+import type UserApp from 'src/main/userApp/UserApp';
+import _ from 'lodash';
+
+
+const props = defineProps<{
+    flows: Flow[],
+    appInfo: UserApp
+}>()
 
 // 添加逻辑
-
 type DirectiveData = DirectiveTree & {
-    open: boolean, hide: boolean,
-    pdLvn: number, isFold: boolean, id: string
     foldDesc?: string,
+    pdLvn: number,
     commentShow?: string,
 };
+
+const flowControl = ref({
+    id: ''
+});
+
+async function executeStep() {
+    if (flowControl.value.id === '') {
+        flowControl.value.id = await Action.startFlowControl();
+    }
+    let result = await Action.executeStep(flowControl.value.id, "var aa = 10;");
+    console.log(result);
+    result = await Action.executeStep(flowControl.value.id, "console.log(aa);ddd");
+    console.log(result);
+    result = await Action.executeStep(flowControl.value.id, "aa++;");
+    console.log(result);
+    result = await Action.executeStep(flowControl.value.id, "console.log(aa);");
+    console.log(result);
+}
+
+const flows = props.flows.map((item) => {
+    return {
+        name: item.name,
+        blocks: item.blocks.map((block) => {
+            return {
+                ...block,
+                open: false,
+                hide: false,
+                pdLvn: 0,
+                isFold: false,
+                id: uuid(),
+                foldDesc: '',
+                commentShow: '',
+            }
+        })
+    }
+})
+console.log(flows);
+
 
 const openFiles = ref<{
     name: string;
     blocks: DirectiveData[],
-    id: number
-}[]>([
-    {
-        name: '主流程.ts',
-        blocks: [],
-        id: 1
-    },
-
-    {
-        name: '主流程.ts',
-        blocks: [],
-        id: 2
-    },
-])
+}[]>(flows)
 
 
 const curOpenFile = ref(openFiles.value[0]);
@@ -74,8 +107,6 @@ function commentCompute(block: DirectiveData) {
 const blocks = computed(() => {
     let pdLvn = 0;
     curOpenFile.value.blocks.forEach((block, index) => {
-
-
         block.commentShow = commentCompute(block);
 
         curOpenFile.value.blocks[index].pdLvn = pdLvn;
@@ -329,7 +360,28 @@ function blockDbClick(_event: MouseEvent, block: DirectiveData, index: number) {
     addTempDialogVisible.value = true;
 }
 
+function variablesCompute(_directive: DirectiveTree, index: number) {
+    const variablesTemp: FlowVariable[] = [];
+    // 获取当前指令之前的指令
+    const beforeBlocks = curOpenFile.value.blocks.slice(0, index);
+    beforeBlocks.forEach((item) => {
+        // 获取指令的输出
+        const outputs = item.outputs || {};
+        for (const key in outputs) {
+            if (Object.prototype.hasOwnProperty.call(outputs, key)) {
+                const output = outputs[key];
+                variablesTemp.push({
+                    name: output.name,
+                    type: output.type,
+                    comment: output.display,
+                });
+            }
+        }
+    });
+    variables.value = variablesTemp;
+    console.log(666, variables.value);
 
+}
 
 /**
  * 添加指令
@@ -348,6 +400,10 @@ function addBlock(directive: DirectiveTree, index?: number) {
 
     directiveAddTemp.value = JSON.parse(JSON.stringify(directive));
     addTempIndex.value = index;
+
+    //计算当前指令能用的变量列表
+    variablesCompute(directive, index);
+
     addTempDialogVisible.value = true;
 }
 
@@ -410,6 +466,14 @@ function directiveShowContextMenu(event: any, block: DirectiveData) {
     toggleCheckBlock(block);
     showContextMenu(event, [
         {
+            label: '执行当前步骤',
+            onClick: () => {
+                executeStep();
+            },
+            icon: 'icon-fuzhi',
+            shortcut: 'Ctrl+C'
+        },
+        {
             label: '复制',
             onClick: copyBlocks,
             icon: 'icon-fuzhi',
@@ -467,9 +531,10 @@ function addBlockComfig() {
     addBlockDialogVisible.value = false;
 }
 
-const directiveAddTemp = ref<DirectiveTree>();
+const directiveAddTemp = ref<DirectiveData>();
 const addTempDialogVisible = ref(false);
 const addTempIndex = ref(0);
+
 
 function addBlockTemp() {
 
@@ -485,6 +550,23 @@ function addBlockTemp() {
         } else {
             curBlocks.value = [curOpenFile.value.blocks[addTempIndex.value]];
         }
+
+        //判断如果添加的是控制流程开始需要自动添加控制流程结束
+        if (addDirective.isControl && addDirective.name === 'flowControls.if') {
+            const controlEnd: DirectiveData = {
+                id: uuid(),
+                pdLvn: 0,
+                name: 'flowControls.if.end',
+                displayName: 'End If',
+                comment: '结束条件判断',
+                isControl: false,
+                isControlEnd: true,
+                inputs: {},
+                outputs: {}
+            }
+            curOpenFile.value.blocks.splice(addTempIndex.value + 1, 0, controlEnd);
+        }
+
     } else {
         //有id 说明是编辑节点
         const index = curOpenFile.value.blocks.findIndex((block) => block.id === addDirective.id);
@@ -495,14 +577,41 @@ function addBlockTemp() {
 
 }
 
+/**
+ * 变量列表
+ */
+const variables = ref<FlowVariable[]>([]);
+
+/**
+ * 保存流程
+ */
+async function saveCurFlow() {
+    const saveObj: any = JSON.parse(JSON.stringify(curOpenFile.value));
+    saveObj.blocks = saveObj.blocks.map((item) => {
+        delete item.commentShow;
+        delete item.foldDesc;
+        return item;
+    });
+    console.log(saveObj, '流程保存');
+    await Action.saveFlow(props.appInfo.id, saveObj);
+}
+const saveCurFlowDebounce = _.debounce(saveCurFlow, 3000);
+
+watch(curBlocks, () => {
+    console.log('curBlocks', curBlocks.value);
+    saveCurFlowDebounce();
+}, { deep: true })
+
+
+
 </script>
 
 <template>
     <div class="viewbox rounded bg-white flex-1">
         <div class="header bg-gray-100">
             <div class="files flex items-center">
-                <div class="file py-2 px-4 cursor-pointer hover:bg-white/60" v-for="(file) in openFiles" :key="file.id"
-                    :class="{ 'bg-white': file.id === curOpenFile.id }" @click="curOpenFile = file">{{
+                <div class="file py-2 px-4 cursor-pointer hover:bg-white/60" v-for="(file) in openFiles" :key="file.name"
+                    :class="{ 'bg-white': file.name === curOpenFile.name }" @click="curOpenFile = file">{{
                         file.name
                     }}
                 </div>
@@ -550,7 +659,7 @@ function addBlockTemp() {
                                             <div class="py-2 felx flex-col w-0 flex-1 pl-3">
                                                 <div class="operation flex items-center gap-1">
                                                     <i class="iconfont" :class="element.icon"></i>
-                                                    <div class="font-bold ">{{ element.name }}
+                                                    <div class="font-bold ">{{ element.displayName }}
                                                         <span v-show="element.isFold && !element.open">
                                                             <span>[...]</span>
                                                             <span class="ml-2 text-xs text-gray-400">{{ element.foldDesc
@@ -591,7 +700,7 @@ function addBlockTemp() {
 
         </div>
         <!-- 添加指令弹框 -->
-        <el-dialog v-model="addBlockDialogVisible" title="添加指令" width="500" align-center>
+        <el-dialog v-model="addBlockDialogVisible" title="添加指令" width="500" align-center draggable>
             <div class="flex flex-col">
                 <el-cascader v-model="addBlockDirective" placeholder="选择要添加的指令" :options="directivesData" filterable />
             </div>
@@ -605,11 +714,10 @@ function addBlockTemp() {
             </template>
         </el-dialog>
         <!-- 确认添加指令弹框 -->
-        <el-dialog v-if="directiveAddTemp" v-model="addTempDialogVisible" :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`"
-            width="500" align-center>
+        <el-dialog v-if="directiveAddTemp" v-model="addTempDialogVisible" @close="directiveAddTemp = void 0"
+            :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`" width="642" align-center draggable>
             <div class="flex flex-col">
-                {{ directiveAddTemp.id }}
-                <AddDirective :directive="directiveAddTemp" />
+                <AddDirective :directive="directiveAddTemp" :variables="variables" />
             </div>
             <template #footer>
                 <div class="dialog-footer">

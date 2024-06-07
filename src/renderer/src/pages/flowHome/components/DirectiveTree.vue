@@ -2,7 +2,7 @@
 import BtnTip from '@renderer/components/BtnTip.vue';
 import { ElInput, ElTree } from 'element-plus';
 import { ref, watch } from 'vue';
-import { DirectiveTree } from '@renderer/types/DirectiveTree';
+import { DirectiveTree } from 'src/main/userApp/types';
 import { dragData } from '../dragVar';
 import { useDirective } from '../directive';
 import { FilterValue, TreeNodeData } from 'element-plus/es/components/tree/src/tree.type';
@@ -62,7 +62,7 @@ function handleDragStart(_event: DragEvent, data: DirectiveTree) {
                                 @dragstart="handleDragStart($event, data)">
                                 <div class="tree-node py-2 flex items-center gap-1 align-middle">
                                     <i class="iconfont text-xl" :class="data.icon"></i>
-                                    <span>{{ data.name }}</span>
+                                    <span>{{ data.displayName }}</span>
                                 </div>
                                 <div v-if="node.isLeaf" @click.stop="$emit('addSubTask', data)">
                                     <i class="iconfont icon-tianjia mr-1"></i>
@@ -73,7 +73,7 @@ function handleDragStart(_event: DragEvent, data: DirectiveTree) {
                             <div class="flex-1 flex justify-between items-center">
                                 <div class="tree-node py-2 flex items-center gap-1 align-middle">
                                     <i class="iconfont text-xl" :class="data.icon"></i>
-                                    <span>{{ data.name }}</span>
+                                    <span>{{ data.displayName }}</span>
                                 </div>
                                 <div v-if="node.isLeaf">
                                     <i class="iconfont icon-tianjia mr-1"></i>
