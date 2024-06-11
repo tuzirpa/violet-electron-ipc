@@ -93,6 +93,11 @@ onMounted(() => {
                                             </div>
                                         </div> -->
                                     </div>
+                                    <div class="relative" v-else-if="directiveConfig.inputs[key].type === 'textarea'">
+                                        <InputValueVar v-model="inputItem.value" :inputItem="inputItem"
+                                            :variables="_variables">
+                                        </InputValueVar>
+                                    </div>
                                     <el-select v-else-if="directiveConfig.inputs[key].type === 'select'"
                                         v-model="inputItem.value" placeholder="请选择">
                                         <el-option v-for="option in directiveConfig.inputs[key].options" :key="option.value"
@@ -121,7 +126,7 @@ onMounted(() => {
                         </div>
                         <div class="param-content viewbox gap-2">
                             <template v-if="Object.keys(_directive.outputs).length > 0">
-                                <div class="param-item flex gap-4 items-center"
+                                <div class="param-item flex gap-4 items-center" v-if="directiveConfig.outputs"
                                     v-for="(outputItem, key) of _directive.outputs">
                                     <div class="param-name">{{ directiveConfig.outputs[key].label }}：</div>
                                     <div class="param-value flex-1">

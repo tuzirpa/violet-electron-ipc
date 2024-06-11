@@ -21,8 +21,6 @@ import path from 'path';
 import fs from 'fs';
 import Flow from './Flow';
 
-export const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
-
 /**
  * 应用类
  */
@@ -40,10 +38,18 @@ export default class UserApp {
 
     flows: Flow[] = [];
 
-    // 构造函数
+    static get userAppLocalDir() {
+        const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
+        if(!fs.existsSync(userAppLocalDir)){
+            fs.mkdirSync(userAppLocalDir, { recursive: true });
+        }
+        return userAppLocalDir;
+    }
+
+    // 构造函数 
     constructor(id: string) {
         this.id = id;
-        this.appDir = path.join(userAppLocalDir, this.id);
+        this.appDir = path.join(UserApp.userAppLocalDir, this.id);
         this.appDevDir = path.join(this.appDir, 'dev');
         this.init();
     }
@@ -51,7 +57,7 @@ export default class UserApp {
     save() {
         // 保存
         // 写入package.json文件
-        this.packageJson.name = this.name;
+        this.packageJson.name = this.name; 
         fs.writeFileSync(
             path.join(this.appDir, 'package.json'),
             JSON.stringify(this.packageJson, null, 2)
@@ -77,9 +83,6 @@ export default class UserApp {
         // 初始化
         console.log('UserApp init');
         // 创建本地目录
-        if (!fs.existsSync(userAppLocalDir)) {
-            fs.mkdirSync(userAppLocalDir, { recursive: true });
-        }
         if (!fs.existsSync(this.appDir)) {
             fs.mkdirSync(this.appDir, { recursive: true });
         }
@@ -92,7 +95,9 @@ export default class UserApp {
             author: this.author,
             license: this.license,
             description: this.description,
-            dependencies: {}
+            dependencies: {
+                "axios": "^1.7.2"
+            }
         };
         fs.writeFileSync(
             path.join(this.appDir, 'package.json'),

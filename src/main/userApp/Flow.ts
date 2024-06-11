@@ -39,11 +39,13 @@ export default class Flow {
     }
 
     init() {
-        this.blocks = JSON.parse(
-            fs.readFileSync(this.filePath, {
-                encoding: 'utf-8'
-            })
-        );
+        const content = fs.readFileSync(this.filePath, {
+            encoding: 'utf-8'
+        });
+        if(!content) {
+            return;
+        }
+        this.blocks = JSON.parse(content);
     }
 
     /**

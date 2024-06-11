@@ -997,11 +997,17 @@ directives.value = [
         outputs: {},
         children: [
             {
-                name: '76',
+                name: 'log.out',
                 displayName: '打印日志',
                 isControl: false,
                 isControlEnd: false,
-                inputs: {},
+                inputs: {
+                    content: {
+                        name: '日志内容',
+                        value: '',
+                        type: 'string'
+                    }
+                },
                 outputs: {}
             },
             {

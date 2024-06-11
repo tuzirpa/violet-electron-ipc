@@ -174,6 +174,21 @@ const directiveConfig: { [key: string]: DirectiveConfig } = {
                 tip: '输入需要判断的对象2'
             }
         }
+    },
+    /**
+     * 日志输出
+     */
+    'log.out':{
+        name: '日志输出',
+        description: '输出日志信息',
+        inputs: {
+            content: {
+                label: '日志内容',
+                type: 'textarea',
+                default: '',
+                tip: '输入日志内容'
+            }
+        }
     }
 };
 

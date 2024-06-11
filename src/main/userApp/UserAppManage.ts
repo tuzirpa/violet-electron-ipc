@@ -1,5 +1,5 @@
 import fs from 'fs';
-import UserApp, { userAppLocalDir } from './UserApp';
+import UserApp from './UserApp';
 import { dirname } from 'path';
 import { uuid } from '@shared/Utils';
 import Flow from './Flow';
@@ -16,7 +16,7 @@ export class UserAppManage {
      */
     scanLocalApp() {
         //遍历目录 userAppLocalDir
-        const files = fs.readdirSync(userAppLocalDir);
+        const files = fs.readdirSync(UserApp.userAppLocalDir);
         //遍历文件
         files.forEach((file) => {
             if (file.startsWith('app_')) {
