@@ -9,6 +9,7 @@ import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
+import { electron } from 'process';
 
 const route = useRoute();
 const id = route.query.appId as string;
@@ -30,6 +31,29 @@ async function getAppDetail() {
 const curActiveFlowIndex = ref(-1);
 
 getAppDetail();
+
+async function installPackage() {
+    if (userAppDetail.value?.id) {
+        await Action.installPackage(userAppDetail.value?.id);
+    }
+}
+
+async function run() {
+    if (userAppDetail.value?.id) {
+        await Action.userAppRun(userAppDetail.value?.id);
+    }
+}
+
+async function devRun() {
+    if (userAppDetail.value?.id) {
+        await Action.userAppDevRun(userAppDetail.value?.id);
+    }
+}
+
+const runLogs = ref('加载应用完成');
+window.electron.ipcRenderer.on('run-logs', (_event, logs) => {
+    runLogs.value += logs;
+});
 
 // 添加逻辑
 </script>
@@ -64,13 +88,17 @@ getAppDetail();
                         <BtnTip class="btn-item" :icon="'icon-chexiao'" :text="'撤销'"></BtnTip>
                         <BtnTip class="btn-item chongzuo" :icon="'icon-chexiao'" :text="'重做'"></BtnTip>
                         <BtnTip :icon="'icon-zhedie'" :text="'折叠'"></BtnTip>
-                        <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-yunxing'"
-                            :text="'运行流程'">
-                            运行
+                        <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
+                            :text="'安装依赖包'" @click="installPackage">
+                            安装包
                         </BtnTip>
                         <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
-                            :text="'调试流程'">
+                            :text="'调试流程'" @click="devRun">
                             调试
+                        </BtnTip>
+                        <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-yunxing'"
+                            :text="'运行流程'" @click="run">
+                            运行
                         </BtnTip>
                     </div>
                 </div>
@@ -96,8 +124,10 @@ getAppDetail();
                     <div class="flow-edit flex-1 viewbox p-2 ">
                         <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"></FlowEdit>
                     </div>
-                    <BoxDraggable class="left-sidebar border-t" :height="270" :resize-top="true">
-                        运行日志
+                    <BoxDraggable class="viewbox p-2 left-sidebar border-t" :height="270" :resize-top="true">
+                        <div class="run-logs whitespace-pre select-text overflow-y-auto">
+                            {{ runLogs }}
+                        </div>
                     </BoxDraggable>
                 </div>
                 <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true">

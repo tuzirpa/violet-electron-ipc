@@ -91,6 +91,16 @@ class Action {
     static async saveFlow(appId: string, flow: Flow) {
         return UserAppManage.saveFlow(appId, flow);
     }
+
+    static async installPackage(appId: string) {
+        return UserAppManage.installPackage(appId);
+    }
+    static async userAppRun(appId: string) {
+        return UserAppManage.userAppRun(appId);
+    }
+    static async userAppDevRun(appId: string) {
+        return UserAppManage.userAppDevRun(appId);
+    }
 }
 
 export default Action;

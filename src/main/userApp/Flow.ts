@@ -1,31 +1,7 @@
 import fs from 'fs';
-import { DirectiveInput, DirectiveTree } from './types';
+import { DirectiveTree } from './types';
 import { join } from 'path';
-
-export const blockConvertMap = new Map<string, (directive: DirectiveTree) => string>();
-
-function typeToCode(inputItem: DirectiveInput) {
-    if (inputItem.type === 'string') {
-        return `String(\`${inputItem.value}\`)`;
-    } else if (inputItem.type === 'conditions') {
-        return `${inputItem.value}`;
-    }
-    return '';
-}
-
-blockConvertMap.set('flowControls.if', (directive: DirectiveTree) => {
-    const ifstr: string[] = [];
-    for (const key in directive.inputs) {
-        const input = directive.inputs[key];
-        ifstr.push(typeToCode(input));
-    }
-
-    return `if(${ifstr.join('')}) {`;
-});
-
-blockConvertMap.set('flowControls.if.end', (_directive: DirectiveTree) => {
-    return `}`;
-});
+import { convertDirective } from './directiveconvert';
 
 export default class Flow {
     blocks: DirectiveTree[] = [];
@@ -42,7 +18,7 @@ export default class Flow {
         const content = fs.readFileSync(this.filePath, {
             encoding: 'utf-8'
         });
-        if(!content) {
+        if (!content) {
             return;
         }
         this.blocks = JSON.parse(content);
@@ -52,24 +28,18 @@ export default class Flow {
      * 转换流程到js文件
      */
     public convert() {
-        let content = ['// 头部说明'];
+        let content = ['debugger; // 头部说明'];
         content.push(`const axios = require('axios');`);
         // content.push(`const response = await axios.post(url, data);`);
         this.blocks.forEach((block) => {
-            const blockConvert = blockConvertMap.get(block.name);
+            const convertCode = convertDirective(block);
             let indent = '';
             if (block.pdLvn) {
                 for (let index = 0; index < block.pdLvn * 4; index++) {
                     indent += ' ';
                 }
             }
-            if (blockConvert) {
-                const lineCode = blockConvert(block);
-                content.push(indent + lineCode);
-            } else {
-                console.log(`未找到${block.name}的转换器`);
-                content.push(indent + '//' + '未找到${block.name}的转换器');
-            }
+            content.push(indent + convertCode);
         });
 
         return content.join('\n');

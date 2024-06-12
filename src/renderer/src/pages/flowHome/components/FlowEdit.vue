@@ -147,6 +147,7 @@ const directivesData = computed(() => {
     }
 
     return directives.value.map((item) => {
+        //@ts-ignore
         return toOpsData(item);
     })
 });

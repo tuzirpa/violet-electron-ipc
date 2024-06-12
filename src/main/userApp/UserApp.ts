@@ -16,10 +16,15 @@
 
  */
 
-import { app } from 'electron';
+import { app, ipcMain } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import Flow from './Flow';
+import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
+import { exec, spawn } from 'child_process';
+import { WindowManage } from '../window/WindowManage';
+import { DevServer } from './devuserapp/DevServer';
+import { DevNodeJs } from './devuserapp/DevNodeJs';
 
 /**
  * 应用类
@@ -27,7 +32,7 @@ import Flow from './Flow';
 export default class UserApp {
     id: string;
     version: string = '1.0.0';
-    main: string = 'index.js';
+    main: string = 'main.flow.js';
     author: string = '';
     license: string = '';
     description: string = '';
@@ -40,13 +45,13 @@ export default class UserApp {
 
     static get userAppLocalDir() {
         const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
-        if(!fs.existsSync(userAppLocalDir)){
+        if (!fs.existsSync(userAppLocalDir)) {
             fs.mkdirSync(userAppLocalDir, { recursive: true });
         }
         return userAppLocalDir;
     }
 
-    // 构造函数 
+    // 构造函数
     constructor(id: string) {
         this.id = id;
         this.appDir = path.join(UserApp.userAppLocalDir, this.id);
@@ -57,7 +62,7 @@ export default class UserApp {
     save() {
         // 保存
         // 写入package.json文件
-        this.packageJson.name = this.name; 
+        this.packageJson.name = this.name;
         fs.writeFileSync(
             path.join(this.appDir, 'package.json'),
             JSON.stringify(this.packageJson, null, 2)
@@ -95,8 +100,12 @@ export default class UserApp {
             author: this.author,
             license: this.license,
             description: this.description,
+            scripts: {
+                dev: 'node --inspect-brk=2017 main.flow.js',
+                start: 'node main.flow.js'
+            },
             dependencies: {
-                "axios": "^1.7.2"
+                axios: '^1.7.2'
             }
         };
         fs.writeFileSync(
@@ -129,5 +138,82 @@ export default class UserApp {
 
     findFlow(name: string) {
         return this.flows.find((flow) => flow.name === name);
+    }
+
+    shellExeCmd(cmds: string[], stdCallback?: (data: string) => void) {
+        const cmd = cmds[0];
+        const args = cmds.slice(1);
+        console.log('执行命令', cmd, args);
+        const child = spawn(cmd, args, { cwd: this.appDir, env: {} });
+        child.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+            stdCallback && stdCallback(data.toString());
+            WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
+        });
+        child.stderr.on('data', (data) => {
+            console.log(`stderr: ${data}`);
+            stdCallback && stdCallback(data.toString());
+            WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
+        });
+        child.on('close', (code) => {
+            console.log(`child process exited with code ${code}`);
+        });
+    }
+
+    npmInstall() {
+        // 安装依赖
+        const npmCmd = path.join(NodeEvbitonment.nodeExeDir, 'npm.cmd');
+        // process.chdir(this.appDir);
+        console.log(process.env);
+
+        const cmd = `${npmCmd}`;
+        // const cmd = `dir`;
+        console.log('执行安装命令', cmd);
+        this.shellExeCmd([cmd, 'install']);
+    }
+
+    run() {
+        // 运行
+        const npmCmd = path.join(NodeEvbitonment.nodeExeDir, 'npm.cmd');
+        const cmd = `${npmCmd}`;
+        console.log('执行运行命令', cmd);
+        this.shellExeCmd([cmd, 'run', 'start']);
+    }
+    async dev() {
+        // 调试启动
+        // const devServer = new DevServer(2017);
+        // await devServer.start();
+
+        this.packageJson.scripts.dev = `node --inspect-brk=${2017} main.flow.js`;
+        this.save();
+
+        // const npmCmd = path.join(NodeEvbitonment.nodeExeDir, 'npm.cmd');
+        // const cmd = `${npmCmd}`;
+        // console.log('执行运行命令', cmd);
+
+        const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
+        const mainFlowJs = path.join(this.appDir, 'main.flow.js');
+        // exec(
+        //     [nodeExeCmd, `--inspect-brk=${2017}`, mainFlowJs].join(' '),
+        //     (error, stdout, stderr) => {
+        //         if (error) {
+        //             console.error(`exec error: ${error}`);
+        //             return;
+        //         }
+        //         console.log(`stdout: ${stdout}`);
+        //         console.log(`stderr: ${stderr}`);
+        //         const devNodeJs = new DevNodeJs('');
+        //     }
+        // );
+        const port = 2017;
+        this.shellExeCmd([nodeExeCmd, `--inspect=${port}`, mainFlowJs], (data: string) => {
+            //匹配出调试路径
+            const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
+
+            if (matchData) {
+                const wsUrl = matchData[0];
+                const devNodeJs = new DevNodeJs(wsUrl);
+            }
+        });
     }
 }
