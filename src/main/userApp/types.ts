@@ -1,4 +1,12 @@
-export type DataType = 'string' | 'number' | 'boolean' | 'conditions' | 'object' | 'array' | 'any';
+export type DataType =
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'conditions'
+    | 'object'
+    | 'array'
+    | 'any'
+    | 'chrome';
 
 export interface FlowVariable {
     /**
@@ -8,7 +16,7 @@ export interface FlowVariable {
     /**
      * 变量类型
      */
-    type: string;
+    type: DataType;
     /**
      * 变量描述
      */
@@ -74,7 +82,7 @@ export interface DirectiveOutput {
     /**
      * 输入类型
      */
-    type: string;
+    type: DataType;
     /**
      * 是否必填
      */
@@ -158,4 +166,6 @@ export interface DirectiveTree {
     pdLvn?: number;
     isFold?: boolean;
     id?: string;
+
+    breakpoint?: boolean;
 }

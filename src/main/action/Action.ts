@@ -101,6 +101,18 @@ class Action {
     static async userAppDevRun(appId: string) {
         return UserAppManage.userAppDevRun(appId);
     }
+    static async devStepOver(appId: string) {
+        return UserAppManage.devStepOver(appId);
+    }
+    static async devResume(appId: string) {
+        return UserAppManage.devResume(appId);
+    }
+    static async devStop(appId: string) {
+        return UserAppManage.devStop(appId);
+    }
+    static async devGetProperties(appId: string, objectId: string) {
+        return UserAppManage.devGetProperties(appId, objectId);
+    }
 }
 
 export default Action;

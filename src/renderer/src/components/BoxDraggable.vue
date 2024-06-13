@@ -137,6 +137,7 @@ function initDrag(side: string, event: MouseEvent) {
     position: relative;
     width: v-bind(styleWidth);
     height: v-bind(styleHeight);
+    --draggable-height: v-bind(styleHeight);
     /* background-color: #3d3d3d; */
 }
 

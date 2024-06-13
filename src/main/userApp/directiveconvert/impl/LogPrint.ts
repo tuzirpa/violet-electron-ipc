@@ -1,5 +1,5 @@
-import { DirectiveTree } from '../types';
-import { BaseConvert } from './BaseConvert';
+import { DirectiveTree } from '../../types';
+import { BaseConvert } from '../BaseConvert';
 
 export class LogPrintConvert extends BaseConvert {
     public match(directiveName: string): boolean {

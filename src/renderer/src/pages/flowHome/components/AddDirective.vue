@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
-import { DirectiveConfig, getDirectiveConfig } from '../directiveConfig';
+import { DirectiveConfig, getDirectiveConfig, typeDisplay } from '../directiveConfig';
 import InputValueVar from './InputValueVar.vue';
 import OutputValueVar from './OutputValueVar.vue';
 import { getCurrentInstance, onMounted, ref } from 'vue';
@@ -79,8 +79,8 @@ onMounted(() => {
                                 <div class="param-name">{{ directiveConfig.inputs[key].label }}：</div>
                                 <div class="param-value flex-1">
                                     <div class="relative" v-if="directiveConfig.inputs[key].type === 'string'">
-                                        <InputValueVar v-model="inputItem.value" :inputItem="inputItem"
-                                            :variables="_variables">
+                                        <InputValueVar v-model="inputItem.value" :variables="_variables"
+                                            :inputItem="inputItem">
                                         </InputValueVar>
                                         <!-- <div v-if="directiveConfig.inputs[inputItem.name].openVariableSelect"
                                             class="absolute top-10 left-0 text-gray-500 text-sm border border-blue-500 border-solid rounded-md z-10 w-full">
@@ -99,7 +99,8 @@ onMounted(() => {
                                         </InputValueVar>
                                     </div>
                                     <el-select v-else-if="directiveConfig.inputs[key].type === 'select'"
-                                        v-model="inputItem.value" placeholder="请选择">
+                                        v-model="inputItem.value" placeholder="请选择"
+                                        @change="(e) => { inputItem.display = typeDisplay[e]; }">
                                         <el-option v-for="option in directiveConfig.inputs[key].options" :key="option.value"
                                             :label="option.label" :value="option.value"></el-option>
                                     </el-select>

@@ -15,7 +15,7 @@ export class WindowManage {
     static windows: { [key in string]: BrowserWindow } = {};
 
     static get mainWindow() {
-        return this.getWindow('main');
+        return this.getWindow('login');
     }
 
     /**

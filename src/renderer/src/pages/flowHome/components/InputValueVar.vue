@@ -2,12 +2,14 @@
 import type { DirectiveInput, FlowVariable } from 'src/main/userApp/types';
 import { ElInput } from 'element-plus';
 import { ref } from 'vue';
+import { typeDisplay } from '../directiveConfig';
 
 // 添加逻辑
 defineProps<{
     inputItem: DirectiveInput,
     variables: FlowVariable[]
-}>()
+}>();
+
 
 const model = defineModel<string>({ required: true })
 
@@ -49,6 +51,7 @@ function varSelectValChange(val: string) {
                             v-show="varSelectVal.length === 0 || variable.name.includes(varSelectVal)">
                             <div class="item" @click="varSelectValChange(variable.name)">
                                 {{ variable.name }}
+                                ({{ typeDisplay[variable.type] }})
                             </div>
                         </div>
                     </template>

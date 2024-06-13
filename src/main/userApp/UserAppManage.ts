@@ -4,6 +4,22 @@ import { uuid } from '@shared/Utils';
 import Flow from './Flow';
 
 export class UserAppManage {
+    devGetProperties(appId: string, objectId: string) {
+        const userApp = this.findUserApp(appId);
+        return userApp.devGetProperties(objectId);
+    }
+    devStop(appId: string) {
+        const userApp = this.findUserApp(appId);
+        userApp.devStop();
+    }
+    devResume(appId: string) {
+        const userApp = this.findUserApp(appId);
+        userApp.devResume();
+    }
+    devStepOver(appId: string) {
+        const userApp = this.findUserApp(appId);
+        userApp.devStepOver();
+    }
     userAppDevRun(appId: string) {
         const userApp = this.findUserApp(appId);
         userApp.dev();

@@ -21,10 +21,10 @@ import path from 'path';
 import fs from 'fs';
 import Flow from './Flow';
 import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
-import { exec, spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
 import { WindowManage } from '../window/WindowManage';
 import { DevServer } from './devuserapp/DevServer';
-import { DevNodeJs } from './devuserapp/DevNodeJs';
+import { DevNodeJs, IBreakpoint } from './devuserapp/DevNodeJs';
 
 /**
  * 应用类
@@ -42,6 +42,8 @@ export default class UserApp {
     packageJson: any = {};
 
     flows: Flow[] = [];
+    devNodeJs: DevNodeJs | null = null;
+    devPrecess: ChildProcessWithoutNullStreams | null = null;
 
     static get userAppLocalDir() {
         const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
@@ -140,6 +142,19 @@ export default class UserApp {
         return this.flows.find((flow) => flow.name === name);
     }
 
+    get breakpoints() {
+        const breakpoints: IBreakpoint[] = [];
+        this.flows.forEach((flow) => {
+            flow.breakpoints.forEach((breakpoint) => {
+                breakpoints.push({
+                    url: `file:///${this.appDir}/${flow.name}.js`.replace(/\\/g, '/'),
+                    line: breakpoint
+                });
+            });
+        });
+        return breakpoints;
+    }
+
     shellExeCmd(cmds: string[], stdCallback?: (data: string) => void) {
         const cmd = cmds[0];
         const args = cmds.slice(1);
@@ -158,6 +173,7 @@ export default class UserApp {
         child.on('close', (code) => {
             console.log(`child process exited with code ${code}`);
         });
+        return child;
     }
 
     npmInstall() {
@@ -179,41 +195,69 @@ export default class UserApp {
         console.log('执行运行命令', cmd);
         this.shellExeCmd([cmd, 'run', 'start']);
     }
+
+    async devStepOver() {
+        if (this.devNodeJs) {
+            this.devNodeJs.stepOver();
+        }
+    }
+    async devResume() {
+        if (this.devNodeJs) {
+            this.devNodeJs.resume();
+        }
+    }
+    async devStop() {
+        if (this.devNodeJs) {
+            this.devNodeJs.stop();
+        }
+        this.devPrecess && this.devPrecess.kill();
+        WindowManage.mainWindow.webContents.send('devRunEnd');
+    }
+
+    async devGetProperties(objectId: string) {
+        if (!this.devNodeJs) {
+            throw new Error('DevNodeJs is not inited');
+        }
+        return this.devNodeJs.getProperties(objectId);
+    }
+
     async dev() {
         // 调试启动
-        // const devServer = new DevServer(2017);
-        // await devServer.start();
-
-        this.packageJson.scripts.dev = `node --inspect-brk=${2017} main.flow.js`;
-        this.save();
-
-        // const npmCmd = path.join(NodeEvbitonment.nodeExeDir, 'npm.cmd');
-        // const cmd = `${npmCmd}`;
-        // console.log('执行运行命令', cmd);
-
         const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
         const mainFlowJs = path.join(this.appDir, 'main.flow.js');
-        // exec(
-        //     [nodeExeCmd, `--inspect-brk=${2017}`, mainFlowJs].join(' '),
-        //     (error, stdout, stderr) => {
-        //         if (error) {
-        //             console.error(`exec error: ${error}`);
-        //             return;
-        //         }
-        //         console.log(`stdout: ${stdout}`);
-        //         console.log(`stderr: ${stderr}`);
-        //         const devNodeJs = new DevNodeJs('');
-        //     }
-        // );
-        const port = 2017;
-        this.shellExeCmd([nodeExeCmd, `--inspect=${port}`, mainFlowJs], (data: string) => {
-            //匹配出调试路径
-            const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
-
-            if (matchData) {
-                const wsUrl = matchData[0];
-                const devNodeJs = new DevNodeJs(wsUrl);
+        const port = 9339;
+        let breakpoints = [
+            {
+                url: 'file:///C:/Users/lwd/AppData/Roaming/tuzu_robot/userApp/app_f5c53cd1aee9459b89559926e77582b3/main.flow.js',
+                line: 2
             }
-        });
+        ];
+        breakpoints = this.breakpoints;
+        this.devPrecess = this.shellExeCmd(
+            [nodeExeCmd, `--inspect=${port}`, mainFlowJs],
+            (data: string) => {
+                //匹配出调试路径
+                const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
+
+                if (data.includes('Debugger listening on ws://127.0.0.1:') && matchData) {
+                    const wsUrl = matchData[0];
+
+                    this.devNodeJs = new DevNodeJs(wsUrl, breakpoints);
+                    this.devNodeJs.onBreakpoint((breakpoint: IBreakpoint) => {
+                        //发给前端需要从1开始
+                        breakpoint.line = breakpoint.line + 1 - Flow.headLinkCount;
+                        WindowManage.mainWindow.webContents.send('breakpoint', breakpoint);
+                    });
+                    this.devNodeJs.start();
+                } else if (
+                    this.devNodeJs &&
+                    data.includes('Waiting for the debugger to disconnect.')
+                ) {
+                    this.devNodeJs.close();
+                    this.devNodeJs = null;
+                    WindowManage.mainWindow.webContents.send('devRunEnd');
+                }
+            }
+        );
     }
 }

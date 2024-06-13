@@ -1,5 +1,5 @@
-import { DirectiveTree } from '../types';
-import { BaseConvert } from './BaseConvert';
+import { DirectiveTree } from '../../types';
+import { BaseConvert } from '../BaseConvert';
 
 export class FlowControlIfEndConvert extends BaseConvert {
     convert(_directive: DirectiveTree): string {

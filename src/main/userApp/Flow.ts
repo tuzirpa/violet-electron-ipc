@@ -5,6 +5,7 @@ import { convertDirective } from './directiveconvert';
 
 export default class Flow {
     blocks: DirectiveTree[] = [];
+    static headLinkCount = 3;
     constructor(
         public appDir: string,
         public filePath: string,
@@ -12,6 +13,17 @@ export default class Flow {
     ) {
         console.log('Flow');
         this.init();
+    }
+
+    get breakpoints() {
+        const breakpoints: number[] = [];
+        this.blocks.forEach((block, index) => {
+            const breakpoint = block.breakpoint;
+            if (breakpoint) {
+                breakpoints.push(index + Flow.headLinkCount);
+            }
+        });
+        return breakpoints;
     }
 
     init() {
@@ -30,10 +42,12 @@ export default class Flow {
     public convert() {
         let content = ['debugger; // 头部说明'];
         content.push(`const axios = require('axios');`);
+        content.push(`setTimeout(async ()=>{`);
         // content.push(`const response = await axios.post(url, data);`);
+
         this.blocks.forEach((block) => {
             const convertCode = convertDirective(block);
-            let indent = '';
+            let indent = ' ';
             if (block.pdLvn) {
                 for (let index = 0; index < block.pdLvn * 4; index++) {
                     indent += ' ';
@@ -41,6 +55,8 @@ export default class Flow {
             }
             content.push(indent + convertCode);
         });
+
+        content.push('}, 1000);');
 
         return content.join('\n');
     }

@@ -1,24 +1,44 @@
 import { WebSocket } from 'ws';
 
-interface IBreakpoint {
+export interface IBreakpoint {
     url: string;
     line: number;
+    scopeChain?: any[];
 }
 
 export class DevNodeJs {
+    async getProperties(objectId: string) {
+        const data = await this.sendCommand('Runtime.getProperties', {
+            objectId,
+            ownProperties: false,
+            accessorPropertiesOnly: false,
+            nonIndexedPropertiesOnly: false,
+            generatePreview: true
+        });
+        return data.result;
+    }
+    stop() {
+        this.ws.close();
+    }
+    close() {
+        this.ws.close();
+    }
+    resume() {
+        this.sendCommand('Debugger.resume', { terminateOnResume: false });
+    }
+    stepOver() {
+        this.sendCommand('Debugger.stepOver', {});
+    }
+
     private ws!: WebSocket;
     private commandId = 1;
-
     private sctipts = new Map();
-
-    breakpointBackCall: (url: string, line: number) => void = () => {};
 
     constructor(
         public wsUrl: string,
-        public breakpoints: IBreakpoint[] = []
-    ) {
-        this.start();
-    }
+        public breakpoints: IBreakpoint[] = [],
+        public breakpointCallbacks: ((breakpoint: IBreakpoint) => void)[] = []
+    ) {}
 
     async start() {
         const ws = new WebSocket(this.wsUrl);
@@ -28,6 +48,7 @@ export class DevNodeJs {
 
             await this.sendCommand('Debugger.enable', {});
             await this.sendCommand('Runtime.enable', {});
+            this.setBreakpoint();
         });
 
         ws.on('message', (data) => {
@@ -51,7 +72,7 @@ export class DevNodeJs {
     }
 
     // 发送调试指令的函数
-    sendCommand(method, params) {
+    sendCommand(method, params): Promise<any> {
         return new Promise((resolve, reject) => {
             const id = this.commandId++;
             const command = JSON.stringify({
@@ -78,6 +99,8 @@ export class DevNodeJs {
 
     async scriptParsed(params) {
         this.sctipts.set(params.scriptId, params);
+        console.log('Script parsed:', params.url);
+
         // if (params.url.includes('main.flow.js')) {
         //     const res = await this.sendCommand('Debugger.setBreakpoint', {
         //         location: {
@@ -87,13 +110,6 @@ export class DevNodeJs {
         //     });
         //     console.log('Breakpoint set:', res);
         // }
-        this.breakpoints.forEach((value) => {
-            this.sendCommand('Debugger.setBreakpoint', {
-                url: value.url,
-                lineNumber: value.line,
-                columnNumber: 0
-            });
-        });
     }
     async paused(params) {
         console.log('断点暂停:', params);
@@ -104,18 +120,42 @@ export class DevNodeJs {
         const lineNumber = location.lineNumber;
         const columnNumber = location.columnNumber;
 
+        //首个断点 自动跳过
+        let firstBreakpoint = false;
         const script = this.sctipts.get(scriptId);
+        console.log('断点行号:', lineNumber, '列号:', columnNumber);
         if (script.url.includes('main.flow.js')) {
             if (lineNumber === 0) {
+                firstBreakpoint = true;
                 this.sendCommand('Debugger.resume', {});
             }
         }
-        console.log('断点行号:', lineNumber, '列号:', columnNumber);
-        this.onBreakpoint(script.url, lineNumber);
-        // 这里可以根据需要进行自定义的操作
+        if (firstBreakpoint) {
+            return;
+        }
+        // 获取当前变量
+        const scopeChain = callFrame.scopeChain;
+        // 触发断点回调
+        this.breakpointCallbacks.forEach((callback) => {
+            callback({
+                scopeChain,
+                url: script.url,
+                line: lineNumber
+            });
+        });
     }
 
-    onBreakpoint(url: string, line: number) {
-        this.breakpoints.push({ url, line });
+    async setBreakpoint() {
+        const setBreakpointPromises = this.breakpoints.map((value) => {
+            return this.sendCommand('Debugger.setBreakpointByUrl', {
+                url: value.url,
+                lineNumber: value.line
+            });
+        });
+        await Promise.all(setBreakpointPromises);
+    }
+
+    onBreakpoint(borakpointBackCall: (breakpoint: IBreakpoint) => void) {
+        this.breakpointCallbacks.push(borakpointBackCall);
     }
 }

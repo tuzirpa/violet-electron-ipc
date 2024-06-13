@@ -12,10 +12,12 @@ import { Action } from '@renderer/lib/action';
 import type Flow from 'src/main/userApp/Flow';
 import type UserApp from 'src/main/userApp/UserApp';
 import _ from 'lodash';
+import { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 
 
 const props = defineProps<{
     flows: Flow[],
+    breakpointData: IBreakpoint,
     appInfo: UserApp
 }>()
 
@@ -196,6 +198,15 @@ function foldClick(blockParam: DirectiveData, _index: any) {
     }
 }
 
+/**
+ * 点击折叠节点
+ * @param blockParam 
+ * @param _index 
+ */
+function breakpointClick(blockParam: DirectiveData, _index: any) {
+    blockParam.breakpoint = !blockParam.breakpoint;
+}
+
 
 /**
  * 拖拽方向
@@ -357,11 +368,13 @@ function blockClick(event: MouseEvent, block: DirectiveData, _index: number) {
  */
 function blockDbClick(_event: MouseEvent, block: DirectiveData, index: number) {
     directiveAddTemp.value = JSON.parse(JSON.stringify(block));
+    variablesCompute(block, index);
     addTempIndex.value = index;
     addTempDialogVisible.value = true;
 }
 
 function variablesCompute(_directive: DirectiveTree, index: number) {
+
     const variablesTemp: FlowVariable[] = [];
     // 获取当前指令之前的指令
     const beforeBlocks = curOpenFile.value.blocks.slice(0, index);
@@ -380,7 +393,7 @@ function variablesCompute(_directive: DirectiveTree, index: number) {
         }
     });
     variables.value = variablesTemp;
-    console.log(666, variables.value);
+
 
 }
 
@@ -625,8 +638,14 @@ watch(curBlocks, () => {
                     <div class="flex justify-between items-center row-number w-20 " v-show="!block.hide"
                         v-for="(block, index) in blocks">
                         <div class="text-center h-16 flex items-center pl-2">
-                            {{ index + 1 }}
+                            <div @click="breakpointClick(block, index)">{{ index + 1 }}</div>
+                            <div class="flex justify-center items-center ml-2 w-6 h-6 cursor-pointer"
+                                @click="breakpointClick(block, index)">
+                                <div class="w-3 h-3 rounded-full border-2 border-red-400 bg-red-300"
+                                    v-if="block.breakpoint"></div>
+                            </div>
                         </div>
+
                         <div v-if="block.isFold" class=" cursor-pointer" @click="foldClick(block, index)">
                             <i class="iconfont text-sm hover:text-blue-800"
                                 :class="{ 'icon-jianhaoshouqi': block.open, 'icon-jiahaozhankai': !block.open }"></i>
@@ -637,7 +656,8 @@ watch(curBlocks, () => {
                     @dragenter="flowEditDragEnter" @dragover="flowEditDragOver" @dragleave="flowEditDragLeave">
                     <template v-if="blocks.length > 0">
                         <div class="directive-block" v-for="(element, index) in blocks" :data-id="element.id"
-                            :key="element.id" draggable="true" @dragstart="blockDragStart(element, index)"
+                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line }" :key="element.id"
+                            draggable="true" @dragstart="blockDragStart(element, index)"
                             @contextmenu="directiveShowContextMenu($event, element)">
 
                             <div class="row flex items-center">
