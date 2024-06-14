@@ -16,14 +16,13 @@
 
  */
 
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import Flow from './Flow';
 import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
-import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { WindowManage } from '../window/WindowManage';
-import { DevServer } from './devuserapp/DevServer';
 import { DevNodeJs, IBreakpoint } from './devuserapp/DevNodeJs';
 
 /**
@@ -226,12 +225,7 @@ export default class UserApp {
         const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
         const mainFlowJs = path.join(this.appDir, 'main.flow.js');
         const port = 9339;
-        let breakpoints = [
-            {
-                url: 'file:///C:/Users/lwd/AppData/Roaming/tuzu_robot/userApp/app_f5c53cd1aee9459b89559926e77582b3/main.flow.js',
-                line: 2
-            }
-        ];
+        let breakpoints: IBreakpoint[] = [];
         breakpoints = this.breakpoints;
         this.devPrecess = this.shellExeCmd(
             [nodeExeCmd, `--inspect=${port}`, mainFlowJs],

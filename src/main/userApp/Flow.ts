@@ -40,9 +40,9 @@ export default class Flow {
      * 转换流程到js文件
      */
     public convert() {
-        let content = ['debugger; // 头部说明'];
-        content.push(`const axios = require('axios');`);
-        content.push(`setTimeout(async ()=>{`);
+        let content = ['// 头部说明'];
+        content.push(`//const axios = require('axios');`);
+        content.push(`setTimeout(async ()=>{ var variables = {};`);
         // content.push(`const response = await axios.post(url, data);`);
 
         this.blocks.forEach((block) => {

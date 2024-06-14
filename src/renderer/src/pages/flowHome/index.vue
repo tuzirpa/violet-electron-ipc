@@ -59,9 +59,11 @@ const breakpointCallback = async (_event, data: IBreakpoint) => {
         const scopeChain = breakpointData.value.scopeChain[0].object.objectId;
         const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
         console.log(res.result);
-
-        devVariableData.value = res.result.map((item) => {
-            return { type: item.value.type ? typeDisplay[item.value.type] : '未初始化', name: item.name, val: item.value.value };
+        const variables = await Action.devGetProperties(userAppDetail.value?.id, res.result[0].value.objectId);
+        console.log(variables.result);
+        devVariableData.value = variables.result.filter((item) => item.name.startsWith('var_')).map((item) => {
+            const name = item.name.replace('var_', '');
+            return { type: item.value.type ? typeDisplay[item.value.type] : '未初始化', name, val: item.value.value };
         });
     }
 
@@ -107,10 +109,32 @@ window.electron.ipcRenderer.on('run-logs', (_event, logs) => {
     runLogs.value += logs;
 });
 
+/**
+ * 底部tab激活状态
+ */
 const bottomTabsActiveName = ref('run-logs');
+/**
+ * 调试变量列表
+ */
 const devVariableData = ref([]);
 
+/**
+ * 是否处于调试状态
+ */
 const isDev = ref(false);
+
+
+
+const historys = ref<{ curIndex: number, historys: { saveName: string, data: any[] }[], isRedo: boolean, isUndo: boolean }>({
+    curIndex: 0,
+    historys: [],
+    isRedo: false,
+    isUndo: false
+});
+const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
+
+
+
 
 // 添加逻辑
 </script>
@@ -122,7 +146,7 @@ const isDev = ref(false);
                 <div class="viewbox flex flex-row justify-end items-center gap-2">
                     <div class="btn-group flex justify-end items-center p-1 gap-2 text-gray-900">
                         <el-tooltip class="box-item" effect="dark" content="返回" placement="bottom">
-                            <div
+                            <div @click="$router.go(-1)"
                                 class="btn-item non-draggable flex justify-center items-center rounded py-1 px-2 cursor-pointer hover:bg-slate-400/30">
                                 <i class="iconfont icon-fanhui"></i>
                             </div>
@@ -142,8 +166,13 @@ const isDev = ref(false);
                         <div class="border-r border-gray-200 border-solid w-1 py-3"></div>
                     </div>
                     <div class="btn-group flex justify-end items-center p-1 gap-2 text-gray-900">
-                        <BtnTip class="btn-item" :icon="'icon-chexiao'" :text="'撤销'"></BtnTip>
-                        <BtnTip class="btn-item chongzuo" :icon="'icon-chexiao'" :text="'重做'"></BtnTip>
+
+                        <BtnTip class="btn-item text-gray-400" :class="{ 'text-gray-800': historys.isUndo }"
+                            :icon="'icon-chexiao'" :text="'撤销'" @click="flowEditRef?.undo()"></BtnTip>
+                        <BtnTip class="btn-item text-gray-400 chongzuo" :class="{ 'text-gray-800': historys.isRedo }"
+                            :icon="'icon-chexiao'" :text="'重做'" @click="flowEditRef?.redo()">
+                        </BtnTip>
+
                         <BtnTip :icon="'icon-zhedie'" :text="'折叠'"></BtnTip>
                         <template v-if="!isDev">
                             <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
@@ -197,7 +226,9 @@ const isDev = ref(false);
                 <div class="main-content viewbox flex-1 bg-gray-100">
                     <div class="flow-edit flex-1 viewbox p-2 ">
                         <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"
-                            :breakpointData="breakpointData" :curActiveFlowIndex="curActiveFlowIndex"></FlowEdit>
+                            @history-change="(e) => { console.log(e); historys = e }" ref="flowEditRef"
+                            :breakpointData="breakpointData" :curActiveFlowIndex="curActiveFlowIndex">
+                        </FlowEdit>
                     </div>
                     <BoxDraggable class="viewbox left-sidebar border-t" :height="270" :resize-top="true">
                         <el-tabs v-model="bottomTabsActiveName" :size="'small'" class="viewbox flex-1">

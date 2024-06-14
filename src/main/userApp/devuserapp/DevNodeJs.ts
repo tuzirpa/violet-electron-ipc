@@ -73,7 +73,7 @@ export class DevNodeJs {
 
     // 发送调试指令的函数
     sendCommand(method, params): Promise<any> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const id = this.commandId++;
             const command = JSON.stringify({
                 id: id,

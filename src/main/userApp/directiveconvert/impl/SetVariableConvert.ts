@@ -30,9 +30,9 @@ export class SetVariableConvert extends BaseConvert {
         const value = _directive.inputs.varValue;
         const varTypeType = _directive.inputs.varType.value;
         if (varTypeType === 'number') {
-            return `var ${name} = Number(${this.typeToCode(value)});`;
+            return `variables.var_${name} = Number(${this.typeToCode(value)});`;
         } else {
-            return `var ${name} = ${this.typeToCode(value)};`;
+            return `variables.var_${name} = ${this.typeToCode(value)};`;
         }
     }
     match(divrctiveName: string): boolean {

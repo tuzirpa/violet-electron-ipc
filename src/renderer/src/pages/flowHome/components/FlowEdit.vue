@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin'
 import { ElMessage } from 'element-plus';
 import { useDirective } from '../directive';
 import { Shortcut } from './ShortcutRegister'
 import AddDirective from './AddDirective.vue';
-import { Action } from '@renderer/lib/action';
 import type Flow from 'src/main/userApp/Flow';
 import type UserApp from 'src/main/userApp/UserApp';
 import _ from 'lodash';
 import { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
+import { Action } from '@renderer/lib/action';
+import { de } from 'element-plus/es/locale';
 
 
 const props = defineProps<{
@@ -21,46 +22,44 @@ const props = defineProps<{
     appInfo: UserApp
 }>()
 
+const emit = defineEmits<{
+    (e: 'historyChange', history: { curIndex: number, historys: { saveName: string, data: any[] }[], isRedo: boolean, isUndo: boolean }): void,
+}>()
+
 // 添加逻辑
-type DirectiveData = DirectiveTree & {
+export type DirectiveData = DirectiveTree & {
     foldDesc?: string,
     pdLvn: number,
     commentShow?: string,
 };
 
-const flowControl = ref({
-    id: ''
-});
+
 
 async function executeStep() {
-    if (flowControl.value.id === '') {
-        flowControl.value.id = await Action.startFlowControl();
-    }
-    let result = await Action.executeStep(flowControl.value.id, "var aa = 10;");
-    console.log(result);
-    result = await Action.executeStep(flowControl.value.id, "console.log(aa);ddd");
-    console.log(result);
-    result = await Action.executeStep(flowControl.value.id, "aa++;");
-    console.log(result);
-    result = await Action.executeStep(flowControl.value.id, "console.log(aa);");
-    console.log(result);
+    console.log('executeStep');
+
 }
 
+
 const flows = props.flows.map((item) => {
+    const blocks = item.blocks.map((block) => {
+        return {
+            ...block,
+            open: false,
+            hide: false,
+            pdLvn: 0,
+            isFold: false,
+            id: uuid(),
+            foldDesc: '',
+            commentShow: '',
+        }
+    })
     return {
         name: item.name,
-        blocks: item.blocks.map((block) => {
-            return {
-                ...block,
-                open: false,
-                hide: false,
-                pdLvn: 0,
-                isFold: false,
-                id: uuid(),
-                foldDesc: '',
-                commentShow: '',
-            }
-        })
+        filePath: item.filePath,
+        historys: [{ saveName: '初始加载', data: blocks }],
+        curHistoryIndex: 0,
+        blocks: blocks
     }
 })
 console.log(flows);
@@ -68,11 +67,15 @@ console.log(flows);
 
 const openFiles = ref<{
     name: string;
+    historys: { saveName: string, data: any[] }[],
+    curHistoryIndex: number,
     blocks: DirectiveData[],
 }[]>(flows)
 
 
 const curOpenFile = ref(openFiles.value[0]);
+
+
 
 
 function commentCompute(block: DirectiveData) {
@@ -199,12 +202,13 @@ function foldClick(blockParam: DirectiveData, _index: any) {
 }
 
 /**
- * 点击折叠节点
+ * 设置断点
  * @param blockParam 
  * @param _index 
  */
 function breakpointClick(blockParam: DirectiveData, _index: any) {
     blockParam.breakpoint = !blockParam.breakpoint;
+    saveCurFlow('设置断点');
 }
 
 
@@ -249,6 +253,7 @@ async function flowEditDrag(event: any) {
         curOpenFile.value.blocks = tempBlocks.filter((item) => item !== null);
 
         // }
+        saveCurFlow('移动节点');
 
     }
 
@@ -367,10 +372,7 @@ function blockClick(event: MouseEvent, block: DirectiveData, _index: number) {
  * @param _index 
  */
 function blockDbClick(_event: MouseEvent, block: DirectiveData, index: number) {
-    directiveAddTemp.value = JSON.parse(JSON.stringify(block));
-    variablesCompute(block, index);
-    addTempIndex.value = index;
-    addTempDialogVisible.value = true;
+    editBlock(block, index);
 }
 
 function variablesCompute(_directive: DirectiveTree, index: number) {
@@ -395,6 +397,14 @@ function variablesCompute(_directive: DirectiveTree, index: number) {
     variables.value = variablesTemp;
 
 
+}
+
+
+function editBlock(block: DirectiveData, index: number) {
+    directiveAddTemp.value = JSON.parse(JSON.stringify(block));
+    variablesCompute(block, index);
+    addTempIndex.value = index;
+    addTempDialogVisible.value = true;
 }
 
 /**
@@ -446,13 +456,13 @@ async function pasteBlocks() {
     // 粘贴到当前最后选中块的后面
     if (curBlocks.value.length === 0) {
         curOpenFile.value.blocks.push(...newBlocks);
-        ElMessage.success('粘贴成功');
-        return;
+    } else {
+        const index = curOpenFile.value.blocks.findIndex((block) => block.id === curBlocks.value[curBlocks.value.length - 1].id);
+        curOpenFile.value.blocks.splice(index + 1, 0, ...newBlocks);
+        curBlocks.value = newBlocks;
     }
-    const index = curOpenFile.value.blocks.findIndex((block) => block.id === curBlocks.value[curBlocks.value.length - 1].id);
-    curOpenFile.value.blocks.splice(index + 1, 0, ...newBlocks);
-    curBlocks.value = newBlocks;
     ElMessage.success('粘贴成功');
+    saveCurFlow('粘贴');
 }
 
 /**
@@ -463,6 +473,7 @@ async function cutBlocks() {
     await navigator.clipboard.writeText(JSON.stringify(curBlocks.value));
     curOpenFile.value.blocks = curOpenFile.value.blocks.filter((item) => !curBlocks.value.some((block) => block.id === item.id));
     curBlocks.value = [];
+    saveCurFlow('剪切');
     ElMessage.success('剪切成功');
 }
 
@@ -471,6 +482,8 @@ async function cutBlocks() {
  */
 function deleteBlocks() {
     curOpenFile.value.blocks = curOpenFile.value.blocks.filter((item) => !curBlocks.value.some((block) => block.id === item.id));
+
+    saveCurFlow('删除');
 }
 
 
@@ -529,6 +542,10 @@ onMounted(() => {
         shortcut.register({ keys: ['C', 'c'], ctrlKey: true }, copyBlocks);
         shortcut.register({ keys: ['V', 'v'], ctrlKey: true }, pasteBlocks);
         shortcut.register({ keys: ['X', 'x'], ctrlKey: true }, cutBlocks);
+        shortcut.register({ keys: ['Delete'] }, deleteBlocks);
+        shortcut.register({ keys: ['F2'] }, () => {
+            editBlock(curBlocks.value[0], curOpenFile.value.blocks.findIndex((item) => item.id === curBlocks.value[0].id));
+        });
     }
 })
 
@@ -551,9 +568,7 @@ const addTempIndex = ref(0);
 
 
 function addBlockTemp() {
-
     const addDirective: DirectiveData = JSON.parse(JSON.stringify(directiveAddTemp.value));
-    console.log(addDirective);
     if (!addDirective.id) {
         addDirective.id = uuid();
         curOpenFile.value.blocks.splice(addTempIndex.value, 0, addDirective);
@@ -580,14 +595,16 @@ function addBlockTemp() {
             }
             curOpenFile.value.blocks.splice(addTempIndex.value + 1, 0, controlEnd);
         }
-
+        saveCurFlow('添加');
     } else {
         //有id 说明是编辑节点
         const index = curOpenFile.value.blocks.findIndex((block) => block.id === addDirective.id);
         curOpenFile.value.blocks.splice(index, 1, addDirective);
         addTempDialogVisible.value = false;
         curBlocks.value = [addDirective];
+        saveCurFlow('编辑');
     }
+
 
 }
 
@@ -596,11 +613,33 @@ function addBlockTemp() {
  */
 const variables = ref<FlowVariable[]>([]);
 
+
+function emitHistoryChange() {
+    const isRedo = curOpenFile.value.curHistoryIndex !== curOpenFile.value.historys.length - 1;
+    const isUndo = curOpenFile.value.curHistoryIndex !== 0;
+    emit('historyChange', { curIndex: curOpenFile.value.curHistoryIndex, historys: curOpenFile.value.historys, isRedo, isUndo });
+}
+
 /**
  * 保存流程
  */
-async function saveCurFlow() {
+async function saveCurFlow(
+    saveName?: string
+) {
     const saveObj: any = JSON.parse(JSON.stringify(curOpenFile.value));
+    const curIndex = curOpenFile.value.curHistoryIndex;
+    const history = curOpenFile.value.historys;
+    if (curIndex < history.length - 1) {
+        history.splice(curIndex + 1);
+    }
+
+    history.push({ saveName: saveName || '未命名', data: JSON.parse(JSON.stringify(saveObj.blocks)) });
+
+    if (history.length > 20) {
+        history.shift();
+    }
+    curOpenFile.value.curHistoryIndex = history.length - 1;
+
     saveObj.blocks = saveObj.blocks.map((item) => {
         delete item.commentShow;
         delete item.foldDesc;
@@ -608,15 +647,44 @@ async function saveCurFlow() {
     });
     console.log(saveObj, '流程保存');
     await Action.saveFlow(props.appInfo.id, saveObj);
+    emitHistoryChange();
 }
-const saveCurFlowDebounce = _.debounce(saveCurFlow, 3000);
 
-watch(curBlocks, () => {
-    console.log('curBlocks', curBlocks.value);
-    saveCurFlowDebounce();
-}, { deep: true })
+/**
+ * 撤销
+ */
+const undo = () => {
+    console.log('撤销');
+
+    if (curOpenFile.value.curHistoryIndex === 0) {
+        return;
+    }
+    curOpenFile.value.curHistoryIndex--;
+
+    curOpenFile.value.blocks = curOpenFile.value.historys[curOpenFile.value.curHistoryIndex].data;
+    curBlocks.value = [];
+
+    emitHistoryChange();
+};
+
+/**
+ * 重做
+ */
+const redo = () => {
+    if (curOpenFile.value.curHistoryIndex >= curOpenFile.value.historys.length - 1) {
+        return;
+    }
+    curOpenFile.value.curHistoryIndex++;
+    curOpenFile.value.blocks = curOpenFile.value.historys[curOpenFile.value.curHistoryIndex].data;
+
+    emitHistoryChange();
+};
 
 
+defineExpose({
+    undo,
+    redo,
+});
 
 </script>
 

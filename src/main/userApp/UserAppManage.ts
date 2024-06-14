@@ -70,7 +70,7 @@ export class UserAppManage {
 
     newUserApp(name: string) {
         const id = uuid();
-        const userApp = new UserApp(`app_${id}`);
+        const userApp = new UserApp(`app_${Date.now()}_${id}`);
         userApp.name = name;
         userApp.save();
         this.userApps.push(userApp);
