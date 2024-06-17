@@ -24,6 +24,7 @@ import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { WindowManage } from '../window/WindowManage';
 import { DevNodeJs, IBreakpoint } from './devuserapp/DevNodeJs';
+import rebotUtilPath from './robotUtil.template?modulePath';
 
 /**
  * 应用类
@@ -106,7 +107,8 @@ export default class UserApp {
                 start: 'node main.flow.js'
             },
             dependencies: {
-                axios: '^1.7.2'
+                axios: '^1.7.2',
+                puppeteer: '^22.11.0'
             }
         };
         fs.writeFileSync(
@@ -121,6 +123,10 @@ export default class UserApp {
         fs.mkdirSync(this.appDevDir, { recursive: true });
         // 写入dev/main.flow文件
         fs.writeFileSync(path.join(this.appDevDir, 'main.flow'), '');
+
+        // 写入dev/main.flow文件
+        const robotUtilContent = fs.readFileSync(rebotUtilPath, 'utf-8');
+        fs.writeFileSync(path.join(this.appDir, 'robotUtil.js'), robotUtilContent);
     }
 
     initFlows() {

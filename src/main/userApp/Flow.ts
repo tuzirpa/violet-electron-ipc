@@ -42,7 +42,7 @@ export default class Flow {
     public convert() {
         let content = ['// 头部说明'];
         content.push(`//const axios = require('axios');`);
-        content.push(`//const robotUtil = require('./robotUtil');`);
+        content.push(`let robotUtil = require('./robotUtil'); robotUtil = robotUtil.default;`);
         content.push(`setTimeout(async ()=>{ var variables = {};`);
         // content.push(`const response = await axios.post(url, data);`);
 

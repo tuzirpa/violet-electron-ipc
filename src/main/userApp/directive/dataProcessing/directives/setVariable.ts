@@ -97,9 +97,9 @@ export const directive: DirectiveTree = {
         const value = directive.inputs.varValue;
         const varTypeType = directive.inputs.varType.value;
         if (varTypeType === 'number') {
-            return `variables.var_${name} = Number(${typeToCode(value)});`;
+            return `var ${name} = Number(${typeToCode(value)});`;
         } else {
-            return `variables.var_${name} = ${typeToCode(value)};`;
+            return `var ${name} = ${typeToCode(value)};`;
         }
     }
 };

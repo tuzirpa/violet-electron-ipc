@@ -47,7 +47,7 @@ async function run() {
 
 const breakpointData = ref<IBreakpoint>({
     line: 0,
-    url: '',
+    url: ''
 });
 
 const breakpointCallback = async (_event, data: IBreakpoint) => {
@@ -55,19 +55,29 @@ const breakpointCallback = async (_event, data: IBreakpoint) => {
     breakpointData.value = data;
 
     //获取断点变量列表
-    if (userAppDetail.value?.id && breakpointData.value.scopeChain && breakpointData.value.scopeChain.length > 0) {
+    if (
+        userAppDetail.value?.id &&
+        breakpointData.value.scopeChain &&
+        breakpointData.value.scopeChain.length > 0
+    ) {
         const scopeChain = breakpointData.value.scopeChain[0].object.objectId;
         const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
         console.log(res.result);
-        const variables = await Action.devGetProperties(userAppDetail.value?.id, res.result[0].value.objectId);
+        const variables = await Action.devGetProperties(
+            userAppDetail.value?.id,
+            res.result[0].value.objectId
+        );
         console.log(variables.result);
-        devVariableData.value = variables.result.filter((item) => item.name.startsWith('var_')).map((item) => {
-            const name = item.name.replace('var_', '');
-            return { type: item.value.type ? typeDisplay[item.value.type] : '未初始化', name, val: item.value.value };
+        devVariableData.value = res.result.map((item) => {
+            const name = item.name;
+            return {
+                type: item.value.type ? typeDisplay[item.value.type] : '未初始化',
+                name,
+                val: item.value.value
+            };
         });
     }
-
-}
+};
 
 const devRunEndCallback = (_event) => {
     isDev.value = false;
@@ -75,13 +85,13 @@ const devRunEndCallback = (_event) => {
     window.electron.ipcRenderer.removeAllListeners('devRunEnd');
     breakpointData.value = { line: 0, url: '' };
     devVariableData.value = [];
-}
+};
 
 async function devRun() {
     if (userAppDetail.value?.id) {
         await Action.userAppDevRun(userAppDetail.value?.id);
         isDev.value = true;
-        bottomTabsActiveName.value = 'dev-variable'
+        bottomTabsActiveName.value = 'dev-variable';
         window.electron.ipcRenderer.on('breakpoint', breakpointCallback);
         window.electron.ipcRenderer.on('devRunEnd', devRunEndCallback);
     }
@@ -123,18 +133,18 @@ const devVariableData = ref([]);
  */
 const isDev = ref(false);
 
-
-
-const historys = ref<{ curIndex: number, historys: { saveName: string, data: any[] }[], isRedo: boolean, isUndo: boolean }>({
+const historys = ref<{
+    curIndex: number;
+    historys: { saveName: string; data: any[] }[];
+    isRedo: boolean;
+    isUndo: boolean;
+}>({
     curIndex: 0,
     historys: [],
     isRedo: false,
     isUndo: false
 });
 const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
-
-
-
 
 // 添加逻辑
 </script>
@@ -145,74 +155,128 @@ const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
             <div class="viewbox flex flex-1 flex-row justify-between items-center">
                 <div class="viewbox flex flex-row justify-end items-center gap-2">
                     <div class="btn-group flex justify-end items-center p-1 gap-2 text-gray-900">
-                        <el-tooltip class="box-item" effect="dark" content="返回" placement="bottom">
-                            <div @click="$router.go(-1)"
-                                class="btn-item non-draggable flex justify-center items-center rounded py-1 px-2 cursor-pointer hover:bg-slate-400/30">
+                        <el-tooltip
+                            class="box-item"
+                            effect="dark"
+                            content="返回"
+                            placement="bottom"
+                        >
+                            <div
+                                @click="$router.go(-1)"
+                                class="btn-item non-draggable flex justify-center items-center rounded py-1 px-2 cursor-pointer hover:bg-slate-400/30"
+                            >
                                 <i class="iconfont icon-fanhui"></i>
                             </div>
                         </el-tooltip>
 
-                        <el-tooltip class="box-item" effect="dark" content="编辑应用信息" placement="bottom-start"
-                            :show-after="100">
-                            <div class="btn-item group non-draggable flex justify-center items-center 
-                    gap-2 rounded py-1 px-2 pr-8 cursor-pointer hover:bg-slate-400/30
-                    ">
+                        <el-tooltip
+                            class="box-item"
+                            effect="dark"
+                            content="编辑应用信息"
+                            placement="bottom-start"
+                            :show-after="100"
+                        >
+                            <div
+                                class="btn-item group non-draggable flex justify-center items-center gap-2 rounded py-1 px-2 pr-8 cursor-pointer hover:bg-slate-400/30"
+                            >
                                 <i class="iconfont icon-yingyongming"></i>
                                 <div>应用名称</div>
-                                <i class="iconfont icon-bianji opacity-30 group-hover:opacity-100"></i>
+                                <i
+                                    class="iconfont icon-bianji opacity-30 group-hover:opacity-100"
+                                ></i>
                             </div>
                         </el-tooltip>
                         <BtnTip class="btn-item" :icon="'icon-baocun'" :text="'保存'"></BtnTip>
                         <div class="border-r border-gray-200 border-solid w-1 py-3"></div>
                     </div>
                     <div class="btn-group flex justify-end items-center p-1 gap-2 text-gray-900">
-
-                        <BtnTip class="btn-item text-gray-400" :class="{ 'text-gray-800': historys.isUndo }"
-                            :icon="'icon-chexiao'" :text="'撤销'" @click="flowEditRef?.undo()"></BtnTip>
-                        <BtnTip class="btn-item text-gray-400 chongzuo" :class="{ 'text-gray-800': historys.isRedo }"
-                            :icon="'icon-chexiao'" :text="'重做'" @click="flowEditRef?.redo()">
+                        <BtnTip
+                            class="btn-item text-gray-400"
+                            :class="{ 'text-gray-800': historys.isUndo }"
+                            :icon="'icon-chexiao'"
+                            :text="'撤销'"
+                            @click="flowEditRef?.undo()"
+                        ></BtnTip>
+                        <BtnTip
+                            class="btn-item text-gray-400 chongzuo"
+                            :class="{ 'text-gray-800': historys.isRedo }"
+                            :icon="'icon-chexiao'"
+                            :text="'重做'"
+                            @click="flowEditRef?.redo()"
+                        >
                         </BtnTip>
 
                         <BtnTip :icon="'icon-zhedie'" :text="'折叠'"></BtnTip>
                         <template v-if="!isDev">
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
-                                :text="'安装依赖包'" @click="installPackage">
+                            <BtnTip
+                                class="bg-slate-400/20 rounded"
+                                :icon-class="'text-green-500'"
+                                :icon="'icon-tiaoshi'"
+                                :text="'安装依赖包'"
+                                @click="installPackage"
+                            >
                                 安装包
                             </BtnTip>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-yunxing'"
-                                :text="'运行流程'" @click="run">
+                            <BtnTip
+                                class="bg-slate-400/20 rounded"
+                                :icon-class="'text-green-500'"
+                                :icon="'icon-yunxing'"
+                                :text="'运行流程'"
+                                @click="run"
+                            >
                                 运行
                             </BtnTip>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
-                                :text="'调试流程'" @click="devRun">
+                            <BtnTip
+                                class="bg-slate-400/20 rounded"
+                                :icon-class="'text-green-500'"
+                                :icon="'icon-tiaoshi'"
+                                :text="'调试流程'"
+                                @click="devRun"
+                            >
                                 调试
                             </BtnTip>
                         </template>
                         <template v-else>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-yunxing'"
-                                :text="'运行到下一个断点'" @click="devResume">
+                            <BtnTip
+                                class="bg-slate-400/20 rounded"
+                                :icon-class="'text-green-500'"
+                                :icon="'icon-yunxing'"
+                                :text="'运行到下一个断点'"
+                                @click="devResume"
+                            >
                                 继续
                             </BtnTip>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :text="'下一步'"
-                                :icon="'icon-nextstep'" @click="devStepOver">
+                            <BtnTip
+                                class="bg-slate-400/20 rounded"
+                                :icon-class="'text-green-500'"
+                                :text="'下一步'"
+                                :icon="'icon-nextstep'"
+                                @click="devStepOver"
+                            >
                                 下一步
                             </BtnTip>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-stop'"
-                                :text="'停止调试'" @click="devStop">
+                            <BtnTip
+                                class="bg-slate-400/20 rounded"
+                                :icon-class="'text-green-500'"
+                                :icon="'icon-stop'"
+                                :text="'停止调试'"
+                                @click="devStop"
+                            >
                                 停止
                             </BtnTip>
                         </template>
-
                     </div>
                 </div>
                 <div class="viewbox flex flex-row justify-end items-center gap-2">
-                    <BtnTip class="bg-slate-400/15 rounded" :icon="'icon-wenhao'" :text="'帮助、教程、学习资料'">
+                    <BtnTip
+                        class="bg-slate-400/15 rounded"
+                        :icon="'icon-wenhao'"
+                        :text="'帮助、教程、学习资料'"
+                    >
                         学习中心
                     </BtnTip>
-                    <BtnTip :icon="'icon-tongzhi'" :text="'消息通知'">
-                    </BtnTip>
-                    <BtnTip :icon="'icon-sandian'" :text="'插件、交流、分享'">
-                    </BtnTip>
+                    <BtnTip :icon="'icon-tongzhi'" :text="'消息通知'"> </BtnTip>
+                    <BtnTip :icon="'icon-sandian'" :text="'插件、交流、分享'"> </BtnTip>
                     <div class="border-r border-gray-200 border-solid w-1 py-3"></div>
                 </div>
             </div>
@@ -220,46 +284,77 @@ const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
         <div class="viewbox">
             <div class="flex flex-1 flex-row viewbox">
                 <!-- 指令区 -->
-                <BoxDraggable class=" viewbox left-sidebar border-r" :width="250" :resize-right="true">
+                <BoxDraggable
+                    class="viewbox left-sidebar border-r"
+                    :width="250"
+                    :resize-right="true"
+                >
                     <DirectiveTree class="directive-edit flex-1 wrapbox p-1"></DirectiveTree>
                 </BoxDraggable>
                 <div class="main-content viewbox flex-1 bg-gray-100">
-                    <div class="flow-edit flex-1 viewbox p-2 ">
-                        <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"
-                            @history-change="(e) => { console.log(e); historys = e }" ref="flowEditRef"
-                            :breakpointData="breakpointData" :curActiveFlowIndex="curActiveFlowIndex">
+                    <div class="flow-edit flex-1 viewbox p-2">
+                        <FlowEdit
+                            v-if="userAppDetail"
+                            :app-info="userAppDetail"
+                            :flows="userAppDetail?.flows"
+                            @history-change="
+                                (e) => {
+                                    console.log(e);
+                                    historys = e;
+                                }
+                            "
+                            ref="flowEditRef"
+                            :breakpointData="breakpointData"
+                            :curActiveFlowIndex="curActiveFlowIndex"
+                        >
                         </FlowEdit>
                     </div>
-                    <BoxDraggable class="viewbox left-sidebar border-t" :height="270" :resize-top="true">
-                        <el-tabs v-model="bottomTabsActiveName" :size="'small'" class="viewbox flex-1">
+                    <BoxDraggable
+                        class="viewbox left-sidebar border-t"
+                        :height="270"
+                        :resize-top="true"
+                    >
+                        <el-tabs
+                            v-model="bottomTabsActiveName"
+                            :size="'small'"
+                            class="viewbox flex-1"
+                        >
                             <el-tab-pane label="运行日志" name="run-logs">
                                 <el-scrollbar class="h-full">
-                                    <div class="run-logs whitespace-pre select-text ">
+                                    <div class="run-logs whitespace-pre select-text">
                                         {{ runLogs }}
                                     </div>
                                 </el-scrollbar>
                             </el-tab-pane>
                             <el-tab-pane label="调试变量" name="dev-variable">
-                                <el-table :data="devVariableData"
-                                    style="width: 100%;height: calc(var(--draggable-height) - 60px);">
+                                <el-table
+                                    :data="devVariableData"
+                                    style="
+                                        width: 100%;
+                                        height: calc(var(--draggable-height) - 60px);
+                                    "
+                                >
                                     <el-table-column prop="name" label="变量名" width="180" />
                                     <el-table-column prop="val" label="变量值" width="180" />
                                     <el-table-column prop="type" label="变量类型" />
                                 </el-table>
                             </el-tab-pane>
-
                         </el-tabs>
-
-
-
                     </BoxDraggable>
                 </div>
                 <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true">
                     <div class="property-edit flex-1 p-2">
                         <div>流程</div>
-                        <div class="flow-list flex flex-1" v-for="(flow, index) in userAppDetail?.flows" :key="index">
-                            <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
-                                :class="{ 'bg-slate-100': curActiveFlowIndex === index }">{{ flow.name }}
+                        <div
+                            class="flow-list flex flex-1"
+                            v-for="(flow, index) in userAppDetail?.flows"
+                            :key="index"
+                        >
+                            <div
+                                class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
+                                :class="{ 'bg-slate-100': curActiveFlowIndex === index }"
+                            >
+                                {{ flow.name }}
                             </div>
                         </div>
                     </div>

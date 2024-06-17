@@ -12,7 +12,13 @@ export const directive: DirectiveTree = {
         content: {
             name: '要输出的内容',
             value: '',
-            type: 'string'
+            type: 'string',
+            addConfig: {
+                label: '变量类型',
+                type: 'string',
+                defaultValue: 'test',
+                tip: '输出内容'
+            }
         }
     },
     outputs: {},

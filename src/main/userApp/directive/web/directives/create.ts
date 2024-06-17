@@ -55,7 +55,10 @@ export const directive: DirectiveTree = {
         }
     },
     toCode(directive: DirectiveTree) {
-        return `var ${directive.outputs.browser.name} = robotUtil.openBrowser('${directive.inputs.webType.value}');`;
+        const inputWebType = directive.inputs.webType;
+        const iw = JSON.parse(JSON.stringify(inputWebType));
+        delete iw.addConfig;
+        return `var ${directive.outputs.browser.name} = robotUtil.openBrowser(${JSON.stringify(iw)});`;
     }
 };
 
