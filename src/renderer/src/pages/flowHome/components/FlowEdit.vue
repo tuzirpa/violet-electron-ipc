@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
+import type { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
 import { computed, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';

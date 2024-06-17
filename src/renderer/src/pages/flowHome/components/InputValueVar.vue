@@ -33,7 +33,7 @@ function varSelectValChange(val: string) {
 
 <template>
     <div class="relative">
-        <el-input v-model="model" :placeholder="inputItem.placeholder">
+        <el-input v-model="model" :placeholder="inputItem.addConfig?.placeholder">
             <template #append>
                 <div class="text-gray-500 text-sm cursor-pointer" @click="varClick">
                     使用变量</div>
