@@ -23,6 +23,48 @@ export interface FlowVariable {
     comment?: string;
 }
 
+export type AddConfigInputType = 'string' | 'number' | 'boolean' | 'select' | 'textarea';
+
+export type AddConfigOnputType = 'variable';
+
+export interface AddConfig<T> {
+    /**
+     * 输入标签
+     */
+    label: string;
+    /**
+     * 添加配置类型
+     */
+    type: T;
+    /**
+     * type为select时，选项列表
+     */
+    options?: {
+        label: string;
+        value: string;
+    }[];
+    /**
+     * 输入提示
+     */
+    placeholder?: string;
+    /**
+     * 输入提示
+     */
+    tip?: string;
+
+    /**
+     * 输入默认值
+     */
+    defaultValue?: any;
+
+    /**
+     * 输入限制
+     */
+    limit?: {
+        [key: string]: any;
+    };
+}
+
 /**
  * 指令输入对象
  */
@@ -40,34 +82,15 @@ export interface DirectiveInput {
      */
     display?: string;
     /**
+     * 对应变量类型的描述
+     */
+    typeDisplay?: string;
+    /**
      * 输入类型
      */
     type: DataType;
 
-    /**
-     * 输入提示
-     */
-    placeholder?: string;
-    /**
-     * 输入提示
-     */
-    hint?: string;
-    /**
-     * 输入默认值
-     */
-    defaultValue?: string;
-    /**
-     * 输入选项
-     */
-    options?: {
-        [key: string]: any;
-    };
-    /**
-     * 输入限制
-     */
-    limit?: {
-        [key: string]: any;
-    };
+    addConfig?: AddConfig<AddConfigInputType>;
 }
 
 export interface DirectiveOutput {
@@ -87,30 +110,8 @@ export interface DirectiveOutput {
      * 是否必填
      */
     required: boolean;
-    /**
-     * 输入提示
-     */
-    placeholder?: string;
-    /**
-     * 输入提示
-     */
-    hint?: string;
-    /**
-     * 输入默认值
-     */
-    defaultValue?: string;
-    /**
-     * 输入选项
-     */
-    options?: {
-        [key: string]: any;
-    };
-    /**
-     * 输入限制
-     */
-    limit?: {
-        [key: string]: any;
-    };
+
+    addConfig?: AddConfig<AddConfigOnputType>;
 }
 
 /**
@@ -118,12 +119,21 @@ export interface DirectiveOutput {
  */
 export interface DirectiveTree {
     /**
-     * 指令名称 需要全局唯一
+     * 指令排序
      */
-    displayName: string;
+    sort?: number;
+    /**
+     * 显示名称空 直接显示name
+     */
+    displayName?: string;
 
     /**
-     * name
+     * 指令描述
+     */
+    description?: string;
+
+    /**
+     * name 指令名称 需要全局唯一
      */
     name: string;
 
@@ -168,4 +178,6 @@ export interface DirectiveTree {
     id?: string;
 
     breakpoint?: boolean;
+
+    toCode?: (directive: DirectiveTree) => string;
 }

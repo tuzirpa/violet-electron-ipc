@@ -13,7 +13,6 @@ import type UserApp from 'src/main/userApp/UserApp';
 import _ from 'lodash';
 import { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { Action } from '@renderer/lib/action';
-import { de } from 'element-plus/es/locale';
 
 
 const props = defineProps<{
@@ -80,6 +79,7 @@ const curOpenFile = ref(openFiles.value[0]);
 
 function commentCompute(block: DirectiveData) {
     if (block.comment) {
+
         const comment = block.comment.replace(/\${.*?}/g, (substring: string, ..._args: any[]) => {
             const valKey = substring.substring(2, substring.length - 1);
             let val = '';

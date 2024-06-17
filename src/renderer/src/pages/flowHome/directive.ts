@@ -1,3 +1,4 @@
+import { Action } from '@renderer/lib/action';
 import { DirectiveTree } from 'src/main/userApp/types';
 import { ref } from 'vue';
 
@@ -1170,6 +1171,12 @@ directives.value = [
 /**
  * 服务器加载的指令列表
  */
+async function loadDirective() {
+    directives.value = await Action.getDirectives();
+    console.log(directives.value, 'directives');
+}
+
+loadDirective();
 
 /**
  * 获取一个指令列表

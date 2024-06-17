@@ -1,6 +1,7 @@
 import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
+import { useDirective } from '../userApp/directive/directive';
 import { WindowManage, WindowNameType } from '../window/WindowManage';
 
 class Action {
@@ -97,6 +98,10 @@ class Action {
     }
     static async devGetProperties(appId: string, objectId: string) {
         return UserAppManage.devGetProperties(appId, objectId);
+    }
+
+    static async getDirectives() {
+        return useDirective();
     }
 }
 
