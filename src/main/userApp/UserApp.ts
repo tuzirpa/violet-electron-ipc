@@ -23,7 +23,7 @@ import Flow from './Flow';
 import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { WindowManage } from '../window/WindowManage';
-import { DevNodeJs, IBreakpoint } from './devuserapp/DevNodeJs';
+import { DevNodeJs, IBreakpoint, IConsoleApiCalled } from './devuserapp/DevNodeJs';
 import rebotUtilPath from './robotUtil.template?modulePath';
 
 /**
@@ -84,6 +84,7 @@ export default class UserApp {
         this.name = this.packageJson.name;
 
         this.initFlows();
+        this.robotUtilInit();
     }
 
     create() {
@@ -124,7 +125,11 @@ export default class UserApp {
         // 写入dev/main.flow文件
         fs.writeFileSync(path.join(this.appDevDir, 'main.flow'), '');
 
-        // 写入dev/main.flow文件
+        this.robotUtilInit();
+    }
+
+    robotUtilInit() {
+        // 写入robotUtil文件
         const robotUtilContent = fs.readFileSync(rebotUtilPath, 'utf-8');
         fs.writeFileSync(path.join(this.appDir, 'robotUtil.js'), robotUtilContent);
     }
@@ -167,13 +172,15 @@ export default class UserApp {
         const child = spawn(cmd, args, { cwd: this.appDir, env: {} });
         child.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);
-            stdCallback && stdCallback(data.toString());
-            WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
+            data = data.toString();
+            stdCallback && stdCallback(data);
+            // WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
         });
         child.stderr.on('data', (data) => {
             console.log(`stderr: ${data}`);
-            stdCallback && stdCallback(data.toString());
-            WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
+            data = data.toString();
+            stdCallback && stdCallback(data);
+            // WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
         });
         child.on('close', (code) => {
             console.log(`child process exited with code ${code}`);
@@ -195,10 +202,56 @@ export default class UserApp {
 
     run() {
         // 运行
-        const npmCmd = path.join(NodeEvbitonment.nodeExeDir, 'npm.cmd');
-        const cmd = `${npmCmd}`;
-        console.log('执行运行命令', cmd);
-        this.shellExeCmd([cmd, 'run', 'start']);
+        // 调试启动
+        const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
+        const mainFlowJs = path.join(this.appDir, 'main.flow.js');
+        const port = 9339;
+        let breakpoints: IBreakpoint[] = [];
+        WindowManage.mainWindow.webContents.send('run-logs', {
+            level: 'info',
+            time: Date.now(),
+            message: `流程启动`
+        });
+        this.devPrecess = this.shellExeCmd(
+            [nodeExeCmd, `--inspect=${port}`, mainFlowJs],
+            (data: string) => {
+                //匹配出调试路径
+                const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
+
+                if (data.includes('Debugger listening on ws://127.0.0.1:') && matchData) {
+                    const wsUrl = matchData[0];
+
+                    this.devNodeJs = new DevNodeJs(wsUrl, breakpoints);
+                    this.devNodeJs.onBreakpoint((breakpoint: IBreakpoint) => {
+                        //发给前端需要从1开始
+                        breakpoint.line = breakpoint.line + 1 - Flow.headLinkCount;
+                        WindowManage.mainWindow.webContents.send('breakpoint', breakpoint);
+                    });
+                    this.devNodeJs.onConsoleApiCalled((params: IConsoleApiCalled) => {
+                        console.log(params.type, params.args, params.timestamp);
+                        if (params.args[0].value === 'robotUtilLog') {
+                            WindowManage.mainWindow.webContents.send(
+                                'run-logs',
+                                JSON.parse(params.args[1].value)
+                            );
+                        }
+                    });
+                    this.devNodeJs.start();
+                } else if (
+                    this.devNodeJs &&
+                    data.includes('Waiting for the debugger to disconnect.')
+                ) {
+                    this.devNodeJs.close();
+                    this.devNodeJs = null;
+                    WindowManage.mainWindow.webContents.send('run-logs', {
+                        level: 'info',
+                        time: Date.now(),
+                        message: `流程结束`
+                    });
+                    WindowManage.mainWindow.webContents.send('devRunEnd');
+                }
+            }
+        );
     }
 
     async devStepOver() {
@@ -233,6 +286,11 @@ export default class UserApp {
         const port = 9339;
         let breakpoints: IBreakpoint[] = [];
         breakpoints = this.breakpoints;
+        WindowManage.mainWindow.webContents.send('run-logs', {
+            level: 'info',
+            time: Date.now(),
+            message: `流程启动`
+        });
         this.devPrecess = this.shellExeCmd(
             [nodeExeCmd, `--inspect=${port}`, mainFlowJs],
             (data: string) => {
@@ -248,6 +306,15 @@ export default class UserApp {
                         breakpoint.line = breakpoint.line + 1 - Flow.headLinkCount;
                         WindowManage.mainWindow.webContents.send('breakpoint', breakpoint);
                     });
+                    this.devNodeJs.onConsoleApiCalled((params: IConsoleApiCalled) => {
+                        console.log(params.type, params.args, params.timestamp);
+                        if (params.args[0].value === 'robotUtilLog') {
+                            WindowManage.mainWindow.webContents.send(
+                                'run-logs',
+                                JSON.parse(params.args[1].value)
+                            );
+                        }
+                    });
                     this.devNodeJs.start();
                 } else if (
                     this.devNodeJs &&
@@ -255,6 +322,11 @@ export default class UserApp {
                 ) {
                     this.devNodeJs.close();
                     this.devNodeJs = null;
+                    WindowManage.mainWindow.webContents.send('run-logs', {
+                        level: 'info',
+                        time: Date.now(),
+                        message: `流程结束`
+                    });
                     WindowManage.mainWindow.webContents.send('devRunEnd');
                 }
             }

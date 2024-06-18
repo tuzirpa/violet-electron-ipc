@@ -5,7 +5,7 @@ import { convertDirective } from './directiveconvert';
 
 export default class Flow {
     blocks: DirectiveTree[] = [];
-    static headLinkCount = 3;
+    static headLinkCount = 4;
     constructor(
         public appDir: string,
         public filePath: string,
@@ -43,11 +43,11 @@ export default class Flow {
         let content = ['// 头部说明'];
         content.push(`//const axios = require('axios');`);
         content.push(`let robotUtil = require('./robotUtil'); robotUtil = robotUtil.default;`);
-        content.push(`setTimeout(async ()=>{ var variables = {};`);
+        content.push(`setTimeout(async ()=>{`);
         // content.push(`const response = await axios.post(url, data);`);
 
-        this.blocks.forEach((block) => {
-            const convertCode = convertDirective(block);
+        this.blocks.forEach((block, index) => {
+            const convertCode = convertDirective(block, index, this);
             let indent = ' ';
             if (block.pdLvn) {
                 for (let index = 0; index < block.pdLvn * 4; index++) {

@@ -6,6 +6,14 @@ export interface IBreakpoint {
     scopeChain?: any[];
 }
 
+export interface IConsoleApiCalled {
+    type: string;
+    args: any[];
+    executionContextId: number;
+    timestamp: number;
+    stackTrace: any;
+}
+
 export class DevNodeJs {
     async getProperties(objectId: string) {
         const data = await this.sendCommand('Runtime.getProperties', {
@@ -37,7 +45,8 @@ export class DevNodeJs {
     constructor(
         public wsUrl: string,
         public breakpoints: IBreakpoint[] = [],
-        public breakpointCallbacks: ((breakpoint: IBreakpoint) => void)[] = []
+        public breakpointCallbacks: ((breakpoint: IBreakpoint) => void)[] = [],
+        public consoleApiCalledCallbacks: ((breakpoint: IConsoleApiCalled) => void)[] = []
     ) {}
 
     async start() {
@@ -59,6 +68,13 @@ export class DevNodeJs {
                 this.scriptParsed(cdpRes.params);
             } else if (cdpRes.method === 'Debugger.paused') {
                 this.paused(cdpRes.params);
+            } else if (cdpRes.method === 'Runtime.exceptionThrown') {
+                console.log('executionContextCreated', cdpRes.params);
+            } else if (cdpRes.method === 'Runtime.consoleAPICalled') {
+                console.log('consoleAPICalled', cdpRes.params);
+                this.consoleApiCalledCallbacks.forEach((callback) => {
+                    callback(cdpRes.params);
+                });
             }
         });
 
@@ -99,17 +115,6 @@ export class DevNodeJs {
 
     async scriptParsed(params) {
         this.sctipts.set(params.scriptId, params);
-        console.log('Script parsed:', params.url);
-
-        // if (params.url.includes('main.flow.js')) {
-        //     const res = await this.sendCommand('Debugger.setBreakpoint', {
-        //         location: {
-        //             scriptId: params.scriptId,
-        //             lineNumber: 2
-        //         }
-        //     });
-        //     console.log('Breakpoint set:', res);
-        // }
     }
     async paused(params) {
         console.log('断点暂停:', params);
@@ -120,17 +125,15 @@ export class DevNodeJs {
         const lineNumber = location.lineNumber;
         const columnNumber = location.columnNumber;
 
-        //首个断点 自动跳过
-        let firstBreakpoint = false;
+        //不是流程js文件， 自动跳过
+        let noFlowJsBreakpoint = false;
         const script = this.sctipts.get(scriptId);
         console.log('断点行号:', lineNumber, '列号:', columnNumber);
-        if (script.url.includes('main.flow.js')) {
-            if (lineNumber === 0) {
-                firstBreakpoint = true;
-                this.sendCommand('Debugger.resume', {});
-            }
+        if (!script.url.includes('flow.js')) {
+            noFlowJsBreakpoint = true;
+            this.sendCommand('Debugger.resume', {});
         }
-        if (firstBreakpoint) {
+        if (noFlowJsBreakpoint) {
             return;
         }
         // 获取当前变量
@@ -157,5 +160,9 @@ export class DevNodeJs {
 
     onBreakpoint(borakpointBackCall: (breakpoint: IBreakpoint) => void) {
         this.breakpointCallbacks.push(borakpointBackCall);
+    }
+
+    onConsoleApiCalled(callback: (breakpoint: IConsoleApiCalled) => void) {
+        this.consoleApiCalledCallbacks.push(callback);
     }
 }

@@ -33,6 +33,11 @@ export interface AddConfig<T> {
      */
     label: string;
     /**
+     * 是否为高级配置
+     */
+    isAdvanced?: boolean;
+
+    /**
      * 添加配置类型
      */
     type: T;
@@ -179,5 +184,30 @@ export interface DirectiveTree {
 
     breakpoint?: boolean;
 
-    toCode?: (directive: DirectiveTree) => string;
+    /**
+     * 失败策略    terminate: 终止流程   ignore: 忽略错误   retry: 重试流程
+     */
+    failureStrategy?: 'terminate' | 'ignore' | 'retry';
+    /**
+     * retry时 重试间隔时间
+     */
+    intervalTime?: number;
+    /**
+     * retry时 重试次数
+     */
+    retryCount?: number;
+
+    toCode?: (directive: DirectiveTree, block: Block) => string;
 }
+
+export interface Block {
+    blockLine: number;
+    flowName: string;
+    directiveName: string;
+    directiveDisplayName: string;
+    failureStrategy: 'terminate' | 'ignore' | 'retry';
+    intervalTime: number;
+    retryCount: number;
+}
+
+export type LogLevel = 'info' | 'warn' | 'error';

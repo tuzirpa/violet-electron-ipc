@@ -1,5 +1,6 @@
+import Flow from '../Flow';
 import { directiveToCodeMap } from '../directive/directive';
-import { DirectiveTree } from '../types';
+import { Block, DirectiveTree } from '../types';
 import { DirectiveConvert } from './DirevtveConvert';
 import { FlowControlIfConvert } from './impl/FlowControlIfConvert';
 import { FlowControlIfEndConvert } from './impl/FlowControlIfEndConvert';
@@ -13,10 +14,19 @@ import { SetVariableConvert } from './impl/SetVariableConvert';
 // directiveConverts.push(new FlowControlIfEndConvert());
 // directiveConverts.push(new SetVariableConvert());
 
-export function convertDirective(directive: DirectiveTree): string {
+export function convertDirective(directive: DirectiveTree, index: number, flow: Flow): string {
     const toCode = directiveToCodeMap.get(directive.name);
     if (toCode) {
-        return toCode(directive);
+        const block: Block = {
+            blockLine: index + 1,
+            flowName: flow.name,
+            directiveName: directive.name,
+            directiveDisplayName: directive.displayName || directive.name,
+            failureStrategy: directive.failureStrategy || 'terminate',
+            intervalTime: directive.intervalTime || 0,
+            retryCount: directive.retryCount || 0
+        };
+        return toCode(directive, block) + `//${JSON.stringify(block)}`;
     }
 
     return 'console.log("未提供代码转换器")// 未提供代码转换器';

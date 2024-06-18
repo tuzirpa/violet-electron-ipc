@@ -1,4 +1,4 @@
-import { DirectiveTree } from '../../../types';
+import { DirectiveTree, Block } from '../../../types';
 import { typeToCode } from '../../convertUtils';
 
 export const directive: DirectiveTree = {
@@ -14,7 +14,7 @@ export const directive: DirectiveTree = {
             value: '',
             type: 'string',
             addConfig: {
-                label: '变量类型',
+                label: '输出内容',
                 type: 'string',
                 defaultValue: 'test',
                 tip: '输出内容'
@@ -22,9 +22,8 @@ export const directive: DirectiveTree = {
         }
     },
     outputs: {},
-    toCode(directive: DirectiveTree) {
-        const content = typeToCode(directive.inputs.content);
-        return `console.log(${content})`;
+    toCode(directive: DirectiveTree, block: Block) {
+        return `robotUtil.dataProcessing.log(${typeToCode(directive.inputs.content)},${JSON.stringify(block)});`;
     }
 };
 

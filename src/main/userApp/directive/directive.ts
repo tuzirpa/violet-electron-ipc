@@ -1,11 +1,14 @@
-import { DirectiveTree } from 'src/main/userApp/types';
+import { Block, DirectiveTree } from 'src/main/userApp/types';
 
 const groups: { [key: string]: { default: DirectiveTree } } = import.meta.glob('./*/index.ts', {
     eager: true
 });
 console.log(groups, 'groups');
 
-export const directiveToCodeMap = new Map<string, (directive: DirectiveTree) => string>();
+export const directiveToCodeMap = new Map<
+    string,
+    (directive: DirectiveTree, block: Block) => string
+>();
 
 export const directives: DirectiveTree[] = [];
 

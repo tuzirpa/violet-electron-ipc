@@ -1,4 +1,4 @@
-import { DirectiveTree } from '../../../types';
+import { DirectiveTree, Block } from '../../../types';
 
 export const directive: DirectiveTree = {
     name: 'web.create',
@@ -17,6 +17,7 @@ export const directive: DirectiveTree = {
             addConfig: {
                 label: '浏览器类型',
                 type: 'select',
+                isAdvanced: true,
                 // isHide: true,
                 options: [
                     {
@@ -54,11 +55,11 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    toCode(directive: DirectiveTree) {
+    toCode(directive: DirectiveTree, block: Block) {
         const inputWebType = directive.inputs.webType;
         const iw = JSON.parse(JSON.stringify(inputWebType));
         delete iw.addConfig;
-        return `var ${directive.outputs.browser.name} = robotUtil.openBrowser(${JSON.stringify(iw)});`;
+        return `var ${directive.outputs.browser.name} = robotUtil.openBrowser(${JSON.stringify(iw)},${JSON.stringify(block)});`;
     }
 };
 
