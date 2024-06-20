@@ -43,6 +43,13 @@ async function executeStep() {
     console.log('executeStep');
 }
 
+async function disableCurDirective() {
+    curBlocks.value.forEach((block) => {
+        block.disabled = !block.disabled;
+    });
+    saveCurFlow('禁用当前指令');
+}
+
 const flows = props.flows.map((item) => {
     const blocks = item.blocks.map((block) => {
         return {
@@ -504,6 +511,14 @@ function directiveShowContextMenu(event: any, block: DirectiveData) {
             shortcut: 'Ctrl+C'
         },
         {
+            label: '禁用/启用当前指令',
+            onClick: () => {
+                disableCurDirective();
+            },
+            icon: 'icon-fuzhi',
+            shortcut: 'Ctrl+/'
+        },
+        {
             label: '复制',
             onClick: copyBlocks,
             icon: 'icon-fuzhi',
@@ -546,6 +561,7 @@ onMounted(() => {
         shortcut.register({ keys: ['V', 'v'], ctrlKey: true }, pasteBlocks);
         shortcut.register({ keys: ['X', 'x'], ctrlKey: true }, cutBlocks);
         shortcut.register({ keys: ['Delete'] }, deleteBlocks);
+        shortcut.register({ keys: ['/'], ctrlKey: true }, disableCurDirective);
         shortcut.register({ keys: ['F2'] }, () => {
             editBlock(
                 curBlocks.value[0],
@@ -767,7 +783,10 @@ defineExpose({
                             @dragstart="blockDragStart(element, index)"
                             @contextmenu="directiveShowContextMenu($event, element)"
                         >
-                            <div class="row flex items-center">
+                            <div
+                                class="row flex items-center"
+                                :class="{ 'text-gray-400/50': element.disabled }"
+                            >
                                 <div class="flex flex-1 h-16" v-show="!element.hide">
                                     <div
                                         class="h-full row-content group relative hover:bg-gray-100/50 flex-1 has-[.add:hover]:border-b-2 has-[.add:hover]:border-blue-500"

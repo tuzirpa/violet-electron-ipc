@@ -131,7 +131,7 @@ export class DevNodeJs {
         console.log('断点行号:', lineNumber, '列号:', columnNumber);
         if (!script.url.includes('flow.js')) {
             noFlowJsBreakpoint = true;
-            this.sendCommand('Debugger.resume', {});
+            this.resume();
         }
         if (noFlowJsBreakpoint) {
             return;

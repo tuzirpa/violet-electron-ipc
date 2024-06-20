@@ -29,7 +29,8 @@ export type AddConfigInputType =
     | 'boolean'
     | 'select'
     | 'textarea'
-    | 'filePath';
+    | 'filePath'
+    | 'variable';
 
 export type AddConfigOnputType = 'variable';
 
@@ -187,6 +188,11 @@ export interface DirectiveTree {
     pdLvn?: number;
     isFold?: boolean;
     id?: string;
+
+    /**
+     * 是否禁用
+     */
+    disabled?: boolean;
 
     breakpoint?: boolean;
 

@@ -2,6 +2,7 @@
 import type { DirectiveInput, DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import InputValueVar from './InputValueVar.vue';
 import OutputValueVar from './OutputValueVar.vue';
+import InputValueVarVariable from './InputValueVarVariable.vue';
 import { getCurrentInstance, onMounted, ref } from 'vue';
 import { ElSelect, ElTooltip } from 'element-plus';
 
@@ -13,6 +14,8 @@ const props = defineProps<{
 
 const _directive = ref(props.directive);
 const _variables = ref(props.variables);
+
+_directive.value.failureStrategy = _directive.value.failureStrategy || 'terminate';
 
 const groups = ref([
     { name: '常规', active: false },
@@ -65,7 +68,7 @@ function filePathSelect(e, inputItem: DirectiveInput) {
     input.type = 'file';
     //exe 文件类型
     input.accept = '.exe';
-    input.onchange = (e) => {
+    input.onchange = (e: any) => {
         const file = e.target.files[0];
         console.log(file);
         inputItem.value = file.path;
@@ -136,16 +139,17 @@ onMounted(() => {
                                             :inputItem="inputItem"
                                         >
                                         </InputValueVar>
-                                        <!-- <div v-if="directiveConfig.inputs[inputItem.name].openVariableSelect"
-                                                class="absolute top-10 left-0 text-gray-500 text-sm border border-blue-500 border-solid rounded-md z-10 w-full">
-                                                <div class="variable-select-content flex flex-col gap-2">
-                                                    <div class="variable-select-item flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-300/30"
-                                                        v-for="(variable, key) of variables" :key="key">
-                                                        <div class="variable-select-name">{{ variable.name }}</div>
-                                                        <div class="variable-select-comment">{{ variable.comment }}</div>
-                                                    </div>
-                                                </div>
-                                            </div> -->
+                                    </div>
+                                    <div
+                                        class="relative"
+                                        v-if="inputItem.addConfig.type === 'variable'"
+                                    >
+                                        <InputValueVarVariable
+                                            v-model="inputItem.value"
+                                            :variables="_variables"
+                                            :inputItem="inputItem"
+                                        >
+                                        </InputValueVarVariable>
                                     </div>
                                     <div
                                         class="relative"

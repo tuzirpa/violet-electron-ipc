@@ -36,6 +36,19 @@ export const directive: DirectiveTree = {
                 defaultValue: 'tuziChrome',
                 tip: '选择浏览器类型'
             }
+        },
+        url: {
+            name: 'url',
+            value: '',
+            type: 'string',
+            // errorHadnler: 'error',
+            addConfig: {
+                label: '地址',
+                type: 'string',
+                // isHide: true,
+                defaultValue: 'https://',
+                tip: '打开的地址'
+            }
         }
     },
     outputs: {
@@ -53,10 +66,11 @@ export const directive: DirectiveTree = {
     },
     async toCode(directive: DirectiveTree, block: Block) {
         const inputWebType = directive.inputs.webType;
+        const webUrl = directive.inputs.url.value;
 
         const executablePathValue = await getExeCutablePath(inputWebType.value);
 
-        return `var ${directive.outputs.browser.name} = await robotUtil.openBrowser('${inputWebType.value}', '${executablePathValue}' ,'${inputWebType.display}',${JSON.stringify(block)});`;
+        return `var ${directive.outputs.browser.name} = await robotUtil.web.openBrowser('${inputWebType.value}', '${executablePathValue}','${webUrl}' ,'${inputWebType.display}',${JSON.stringify(block)});`;
     }
 };
 

@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser, PuppeteerLaunchOptions } from 'puppeteer';
 import type { Block, LogLevel } from './types';
 
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
@@ -24,26 +24,43 @@ export const robotUtil = {
             return value;
         }
     },
-    openBrowser: async function (
-        type: string,
-        executablePath: string,
-        displayName: string,
-        block: Block
-    ) {
-        if (type !== 'tuziChrome') {
-            if (executablePath === '') {
-                sendLog('error', `本地未安装 ${displayName}，请设置先安装 ${displayName}`, block);
-                throw new Error('未设置chrome路径');
+    web: {
+        openBrowser: async function (
+            type: string,
+            executablePath: string,
+            webUrl: string,
+            displayName: string,
+            block: Block
+        ) {
+            if (type !== 'tuziChrome') {
+                if (executablePath === '') {
+                    sendLog(
+                        'error',
+                        `本地未安装 ${displayName}，请设置先安装 ${displayName}`,
+                        block
+                    );
+                    throw new Error('未设置chrome路径');
+                }
             }
+            const ops: PuppeteerLaunchOptions = { headless: false, defaultViewport: null };
+            executablePath && (ops.executablePath = executablePath);
+            const browser = await puppeteer.launch(ops);
+            const pages = await browser.pages();
+            const page = pages[0];
+            await page.goto(webUrl);
+            return browser;
+        },
+        openBrowserPage: async function (webBrow: Browser, url: string, block: Block) {
+            // const aaa = await puppeteer.launch(ops);
+            const page = await webBrow.newPage();
+            await page.goto(url);
+            sendLog('info', `打开网页：${url}，成功`, block);
+            return page;
         }
-        const ops = { headless: false } as any;
-        executablePath && (ops.executablePath = executablePath);
-
-        return puppeteer.launch(ops);
     }
 };
-//循环执行指令 给指令套上一层 异常处理
 
+//循环执行指令 给指令套上一层 异常处理
 function forRobotUtil(obj: any) {
     for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {

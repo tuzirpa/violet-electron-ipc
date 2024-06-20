@@ -55,7 +55,11 @@ export default class Flow {
                     indent += ' ';
                 }
             }
-            content.push(indent + convertCode);
+            let jsCode = indent + convertCode;
+            if (block.disabled) {
+                jsCode = '//' + jsCode;
+            }
+            content.push(jsCode);
         }
 
         content.push('}, 1000);');

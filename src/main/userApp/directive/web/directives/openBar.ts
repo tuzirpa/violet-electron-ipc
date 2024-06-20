@@ -1,14 +1,24 @@
-import { DirectiveTree } from '../../../types';
+import { DirectiveTree, Block } from 'src/main/userApp/types';
 
 export const directive: DirectiveTree = {
     name: 'web.openBar',
     sort: 2,
-    displayName: '打开浏览器标签页',
+    displayName: '在新标签页打开网址',
     icon: 'icon-web-create',
     isControl: false,
     isControlEnd: false,
-    comment: '打开${url},保存至：${pageBar}',
+    comment: '在${webBrowser},打开${url},保存至：${pageBar}',
     inputs: {
+        webBrowser: {
+            name: 'url',
+            value: '',
+            type: 'string',
+            // errorHadnler: 'error',
+            addConfig: {
+                label: '已打开的浏览器对象',
+                type: 'variable'
+            }
+        },
         url: {
             name: 'url',
             value: '',
@@ -36,8 +46,11 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    async toCode(directive: DirectiveTree) {
-        return `var ${directive.outputs.pageBar.name} = await robotUtil.openBrowserPage('${directive.inputs.url.value}');`;
+    async toCode(directive: DirectiveTree, block: Block) {
+        const webBrowserValue = directive.inputs.webBrowser.value;
+        const webUrl = directive.inputs.url.value;
+
+        return `var ${directive.outputs.pageBar.name} = await robotUtil.web.openBrowserPage(${webBrowserValue},'${webUrl}',${JSON.stringify(block)});`;
     }
 };
 
