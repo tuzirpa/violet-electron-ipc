@@ -23,7 +23,13 @@ export interface FlowVariable {
     comment?: string;
 }
 
-export type AddConfigInputType = 'string' | 'number' | 'boolean' | 'select' | 'textarea';
+export type AddConfigInputType =
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'select'
+    | 'textarea'
+    | 'filePath';
 
 export type AddConfigOnputType = 'variable';
 

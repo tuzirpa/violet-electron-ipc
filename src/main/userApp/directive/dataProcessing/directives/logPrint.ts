@@ -23,7 +23,7 @@ export const directive: DirectiveTree = {
     },
     outputs: {},
     toCode(directive: DirectiveTree, block: Block) {
-        return `robotUtil.dataProcessing.log(${typeToCode(directive.inputs.content)},${JSON.stringify(block)});`;
+        return `await robotUtil.dataProcessing.log(${typeToCode(directive.inputs.content)},${JSON.stringify(block)});`;
     }
 };
 

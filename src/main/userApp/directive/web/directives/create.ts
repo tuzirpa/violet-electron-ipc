@@ -1,4 +1,5 @@
 import { DirectiveTree, Block } from '../../../types';
+import { getExeCutablePath } from '../../commonUtils';
 
 export const directive: DirectiveTree = {
     name: 'web.create',
@@ -17,27 +18,22 @@ export const directive: DirectiveTree = {
             addConfig: {
                 label: '浏览器类型',
                 type: 'select',
-                isAdvanced: true,
-                // isHide: true,
+                // isAdvanced: true,
                 options: [
                     {
-                        label: 'Chrome',
-                        value: 'chrome'
+                        label: '内置浏览器',
+                        value: 'tuziChrome'
                     },
                     {
-                        label: 'Firefox',
-                        value: 'firefox'
+                        label: '谷歌浏览器',
+                        value: 'chrome'
                     },
                     {
                         label: 'Edge',
                         value: 'edge'
-                    },
-                    {
-                        label: 'Safari',
-                        value: 'safari'
                     }
                 ],
-                defaultValue: 'chrome',
+                defaultValue: 'tuziChrome',
                 tip: '选择浏览器类型'
             }
         }
@@ -51,15 +47,16 @@ export const directive: DirectiveTree = {
             addConfig: {
                 label: '浏览器对象',
                 type: 'variable',
-                defaultValue: ''
+                defaultValue: 'web_page'
             }
         }
     },
     toCode(directive: DirectiveTree, block: Block) {
         const inputWebType = directive.inputs.webType;
-        const iw = JSON.parse(JSON.stringify(inputWebType));
-        delete iw.addConfig;
-        return `var ${directive.outputs.browser.name} = await robotUtil.openBrowser(${JSON.stringify(iw)},${JSON.stringify(block)});`;
+
+        const executablePathValue = getExeCutablePath(inputWebType.value);
+
+        return `var ${directive.outputs.browser.name} = await robotUtil.openBrowser('${inputWebType.value}', '${executablePathValue}' ,'${inputWebType.display}',${JSON.stringify(block)});`;
     }
 };
 

@@ -1,4 +1,4 @@
-import { DirectiveTree } from '../../../types';
+import { DirectiveTree, Block } from '../../../types';
 import { typeToCode } from '../../convertUtils';
 
 /**
@@ -92,15 +92,19 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    toCode(directive) {
+    toCode(directive, block: Block) {
         const name = directive.outputs.varName.name;
-        const value = directive.inputs.varValue;
+        let value = directive.inputs.varValue;
         const varTypeType = directive.inputs.varType.value;
-        if (varTypeType === 'number') {
-            return `var ${name} = Number(${typeToCode(value)});`;
-        } else {
-            return `var ${name} = ${typeToCode(value)};`;
+        let valueCode = typeToCode(value);
+        if (varTypeType === 'chrome') {
+            valueCode = directive.inputs.varValue.value.substring(
+                2,
+                directive.inputs.varValue.value.length - 1
+            );
         }
+
+        return `var ${name} = await robotUtil.dataProcessing.setVariable('${varTypeType}',${valueCode},${JSON.stringify(block)});`;
     }
 };
 

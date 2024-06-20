@@ -3,42 +3,45 @@ import type { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
 import { computed, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
-import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin'
+import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { ElMessage } from 'element-plus';
 import { useDirective } from '../directive';
-import { Shortcut } from './ShortcutRegister'
+import { Shortcut } from './ShortcutRegister';
 import AddDirective from './AddDirective.vue';
 import type Flow from 'src/main/userApp/Flow';
 import type UserApp from 'src/main/userApp/UserApp';
 import _ from 'lodash';
-import { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
+import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { Action } from '@renderer/lib/action';
 
-
 const props = defineProps<{
-    flows: Flow[],
-    breakpointData: IBreakpoint,
-    appInfo: UserApp
-}>()
+    flows: Flow[];
+    breakpointData: IBreakpoint;
+    appInfo: UserApp;
+}>();
 
 const emit = defineEmits<{
-    (e: 'historyChange', history: { curIndex: number, historys: { saveName: string, data: any[] }[], isRedo: boolean, isUndo: boolean }): void,
-}>()
+    (
+        e: 'historyChange',
+        history: {
+            curIndex: number;
+            historys: { saveName: string; data: any[] }[];
+            isRedo: boolean;
+            isUndo: boolean;
+        }
+    ): void;
+}>();
 
 // 添加逻辑
 export type DirectiveData = DirectiveTree & {
-    foldDesc?: string,
-    pdLvn: number,
-    commentShow?: string,
+    foldDesc?: string;
+    pdLvn: number;
+    commentShow?: string;
 };
-
-
 
 async function executeStep() {
     console.log('executeStep');
-
 }
-
 
 const flows = props.flows.map((item) => {
     const blocks = item.blocks.map((block) => {
@@ -50,36 +53,32 @@ const flows = props.flows.map((item) => {
             isFold: false,
             id: uuid(),
             foldDesc: '',
-            commentShow: '',
-        }
-    })
+            commentShow: ''
+        };
+    });
     return {
         name: item.name,
         filePath: item.filePath,
         historys: [{ saveName: '初始加载', data: blocks }],
         curHistoryIndex: 0,
         blocks: blocks
-    }
-})
+    };
+});
 console.log(flows);
 
-
-const openFiles = ref<{
-    name: string;
-    historys: { saveName: string, data: any[] }[],
-    curHistoryIndex: number,
-    blocks: DirectiveData[],
-}[]>(flows)
-
+const openFiles = ref<
+    {
+        name: string;
+        historys: { saveName: string; data: any[] }[];
+        curHistoryIndex: number;
+        blocks: DirectiveData[];
+    }[]
+>(flows);
 
 const curOpenFile = ref(openFiles.value[0]);
 
-
-
-
 function commentCompute(block: DirectiveData) {
     if (block.comment) {
-
         const comment = block.comment.replace(/\${.*?}/g, (substring: string, ..._args: any[]) => {
             const valKey = substring.substring(2, substring.length - 1);
             let val = '';
@@ -102,10 +101,10 @@ function commentCompute(block: DirectiveData) {
             }
 
             return `<span class="variable">${val}</span>`;
-        })
-        return comment
+        });
+        return comment;
     } else {
-        return block.name
+        return block.name;
     }
 }
 
@@ -131,16 +130,13 @@ const blocks = computed(() => {
     });
 
     return curOpenFile.value.blocks;
-})
-
+});
 
 const curBlocks = ref([curOpenFile.value.blocks[0]]);
 const dragenterBlock = ref<DirectiveData | null>(null);
 
-
 const directives = useDirective();
 const directivesData = computed(() => {
-
     function toOpsData(directive: DirectiveTree) {
         return {
             value: directive,
@@ -148,15 +144,14 @@ const directivesData = computed(() => {
             children: directive?.children?.map((item) => {
                 return toOpsData(item);
             })
-        }
+        };
     }
 
     return directives.value.map((item) => {
         //@ts-ignore
         return toOpsData(item);
-    })
+    });
 });
-
 
 /**
  * 获取折叠节点的子节点
@@ -177,13 +172,13 @@ function getFoldSub(blockParam: DirectiveData) {
     return {
         foldNum,
         subBlocks
-    }
+    };
 }
 
 /**
  * 点击折叠节点
- * @param blockParam 
- * @param _index 
+ * @param blockParam
+ * @param _index
  */
 function foldClick(blockParam: DirectiveData, _index: any) {
     blockParam.open = !blockParam.open;
@@ -203,14 +198,13 @@ function foldClick(blockParam: DirectiveData, _index: any) {
 
 /**
  * 设置断点
- * @param blockParam 
- * @param _index 
+ * @param blockParam
+ * @param _index
  */
 function breakpointClick(blockParam: DirectiveData, _index: any) {
     blockParam.breakpoint = !blockParam.breakpoint;
     saveCurFlow('设置断点');
 }
-
 
 /**
  * 拖拽方向
@@ -220,14 +214,14 @@ const dragDirection = ref<'top' | 'bottom'>('bottom');
 async function flowEditDrag(event: any) {
     event.preventDefault();
     console.log(dragData.value, 'drag');
-    let oldIndex = curOpenFile.value.blocks.findIndex((block) => block.id === dragenterBlock.value?.id);
+    let oldIndex = curOpenFile.value.blocks.findIndex(
+        (block) => block.id === dragenterBlock.value?.id
+    );
 
     if (dragData.value.add) {
-
         oldIndex = oldIndex === -1 ? curOpenFile.value.blocks.length - 1 : oldIndex;
         // curOpenFile.value.blocks.splice(oldIndex + 1, 0, directive);
         addBlock(dragData.value.data, oldIndex + 1);
-
     } else {
         /**
          * 移动，中间节点往后推
@@ -244,7 +238,9 @@ async function flowEditDrag(event: any) {
                 }
             });
         });
-        curBlocks.value.forEach((item) => { item.hide = false; });
+        curBlocks.value.forEach((item) => {
+            item.hide = false;
+        });
         if (dragDirection.value === 'bottom') {
             tempBlocks.splice(oldIndex + 1, 0, ...curBlocks.value);
         } else {
@@ -254,12 +250,9 @@ async function flowEditDrag(event: any) {
 
         // }
         saveCurFlow('移动节点');
-
     }
 
-
     dragenterBlock.value = null;
-
 }
 
 async function flowEditDragEnter(event: DragEvent) {
@@ -278,8 +271,12 @@ async function flowEditDragEnter(event: DragEvent) {
         if (block) {
             console.log(block, 'dragenter');
             dragenterBlock.value = block;
-            let oldIndex = curOpenFile.value.blocks.findIndex((block) => block.id === dragenterBlock.value?.id);
-            const newIndex = curOpenFile.value.blocks.findIndex((block) => block.id === curBlocks.value[0].id);
+            let oldIndex = curOpenFile.value.blocks.findIndex(
+                (block) => block.id === dragenterBlock.value?.id
+            );
+            const newIndex = curOpenFile.value.blocks.findIndex(
+                (block) => block.id === curBlocks.value[0].id
+            );
             if (dragData.value.add) {
                 dragDirection.value = 'bottom';
             } else {
@@ -294,8 +291,8 @@ function flowEditDragLeave(event: DragEvent) {
 }
 
 function flowEditDragOver(event: any) {
-    event.dataTransfer.dropEffect = 'move'
-    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move';
+    event.preventDefault();
 }
 
 function blockDragStart(block: DirectiveData, _index: number) {
@@ -318,7 +315,6 @@ function toggleCheckBlock(block: DirectiveData) {
                 curBlocks.value.push(...subBlocks);
             });
         }
-
     } else {
         if (block.isFold && !block.open) {
             const { subBlocks } = getFoldSub(block);
@@ -327,14 +323,13 @@ function toggleCheckBlock(block: DirectiveData) {
             curBlocks.value = [block];
         }
     }
-
 }
 
 /**
  * 流程块点击
- * @param event 
- * @param block 
- * @param _index 
+ * @param event
+ * @param block
+ * @param _index
  */
 function blockClick(event: MouseEvent, block: DirectiveData, _index: number) {
     // 判断是否按下了Ctrl键
@@ -350,10 +345,15 @@ function blockClick(event: MouseEvent, block: DirectiveData, _index: number) {
             curBlocks.value.push(block);
         }
     } else if (event && event.shiftKey) {
-        //键盘按下了Shift键 需要一次多选到当前块   
+        //键盘按下了Shift键 需要一次多选到当前块
         const startIndex = curOpenFile.value.blocks.findIndex((item) => item.id === block.id);
-        const endIndex = curOpenFile.value.blocks.findIndex((item) => item.id === curBlocks.value[curBlocks.value.length - 1].id);
-        const selectBlocks = curOpenFile.value.blocks.slice(Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
+        const endIndex = curOpenFile.value.blocks.findIndex(
+            (item) => item.id === curBlocks.value[curBlocks.value.length - 1].id
+        );
+        const selectBlocks = curOpenFile.value.blocks.slice(
+            Math.min(startIndex, endIndex),
+            Math.max(startIndex, endIndex) + 1
+        );
         curBlocks.value = selectBlocks;
     } else {
         if (block.isFold && !block.open) {
@@ -368,15 +368,14 @@ function blockClick(event: MouseEvent, block: DirectiveData, _index: number) {
 /**
  * 双击进入编辑模式
  * @param _event
- * @param block 
- * @param _index 
+ * @param block
+ * @param _index
  */
 function blockDbClick(_event: MouseEvent, block: DirectiveData, index: number) {
     editBlock(block, index);
 }
 
 function variablesCompute(_directive: DirectiveTree, index: number) {
-
     const variablesTemp: FlowVariable[] = [];
     // 获取当前指令之前的指令
     const beforeBlocks = curOpenFile.value.blocks.slice(0, index);
@@ -389,16 +388,13 @@ function variablesCompute(_directive: DirectiveTree, index: number) {
                 variablesTemp.push({
                     name: output.name,
                     type: output.type,
-                    comment: output.display,
+                    comment: output.display
                 });
             }
         }
     });
     variables.value = variablesTemp;
-
-
 }
-
 
 function editBlock(block: DirectiveData, index: number) {
     directiveAddTemp.value = JSON.parse(JSON.stringify(block));
@@ -418,7 +414,10 @@ function addBlock(directive: DirectiveTree, index?: number) {
         if (curBlocks.value.length === 0) {
             index = curOpenFile.value.blocks.length;
         } else {
-            index = curOpenFile.value.blocks.findIndex((block) => block.id === curBlocks.value[curBlocks.value.length - 1].id) + 1;
+            index =
+                curOpenFile.value.blocks.findIndex(
+                    (block) => block.id === curBlocks.value[curBlocks.value.length - 1].id
+                ) + 1;
         }
     }
 
@@ -452,12 +451,14 @@ async function pasteBlocks() {
         block.open = false;
         block.hide = false;
         return block;
-    })
+    });
     // 粘贴到当前最后选中块的后面
     if (curBlocks.value.length === 0) {
         curOpenFile.value.blocks.push(...newBlocks);
     } else {
-        const index = curOpenFile.value.blocks.findIndex((block) => block.id === curBlocks.value[curBlocks.value.length - 1].id);
+        const index = curOpenFile.value.blocks.findIndex(
+            (block) => block.id === curBlocks.value[curBlocks.value.length - 1].id
+        );
         curOpenFile.value.blocks.splice(index + 1, 0, ...newBlocks);
         curBlocks.value = newBlocks;
     }
@@ -471,7 +472,9 @@ async function pasteBlocks() {
 async function cutBlocks() {
     //先复制 然后删除 就实现剪切
     await navigator.clipboard.writeText(JSON.stringify(curBlocks.value));
-    curOpenFile.value.blocks = curOpenFile.value.blocks.filter((item) => !curBlocks.value.some((block) => block.id === item.id));
+    curOpenFile.value.blocks = curOpenFile.value.blocks.filter(
+        (item) => !curBlocks.value.some((block) => block.id === item.id)
+    );
     curBlocks.value = [];
     saveCurFlow('剪切');
     ElMessage.success('剪切成功');
@@ -481,12 +484,12 @@ async function cutBlocks() {
  * 删除选中的块
  */
 function deleteBlocks() {
-    curOpenFile.value.blocks = curOpenFile.value.blocks.filter((item) => !curBlocks.value.some((block) => block.id === item.id));
+    curOpenFile.value.blocks = curOpenFile.value.blocks.filter(
+        (item) => !curBlocks.value.some((block) => block.id === item.id)
+    );
 
     saveCurFlow('删除');
 }
-
-
 
 function directiveShowContextMenu(event: any, block: DirectiveData) {
     event.preventDefault();
@@ -531,8 +534,8 @@ function directiveShowContextMenu(event: any, block: DirectiveData) {
             onClick: deleteBlocks,
             icon: 'icon-shanchu',
             shortcut: 'Delete'
-        },
-    ])
+        }
+    ]);
 }
 
 const editNode = ref<HTMLElement>();
@@ -544,11 +547,13 @@ onMounted(() => {
         shortcut.register({ keys: ['X', 'x'], ctrlKey: true }, cutBlocks);
         shortcut.register({ keys: ['Delete'] }, deleteBlocks);
         shortcut.register({ keys: ['F2'] }, () => {
-            editBlock(curBlocks.value[0], curOpenFile.value.blocks.findIndex((item) => item.id === curBlocks.value[0].id));
+            editBlock(
+                curBlocks.value[0],
+                curOpenFile.value.blocks.findIndex((item) => item.id === curBlocks.value[0].id)
+            );
         });
     }
-})
-
+});
 
 const addBlockDialogVisible = ref(false);
 const addBlockDirective = ref<DirectiveTree[]>([]);
@@ -565,7 +570,6 @@ function addBlockComfig() {
 const directiveAddTemp = ref<DirectiveData>();
 const addTempDialogVisible = ref(false);
 const addTempIndex = ref(0);
-
 
 function addBlockTemp() {
     const addDirective: DirectiveData = JSON.parse(JSON.stringify(directiveAddTemp.value));
@@ -592,7 +596,7 @@ function addBlockTemp() {
                 isControlEnd: true,
                 inputs: {},
                 outputs: {}
-            }
+            };
             curOpenFile.value.blocks.splice(addTempIndex.value + 1, 0, controlEnd);
         }
         saveCurFlow('添加');
@@ -604,8 +608,6 @@ function addBlockTemp() {
         curBlocks.value = [addDirective];
         saveCurFlow('编辑');
     }
-
-
 }
 
 /**
@@ -613,19 +615,21 @@ function addBlockTemp() {
  */
 const variables = ref<FlowVariable[]>([]);
 
-
 function emitHistoryChange() {
     const isRedo = curOpenFile.value.curHistoryIndex !== curOpenFile.value.historys.length - 1;
     const isUndo = curOpenFile.value.curHistoryIndex !== 0;
-    emit('historyChange', { curIndex: curOpenFile.value.curHistoryIndex, historys: curOpenFile.value.historys, isRedo, isUndo });
+    emit('historyChange', {
+        curIndex: curOpenFile.value.curHistoryIndex,
+        historys: curOpenFile.value.historys,
+        isRedo,
+        isUndo
+    });
 }
 
 /**
  * 保存流程
  */
-async function saveCurFlow(
-    saveName?: string
-) {
+async function saveCurFlow(saveName?: string) {
     const saveObj: any = JSON.parse(JSON.stringify(curOpenFile.value));
     const curIndex = curOpenFile.value.curHistoryIndex;
     const history = curOpenFile.value.historys;
@@ -633,7 +637,10 @@ async function saveCurFlow(
         history.splice(curIndex + 1);
     }
 
-    history.push({ saveName: saveName || '未命名', data: JSON.parse(JSON.stringify(saveObj.blocks)) });
+    history.push({
+        saveName: saveName || '未命名',
+        data: JSON.parse(JSON.stringify(saveObj.blocks))
+    });
 
     if (history.length > 20) {
         history.shift();
@@ -680,140 +687,205 @@ const redo = () => {
     emitHistoryChange();
 };
 
-
 defineExpose({
     undo,
-    redo,
+    redo
 });
-
 </script>
 
 <template>
     <div class="viewbox rounded bg-white flex-1">
         <div class="header bg-gray-100">
             <div class="files flex items-center">
-                <div class="file py-2 px-4 cursor-pointer hover:bg-white/60" v-for="(file) in openFiles" :key="file.name"
-                    :class="{ 'bg-white': file.name === curOpenFile.name }" @click="curOpenFile = file">{{
-                        file.name
-                    }}
+                <div
+                    class="file py-2 px-4 cursor-pointer hover:bg-white/60"
+                    v-for="file in openFiles"
+                    :key="file.name"
+                    :class="{ 'bg-white': file.name === curOpenFile.name }"
+                    @click="curOpenFile = file"
+                >
+                    {{ file.name }}
                 </div>
             </div>
         </div>
         <div class="viewbox relative">
             <div class="flex flex-row overflow-auto flex-1">
-                <div class="col-number flex flex-col items-center mt-2 pb-10 border-r border-gray-300"
-                    v-if="blocks.length > 0">
-                    <div class="flex justify-between items-center row-number w-20 " v-show="!block.hide"
-                        v-for="(block, index) in blocks">
+                <div
+                    class="col-number flex flex-col items-center mt-2 pb-10 border-r border-gray-300"
+                    v-if="blocks.length > 0"
+                >
+                    <div
+                        class="flex justify-between items-center row-number w-20"
+                        v-show="!block.hide"
+                        v-for="(block, index) in blocks"
+                    >
                         <div class="text-center h-16 flex items-center pl-2">
                             <div @click="breakpointClick(block, index)">{{ index + 1 }}</div>
-                            <div class="flex justify-center items-center ml-2 w-6 h-6 cursor-pointer"
-                                @click="breakpointClick(block, index)">
-                                <div class="w-3 h-3 rounded-full border-2 border-red-400 bg-red-300"
-                                    v-if="block.breakpoint"></div>
+                            <div
+                                class="flex justify-center items-center ml-2 w-6 h-6 cursor-pointer"
+                                @click="breakpointClick(block, index)"
+                            >
+                                <div
+                                    class="w-3 h-3 rounded-full border-2 border-red-400 bg-red-300"
+                                    v-if="block.breakpoint"
+                                ></div>
                             </div>
                         </div>
 
-                        <div v-if="block.isFold" class=" cursor-pointer" @click="foldClick(block, index)">
-                            <i class="iconfont text-sm hover:text-blue-800"
-                                :class="{ 'icon-jianhaoshouqi': block.open, 'icon-jiahaozhankai': !block.open }"></i>
+                        <div
+                            v-if="block.isFold"
+                            class="cursor-pointer"
+                            @click="foldClick(block, index)"
+                        >
+                            <i
+                                class="iconfont text-sm hover:text-blue-800"
+                                :class="{
+                                    'icon-jianhaoshouqi': block.open,
+                                    'icon-jiahaozhankai': !block.open
+                                }"
+                            ></i>
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-col flex-1 pt-2 pb-10 outline-none" tabindex="0" ref="editNode" @drop="flowEditDrag"
-                    @dragenter="flowEditDragEnter" @dragover="flowEditDragOver" @dragleave="flowEditDragLeave">
+                <div
+                    class="flex flex-col flex-1 pt-2 pb-10 outline-none"
+                    tabindex="0"
+                    ref="editNode"
+                    @drop="flowEditDrag"
+                    @dragenter="flowEditDragEnter"
+                    @dragover="flowEditDragOver"
+                    @dragleave="flowEditDragLeave"
+                >
                     <template v-if="blocks.length > 0">
-                        <div class="directive-block" v-for="(element, index) in blocks" :data-id="element.id"
-                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line }" :key="element.id"
-                            draggable="true" @dragstart="blockDragStart(element, index)"
-                            @contextmenu="directiveShowContextMenu($event, element)">
-
+                        <div
+                            class="directive-block"
+                            v-for="(element, index) in blocks"
+                            :data-id="element.id"
+                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line }"
+                            :key="element.id"
+                            draggable="true"
+                            @dragstart="blockDragStart(element, index)"
+                            @contextmenu="directiveShowContextMenu($event, element)"
+                        >
                             <div class="row flex items-center">
                                 <div class="flex flex-1 h-16" v-show="!element.hide">
-                                    <div class="h-full row-content group relative hover:bg-gray-100/50 flex-1 has-[.add:hover]:border-b-2 has-[.add:hover]:border-blue-500"
+                                    <div
+                                        class="h-full row-content group relative hover:bg-gray-100/50 flex-1 has-[.add:hover]:border-b-2 has-[.add:hover]:border-blue-500"
                                         :class="[
-                                            curBlocks.some(item => item.id === element.id) ? 'bg-gray-200/60 hover:bg-gray-200/60 ' : '',
-                                            dragenterBlock && dragenterBlock.id === element.id ?
-                                                (dragDirection === 'top' ? 'border-t-2 border-red-500' : 'border-b-2 border-blue-500') : '',
-
-                                        ]" @click="blockClick($event, element, index)"
-                                        @dblclick="blockDbClick($event, element, index)">
-
+                                            curBlocks.some((item) => item.id === element.id)
+                                                ? 'bg-gray-200/60 hover:bg-gray-200/60 '
+                                                : '',
+                                            dragenterBlock && dragenterBlock.id === element.id
+                                                ? dragDirection === 'top'
+                                                    ? 'border-t-2 border-red-500'
+                                                    : 'border-b-2 border-blue-500'
+                                                : ''
+                                        ]"
+                                        @click="blockClick($event, element, index)"
+                                        @dblclick="blockDbClick($event, element, index)"
+                                    >
                                         <div class="flex h-full">
                                             <div class="flex h-full">
-                                                <div class="border-gray-300 border-r" v-for="i in element.pdLvn" :key="i"
-                                                    :style="[`width:1px;`, element.pdLvn > 0 ? `border-left:1px solid rgb(229 231 235,0.3);margin-left:24px;` : '']">
-                                                </div>
+                                                <div
+                                                    class="border-gray-300 border-r"
+                                                    v-for="i in element.pdLvn"
+                                                    :key="i"
+                                                    :style="[
+                                                        `width:1px;`,
+                                                        element.pdLvn > 0
+                                                            ? `border-left:1px solid rgb(229 231 235,0.3);margin-left:24px;`
+                                                            : ''
+                                                    ]"
+                                                ></div>
                                             </div>
                                             <div class="py-2 felx flex-col w-0 flex-1 pl-3">
                                                 <div class="operation flex items-center gap-1">
                                                     <i class="iconfont" :class="element.icon"></i>
-                                                    <div class="font-bold ">{{ element.displayName }}
-                                                        <span v-show="element.isFold && !element.open">
+                                                    <div class="font-bold">
+                                                        {{ element.displayName }}
+                                                        <span
+                                                            v-show="element.isFold && !element.open"
+                                                        >
                                                             <span>[...]</span>
-                                                            <span class="ml-2 text-xs text-gray-400">{{ element.foldDesc
-                                                            }}</span>
+                                                            <span
+                                                                class="ml-2 text-xs text-gray-400"
+                                                                >{{ element.foldDesc }}</span
+                                                            >
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div class="description flex-1 ml-6 text-xs text-gray-400 truncate"
-                                                    v-html="element.commentShow">
-
-                                                </div>
+                                                <div
+                                                    class="description flex-1 ml-6 text-xs text-gray-400 truncate"
+                                                    v-html="element.commentShow"
+                                                ></div>
                                             </div>
                                         </div>
-                                        <div @click="addBlockDialogVisible = true" class="add hidden cursor-pointer
-                                     group-hover:flex absolute left-0 w-6 h-6
-                                      bottom-0 -translate-x-1/2 translate-y-1/2 z-10 ">
+                                        <div
+                                            @click="addBlockDialogVisible = true"
+                                            class="add hidden cursor-pointer group-hover:flex absolute left-0 w-6 h-6 bottom-0 -translate-x-1/2 translate-y-1/2 z-10"
+                                        >
                                             <div
-                                                class=" flex items-center justify-center border border-gray-300
-                                     text-gray-400 bg-white text-sm rounded-full overflow-hidden hover:bg-blue-500 hover:text-white">
+                                                class="flex items-center justify-center border border-gray-300 text-gray-400 bg-white text-sm rounded-full overflow-hidden hover:bg-blue-500 hover:text-white"
+                                            >
                                                 <i class="iconfont icon-jiahao text-2xl"></i>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </template>
-                    <div v-show="blocks.length === 0"
-                        class="flex flex-1 justify-center items-center text-center text-gray-400">
-
+                    <div
+                        v-show="blocks.length === 0"
+                        class="flex flex-1 justify-center items-center text-center text-gray-400"
+                    >
                         从左侧拖入指令，像搭积木一样完成自动化流程。
                     </div>
                 </div>
 
                 <!-- <div class="absolute top-2 h-full left-14 w-0.5  border-l border-gray-300"></div> -->
             </div>
-
         </div>
         <!-- 添加指令弹框 -->
-        <el-dialog v-model="addBlockDialogVisible" title="添加指令" width="500" align-center draggable>
+        <el-dialog
+            v-model="addBlockDialogVisible"
+            title="添加指令"
+            width="500"
+            align-center
+            draggable
+        >
             <div class="flex flex-col">
-                <el-cascader v-model="addBlockDirective" placeholder="选择要添加的指令" :options="directivesData" filterable />
+                <el-cascader
+                    v-model="addBlockDirective"
+                    placeholder="选择要添加的指令"
+                    :options="directivesData"
+                    filterable
+                />
             </div>
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="addBlockDialogVisible = false">取消</el-button>
-                    <el-button type="primary" @click="addBlockComfig">
-                        确定
-                    </el-button>
+                    <el-button type="primary" @click="addBlockComfig"> 确定 </el-button>
                 </div>
             </template>
         </el-dialog>
         <!-- 确认添加指令弹框 -->
-        <el-dialog v-if="directiveAddTemp" v-model="addTempDialogVisible" @close="directiveAddTemp = void 0"
-            :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`" width="642" top="30vh" draggable>
+        <el-dialog
+            v-if="directiveAddTemp"
+            v-model="addTempDialogVisible"
+            @close="directiveAddTemp = void 0"
+            :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`"
+            width="642"
+            top="30vh"
+            draggable
+        >
             <div class="flex flex-col max-h-80">
                 <AddDirective :directive="directiveAddTemp" :variables="variables" />
             </div>
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="addTempDialogVisible = false">取消</el-button>
-                    <el-button type="primary" @click="addBlockTemp">
-                        确定
-                    </el-button>
+                    <el-button type="primary" @click="addBlockTemp"> 确定 </el-button>
                 </div>
             </template>
         </el-dialog>
@@ -828,7 +900,7 @@ defineExpose({
 
     &::after {
         position: absolute;
-        content: "";
+        content: '';
         display: block;
         width: 1px;
         height: 100%;

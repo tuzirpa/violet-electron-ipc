@@ -11,15 +11,32 @@ export const robotUtil = {
     dataProcessing: {
         async log(content: string, block: Block) {
             sendLog('info', content, block);
+        },
+
+        async setVariable(type: string, value: any, block: Block) {
+            //{"type":"number","value":"123213sdfa${ffd}adsfa"}
+            if (type === 'number') {
+                return Number(value);
+            }
+            return value;
         }
     },
-    openBrowser: async function (options: any, block: Block) {
-        console.log('openBrowser985981598', options, block);
-        const isaa = true;
-        if (isaa) {
-            throw new Error('openBrowser error');
+    openBrowser: async function (
+        type: string,
+        executablePath: string,
+        displayName: string,
+        block: Block
+    ) {
+        if (type !== 'tuziChrome') {
+            if (executablePath === '') {
+                sendLog('error', `本地未安装 ${displayName}，请设置先安装 ${displayName}`, block);
+                throw new Error('未设置chrome路径');
+            }
         }
-        return puppeteer.launch({ headless: false });
+        const ops = { headless: false } as any;
+        executablePath && (ops.executablePath = executablePath);
+
+        return puppeteer.launch(ops);
     }
 };
 //循环执行指令 给指令套上一层 异常处理
