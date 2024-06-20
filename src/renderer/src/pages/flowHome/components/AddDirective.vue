@@ -129,7 +129,8 @@ onMounted(() => {
                             v-if="Object.keys(_directive.inputs).length > 0">
                             <template
                                 v-if="inputItem.addConfig && !inputItem.addConfig.isAdvanced && inputItemFilters(_directive, inputItem)">
-                                <div class="param-name">{{ inputItem.addConfig.label }}：</div>
+                                <div class="param-name" :class="{ 'required': inputItem.addConfig.required }">{{
+                                    inputItem.addConfig.label }}：</div>
                                 <div class="param-value flex-1">
                                     <div class="relative" v-if="inputItem.addConfig.type === 'string'">
                                         <InputValueVar v-model="inputItem.value" :variables="_variables"
