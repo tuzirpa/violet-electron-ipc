@@ -41,6 +41,10 @@ export interface AddConfig<T> {
      */
     label: string;
     /**
+     * 是否必填
+     */
+    required?: boolean;
+    /**
      * 是否为高级配置
      */
     isAdvanced?: boolean;
@@ -108,7 +112,7 @@ export interface DirectiveInput {
      */
     type: DataType;
 
-    addConfig?: AddConfig<AddConfigInputType>;
+    addConfig: AddConfig<AddConfigInputType>;
 }
 
 export interface DirectiveOutput {
@@ -124,10 +128,6 @@ export interface DirectiveOutput {
      * 输入类型
      */
     type: DataType;
-    /**
-     * 是否必填
-     */
-    required: boolean;
 
     addConfig?: AddConfig<AddConfigOnputType>;
 }

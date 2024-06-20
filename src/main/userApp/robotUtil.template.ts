@@ -11,6 +11,7 @@ export const sendLog = (level: LogLevel = 'info', message: string, data: Block, 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const robotUtil = {
+    sendLog,
     dataProcessing: {
         async log(content: string, block: Block) {
             sendLog('info', content, block);
@@ -66,6 +67,17 @@ export const robotUtil = {
                 webBrow.close();
                 sendLog('info', `关闭浏览器，成功`, block);
             }
+        }
+    },
+    flowControl: {
+        test: async function (operand1: any, operator: string, operand2: any, block: Block) {
+            const result = eval(`${operand1}${operator}${operand2}`);
+            sendLog(
+                'info',
+                `if条件判断结果：${operand1} ${operator} ${operand2} = ${result}`,
+                block
+            );
+            return result;
         }
     }
 };

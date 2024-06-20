@@ -46,6 +46,7 @@ export const directive: DirectiveTree = {
             addConfig: {
                 label: '变量类型',
                 type: 'select',
+                required: true,
                 defaultValue: 'string',
                 tip: '选择变量类型',
                 options: [

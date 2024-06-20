@@ -589,6 +589,20 @@ const addTempIndex = ref(0);
 
 function addBlockTemp() {
     const addDirective: DirectiveData = JSON.parse(JSON.stringify(directiveAddTemp.value));
+    console.log(addDirective, '添加节点确定');
+    let hasError = false;
+    for (const key in addDirective.inputs) {
+        if (Object.prototype.hasOwnProperty.call(addDirective.inputs, key)) {
+            const input = addDirective.inputs[key];
+            if (input.addConfig.required && !input.value) {
+                ElMessage.error(`必填字段：${input.addConfig.label}未填写`);
+                hasError = true;
+            }
+        }
+    }
+    if (hasError) {
+        return;
+    }
     if (!addDirective.id) {
         addDirective.id = uuid();
         curOpenFile.value.blocks.splice(addTempIndex.value, 0, addDirective);
@@ -601,11 +615,11 @@ function addBlockTemp() {
         }
 
         //判断如果添加的是控制流程开始需要自动添加控制流程结束
-        if (addDirective.isControl && addDirective.name === 'flowControls.if') {
+        if (addDirective.isControl && addDirective.name === 'flowControl.if') {
             const controlEnd: DirectiveData = {
                 id: uuid(),
                 pdLvn: 0,
-                name: 'flowControls.if.end',
+                name: 'flowControl.if.end',
                 displayName: 'End If',
                 comment: '结束条件判断',
                 isControl: false,
@@ -713,83 +727,45 @@ defineExpose({
     <div class="viewbox rounded bg-white flex-1">
         <div class="header bg-gray-100">
             <div class="files flex items-center">
-                <div
-                    class="file py-2 px-4 cursor-pointer hover:bg-white/60"
-                    v-for="file in openFiles"
-                    :key="file.name"
-                    :class="{ 'bg-white': file.name === curOpenFile.name }"
-                    @click="curOpenFile = file"
-                >
+                <div class="file py-2 px-4 cursor-pointer hover:bg-white/60" v-for="file in openFiles" :key="file.name"
+                    :class="{ 'bg-white': file.name === curOpenFile.name }" @click="curOpenFile = file">
                     {{ file.name }}
                 </div>
             </div>
         </div>
         <div class="viewbox relative">
             <div class="flex flex-row overflow-auto flex-1">
-                <div
-                    class="col-number flex flex-col items-center mt-2 pb-10 border-r border-gray-300"
-                    v-if="blocks.length > 0"
-                >
-                    <div
-                        class="flex justify-between items-center row-number w-20"
-                        v-show="!block.hide"
-                        v-for="(block, index) in blocks"
-                    >
+                <div class="col-number flex flex-col items-center mt-2 pb-10 border-r border-gray-300"
+                    v-if="blocks.length > 0">
+                    <div class="flex justify-between items-center row-number w-20" v-show="!block.hide"
+                        v-for="(block, index) in blocks">
                         <div class="text-center h-16 flex items-center pl-2">
                             <div @click="breakpointClick(block, index)">{{ index + 1 }}</div>
-                            <div
-                                class="flex justify-center items-center ml-2 w-6 h-6 cursor-pointer"
-                                @click="breakpointClick(block, index)"
-                            >
-                                <div
-                                    class="w-3 h-3 rounded-full border-2 border-red-400 bg-red-300"
-                                    v-if="block.breakpoint"
-                                ></div>
+                            <div class="flex justify-center items-center ml-2 w-6 h-6 cursor-pointer"
+                                @click="breakpointClick(block, index)">
+                                <div class="w-3 h-3 rounded-full border-2 border-red-400 bg-red-300"
+                                    v-if="block.breakpoint"></div>
                             </div>
                         </div>
 
-                        <div
-                            v-if="block.isFold"
-                            class="cursor-pointer"
-                            @click="foldClick(block, index)"
-                        >
-                            <i
-                                class="iconfont text-sm hover:text-blue-800"
-                                :class="{
-                                    'icon-jianhaoshouqi': block.open,
-                                    'icon-jiahaozhankai': !block.open
-                                }"
-                            ></i>
+                        <div v-if="block.isFold" class="cursor-pointer" @click="foldClick(block, index)">
+                            <i class="iconfont text-sm hover:text-blue-800" :class="{
+                                'icon-jianhaoshouqi': block.open,
+                                'icon-jiahaozhankai': !block.open
+                            }"></i>
                         </div>
                     </div>
                 </div>
-                <div
-                    class="flex flex-col flex-1 pt-2 pb-10 outline-none"
-                    tabindex="0"
-                    ref="editNode"
-                    @drop="flowEditDrag"
-                    @dragenter="flowEditDragEnter"
-                    @dragover="flowEditDragOver"
-                    @dragleave="flowEditDragLeave"
-                >
+                <div class="flex flex-col flex-1 pt-2 pb-10 outline-none" tabindex="0" ref="editNode" @drop="flowEditDrag"
+                    @dragenter="flowEditDragEnter" @dragover="flowEditDragOver" @dragleave="flowEditDragLeave">
                     <template v-if="blocks.length > 0">
-                        <div
-                            class="directive-block"
-                            v-for="(element, index) in blocks"
-                            :data-id="element.id"
-                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line }"
-                            :key="element.id"
-                            draggable="true"
-                            @dragstart="blockDragStart(element, index)"
-                            @contextmenu="directiveShowContextMenu($event, element)"
-                        >
-                            <div
-                                class="row flex items-center"
-                                :class="{ 'text-gray-400/50': element.disabled }"
-                            >
+                        <div class="directive-block" v-for="(element, index) in blocks" :data-id="element.id"
+                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line }" :key="element.id"
+                            draggable="true" @dragstart="blockDragStart(element, index)"
+                            @contextmenu="directiveShowContextMenu($event, element)">
+                            <div class="row flex items-center" :class="{ 'text-gray-400/50': element.disabled }">
                                 <div class="flex flex-1 h-16" v-show="!element.hide">
-                                    <div
-                                        class="h-full row-content group relative hover:bg-gray-100/50 flex-1 has-[.add:hover]:border-b-2 has-[.add:hover]:border-blue-500"
+                                    <div class="h-full row-content group relative hover:bg-gray-100/50 flex-1 has-[.add:hover]:border-b-2 has-[.add:hover]:border-blue-500"
                                         :class="[
                                             curBlocks.some((item) => item.id === element.id)
                                                 ? 'bg-gray-200/60 hover:bg-gray-200/60 '
@@ -799,53 +775,38 @@ defineExpose({
                                                     ? 'border-t-2 border-red-500'
                                                     : 'border-b-2 border-blue-500'
                                                 : ''
-                                        ]"
-                                        @click="blockClick($event, element, index)"
-                                        @dblclick="blockDbClick($event, element, index)"
-                                    >
+                                        ]" @click="blockClick($event, element, index)"
+                                        @dblclick="blockDbClick($event, element, index)">
                                         <div class="flex h-full">
                                             <div class="flex h-full">
-                                                <div
-                                                    class="border-gray-300 border-r"
-                                                    v-for="i in element.pdLvn"
-                                                    :key="i"
+                                                <div class="border-gray-300 border-r" v-for="i in element.pdLvn" :key="i"
                                                     :style="[
                                                         `width:1px;`,
                                                         element.pdLvn > 0
                                                             ? `border-left:1px solid rgb(229 231 235,0.3);margin-left:24px;`
                                                             : ''
-                                                    ]"
-                                                ></div>
+                                                    ]"></div>
                                             </div>
                                             <div class="py-2 felx flex-col w-0 flex-1 pl-3">
                                                 <div class="operation flex items-center gap-1">
                                                     <i class="iconfont" :class="element.icon"></i>
                                                     <div class="font-bold">
                                                         {{ element.displayName }}
-                                                        <span
-                                                            v-show="element.isFold && !element.open"
-                                                        >
+                                                        <span v-show="element.isFold && !element.open">
                                                             <span>[...]</span>
-                                                            <span
-                                                                class="ml-2 text-xs text-gray-400"
-                                                                >{{ element.foldDesc }}</span
-                                                            >
+                                                            <span class="ml-2 text-xs text-gray-400">{{ element.foldDesc
+                                                            }}</span>
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="description flex-1 ml-6 text-xs text-gray-400 truncate"
-                                                    v-html="element.commentShow"
-                                                ></div>
+                                                <div class="description flex-1 ml-6 text-xs text-gray-400 truncate"
+                                                    v-html="element.commentShow"></div>
                                             </div>
                                         </div>
-                                        <div
-                                            @click="addBlockDialogVisible = true"
-                                            class="add hidden cursor-pointer group-hover:flex absolute left-0 w-6 h-6 bottom-0 -translate-x-1/2 translate-y-1/2 z-10"
-                                        >
+                                        <div @click="addBlockDialogVisible = true"
+                                            class="add hidden cursor-pointer group-hover:flex absolute left-0 w-6 h-6 bottom-0 -translate-x-1/2 translate-y-1/2 z-10">
                                             <div
-                                                class="flex items-center justify-center border border-gray-300 text-gray-400 bg-white text-sm rounded-full overflow-hidden hover:bg-blue-500 hover:text-white"
-                                            >
+                                                class="flex items-center justify-center border border-gray-300 text-gray-400 bg-white text-sm rounded-full overflow-hidden hover:bg-blue-500 hover:text-white">
                                                 <i class="iconfont icon-jiahao text-2xl"></i>
                                             </div>
                                         </div>
@@ -854,10 +815,8 @@ defineExpose({
                             </div>
                         </div>
                     </template>
-                    <div
-                        v-show="blocks.length === 0"
-                        class="flex flex-1 justify-center items-center text-center text-gray-400"
-                    >
+                    <div v-show="blocks.length === 0"
+                        class="flex flex-1 justify-center items-center text-center text-gray-400">
                         从左侧拖入指令，像搭积木一样完成自动化流程。
                     </div>
                 </div>
@@ -866,20 +825,9 @@ defineExpose({
             </div>
         </div>
         <!-- 添加指令弹框 -->
-        <el-dialog
-            v-model="addBlockDialogVisible"
-            title="添加指令"
-            width="500"
-            align-center
-            draggable
-        >
+        <el-dialog v-model="addBlockDialogVisible" title="添加指令" width="500" align-center draggable>
             <div class="flex flex-col">
-                <el-cascader
-                    v-model="addBlockDirective"
-                    placeholder="选择要添加的指令"
-                    :options="directivesData"
-                    filterable
-                />
+                <el-cascader v-model="addBlockDirective" placeholder="选择要添加的指令" :options="directivesData" filterable />
             </div>
             <template #footer>
                 <div class="dialog-footer">
@@ -889,15 +837,8 @@ defineExpose({
             </template>
         </el-dialog>
         <!-- 确认添加指令弹框 -->
-        <el-dialog
-            v-if="directiveAddTemp"
-            v-model="addTempDialogVisible"
-            @close="directiveAddTemp = void 0"
-            :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`"
-            width="642"
-            top="30vh"
-            draggable
-        >
+        <el-dialog v-if="directiveAddTemp" v-model="addTempDialogVisible" @close="directiveAddTemp = void 0"
+            :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`" width="642" top="30vh" draggable>
             <div class="flex flex-col max-h-80">
                 <AddDirective :directive="directiveAddTemp" :variables="variables" />
             </div>

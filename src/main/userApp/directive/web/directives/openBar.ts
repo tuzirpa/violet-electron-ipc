@@ -38,7 +38,6 @@ export const directive: DirectiveTree = {
             name: 'page',
             display: '浏览器标签对象',
             type: 'chromePage',
-            required: false,
             addConfig: {
                 label: '浏览器对象',
                 type: 'variable',
@@ -50,7 +49,7 @@ export const directive: DirectiveTree = {
         const webBrowserValue = directive.inputs.webBrowser.value;
         const webUrl = directive.inputs.url.value;
 
-        return `var ${directive.outputs.pageBar.name} = await robotUtil.web.openBrowserPage(${webBrowserValue},'${webUrl}',${JSON.stringify(block)});`;
+        return `var ${directive.outputs.pageBar.name} = await robotUtil.web.openBrowserPage(${webBrowserValue},'${webUrl}',_block = ${JSON.stringify(block)});`;
     }
 };
 
