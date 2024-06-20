@@ -22,7 +22,7 @@ export const directive: DirectiveTree = {
         }
     },
     outputs: {},
-    toCode(directive: DirectiveTree, block: Block) {
+    async toCode(directive: DirectiveTree, block: Block) {
         return `await robotUtil.dataProcessing.log(${typeToCode(directive.inputs.content)},${JSON.stringify(block)});`;
     }
 };

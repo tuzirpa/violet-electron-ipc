@@ -2,7 +2,7 @@ import child_process from 'child_process';
 
 function regQueryExeCutablePath(regPath: string) {
     return new Promise<string>((resolve, reject) => {
-        child_process.exec(`REG QUERY ${regPath}`, function (error, stdout, stderr) {
+        child_process.exec(`REG QUERY "${regPath}"`, function (error, stdout, stderr) {
             console.log('stdout:' + stdout);
             console.log('stderr:' + stderr);
             if (error != null) {
@@ -10,7 +10,8 @@ function regQueryExeCutablePath(regPath: string) {
                 return;
             }
             const exePath = stdout.substring(stdout.indexOf('REG_SZ') + 6, stdout.indexOf(','));
-            resolve(exePath);
+            const ep = exePath.trim().replace(/\\/g, '/');
+            resolve(ep);
         });
     });
 }

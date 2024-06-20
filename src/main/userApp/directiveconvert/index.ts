@@ -14,7 +14,7 @@ import { SetVariableConvert } from './impl/SetVariableConvert';
 // directiveConverts.push(new FlowControlIfEndConvert());
 // directiveConverts.push(new SetVariableConvert());
 
-export function convertDirective(directive: DirectiveTree, index: number, flow: Flow): string {
+export async function convertDirective(directive: DirectiveTree, index: number, flow: Flow) {
     const toCode = directiveToCodeMap.get(directive.name);
     if (toCode) {
         const block: Block = {
@@ -26,7 +26,7 @@ export function convertDirective(directive: DirectiveTree, index: number, flow: 
             intervalTime: directive.intervalTime || 0,
             retryCount: directive.retryCount || 0
         };
-        return toCode(directive, block) + `//${JSON.stringify(block)}`;
+        return (await toCode(directive, block)) + `//${JSON.stringify(block)}`;
     }
 
     return 'console.log("未提供代码转换器")// 未提供代码转换器';

@@ -7,7 +7,7 @@ console.log(groups, 'groups');
 
 export const directiveToCodeMap = new Map<
     string,
-    (directive: DirectiveTree, block: Block) => string
+    (directive: DirectiveTree, block: Block) => Promise<string>
 >();
 
 export const directives: DirectiveTree[] = [];

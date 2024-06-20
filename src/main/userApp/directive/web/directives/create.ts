@@ -51,10 +51,10 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    toCode(directive: DirectiveTree, block: Block) {
+    async toCode(directive: DirectiveTree, block: Block) {
         const inputWebType = directive.inputs.webType;
 
-        const executablePathValue = getExeCutablePath(inputWebType.value);
+        const executablePathValue = await getExeCutablePath(inputWebType.value);
 
         return `var ${directive.outputs.browser.name} = await robotUtil.openBrowser('${inputWebType.value}', '${executablePathValue}' ,'${inputWebType.display}',${JSON.stringify(block)});`;
     }

@@ -203,7 +203,7 @@ export interface DirectiveTree {
      */
     retryCount?: number;
 
-    toCode?: (directive: DirectiveTree, block: Block) => string;
+    toCode?: (directive: DirectiveTree, block: Block) => Promise<string>;
 }
 
 export interface Block {

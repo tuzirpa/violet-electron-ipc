@@ -36,7 +36,7 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    toCode(directive: DirectiveTree) {
+    async toCode(directive: DirectiveTree) {
         return `var ${directive.outputs.pageBar.name} = await robotUtil.openBrowserPage('${directive.inputs.url.value}');`;
     }
 };

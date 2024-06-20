@@ -92,7 +92,7 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    toCode(directive, block: Block) {
+    async toCode(directive, block: Block) {
         const name = directive.outputs.varName.name;
         let value = directive.inputs.varValue;
         const varTypeType = directive.inputs.varType.value;

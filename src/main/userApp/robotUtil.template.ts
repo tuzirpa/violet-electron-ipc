@@ -1,8 +1,11 @@
 import puppeteer from 'puppeteer';
 import type { Block, LogLevel } from './types';
 
-export const sendLog = (level: LogLevel = 'info', message: string, data: Block) => {
-    console.log(`robotUtilLog`, `${JSON.stringify({ level, time: Date.now(), message, data })}`);
+export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
+    console.log(
+        `robotUtilLog`,
+        `${JSON.stringify({ level, time: Date.now(), message, data, error })}`
+    );
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,9 +54,16 @@ function forRobotUtil(obj: any) {
                     try {
                         const result = await (value as Function).apply(this, args);
                         return result;
-                    } catch (error) {
+                    } catch (error: any) {
                         const blockInfo = args[args.length - 1] as Block;
-                        sendLog('error', `执行指令 ${blockInfo.directiveName} 异常`, blockInfo);
+                        console.log(error);
+
+                        sendLog(
+                            'error',
+                            `执行指令 ${blockInfo.directiveDisplayName} 异常`,
+                            blockInfo,
+                            error
+                        );
                         if (blockInfo.failureStrategy === 'terminate') {
                             sendLog(
                                 'error',
