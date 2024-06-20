@@ -1,4 +1,4 @@
-import puppeteer, { Browser, PuppeteerLaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import type { Block, LogLevel } from './types';
 
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
@@ -56,6 +56,16 @@ export const robotUtil = {
             await page.goto(url);
             sendLog('info', `打开网页：${url}，成功`, block);
             return page;
+        },
+
+        closeBrowserPage: async function (webBrow: Browser, page: Page, block: Block) {
+            if (page) {
+                page.close();
+                sendLog('info', `网页关闭，成功`, block);
+            } else {
+                webBrow.close();
+                sendLog('info', `关闭浏览器，成功`, block);
+            }
         }
     }
 };

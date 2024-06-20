@@ -6,7 +6,8 @@ export type DataType =
     | 'object'
     | 'array'
     | 'any'
-    | 'chrome';
+    | 'chrome'
+    | 'chromePage';
 
 export interface FlowVariable {
     /**
@@ -68,6 +69,11 @@ export interface AddConfig<T> {
      * 输入默认值
      */
     defaultValue?: any;
+
+    /**
+     * 选项显示表达式
+     */
+    filters?: string;
 
     /**
      * 输入限制

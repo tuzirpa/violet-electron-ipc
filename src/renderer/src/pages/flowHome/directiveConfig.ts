@@ -30,6 +30,7 @@ export const typeDisplay = {
     array: '数组',
     any: '任意值',
     chrome: '浏览器对象',
+    chromePage: '浏览器标签页',
     undefined: '未定义'
 };
 

@@ -37,7 +37,7 @@ export const directive: DirectiveTree = {
         pageBar: {
             name: 'page',
             display: '浏览器标签对象',
-            type: 'any',
+            type: 'chromePage',
             required: false,
             addConfig: {
                 label: '浏览器对象',

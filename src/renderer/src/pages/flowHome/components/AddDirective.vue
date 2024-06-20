@@ -77,6 +77,14 @@ function filePathSelect(e, inputItem: DirectiveInput) {
     input.click();
 }
 
+function inputItemFilters(directive: DirectiveTree, inputItem: DirectiveInput) {
+    if (inputItem.addConfig?.filters) {
+        const fun = new Function('return ' + inputItem.addConfig.filters);
+        return fun.apply(directive);
+    }
+    return true;
+}
+
 const curInstance = getCurrentInstance();
 onMounted(() => {
     console.log(curInstance);
@@ -126,7 +134,13 @@ onMounted(() => {
                             v-for="inputItem of _directive.inputs"
                             v-if="Object.keys(_directive.inputs).length > 0"
                         >
-                            <template v-if="inputItem.addConfig && !inputItem.addConfig.isAdvanced">
+                            <template
+                                v-if="
+                                    inputItem.addConfig &&
+                                    !inputItem.addConfig.isAdvanced &&
+                                    inputItemFilters(_directive, inputItem)
+                                "
+                            >
                                 <div class="param-name">{{ inputItem.addConfig.label }}：</div>
                                 <div class="param-value flex-1">
                                     <div
@@ -209,9 +223,6 @@ onMounted(() => {
                                     </ElTooltip>
                                 </div>
                             </template>
-                            <div v-else>
-                                <div>没有输入参数配置</div>
-                            </div>
                         </div>
                         <div v-else>没有输入参数</div>
                     </div>
