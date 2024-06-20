@@ -144,6 +144,12 @@ const historys = ref<{
 });
 const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
 
+function runLogsRowClassName({
+    row
+}) {
+    return row.level;
+}
+
 // 添加逻辑
 </script>
 
@@ -240,7 +246,7 @@ const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
                     <BoxDraggable class="viewbox left-sidebar border-t" :height="270" :resize-top="true">
                         <el-tabs v-model="bottomTabsActiveName" :size="'small'" class="viewbox flex-1">
                             <el-tab-pane label="运行日志" name="run-logs">
-                                <el-table :data="runLogs" :border="true" style="width: 100%;
+                                <el-table :data="runLogs" :border="true" :row-class-name="runLogsRowClassName" style="width: 100%;
                                         height: calc(var(--draggable-height) - 60px);
                                     ">
                                     <el-table-column prop="level" label="消息类型" width="100" />
@@ -303,6 +309,15 @@ const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
 // 添加样式
 .chongzuo {
     transform: scaleX(-1);
+}
+
+
+::v-deep(.el-table .error) {
+    color: red;
+}
+
+::v-deep(.el-table .info) {
+    color: blue;
 }
 
 ::v-deep(.el-tabs__content) {

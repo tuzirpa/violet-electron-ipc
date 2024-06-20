@@ -29,39 +29,46 @@ function forRobotUtil(obj: any) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
             const value = obj[key];
             if (typeof value === 'function') {
+                let retryCountNum = 0;
                 obj[key] = async function aaa(...args: any[]) {
                     try {
-                        const result = await value.call(this, ...args);
+                        const result = await (value as Function).apply(this, args);
                         return result;
                     } catch (error) {
-                        console.log('robotUtil', error);
-                        const blockInfo = args.pop() as Block;
+                        const blockInfo = args[args.length - 1] as Block;
                         sendLog('error', `执行指令 ${blockInfo.directiveName} 异常`, blockInfo);
                         if (blockInfo.failureStrategy === 'terminate') {
                             sendLog(
                                 'error',
-                                `执行指令 ${blockInfo.directiveName} 异常,终止流程`,
+                                `执行指令 ${blockInfo.directiveDisplayName} 异常,终止流程`,
                                 blockInfo
                             );
-                            setTimeout(() => {
-                                process.exit(1);
-                            }, 500);
+                            process.exit(1);
                         } else if (blockInfo.failureStrategy === 'ignore') {
                             sendLog(
                                 'error',
-                                `执行指令 ${blockInfo.directiveName} 异常 ,忽略错误`,
+                                `执行指令 ${blockInfo.directiveDisplayName} 异常 ,忽略错误`,
                                 blockInfo
                             );
                             return '';
                         } else {
                             sendLog(
                                 'error',
-                                `执行指令 ${blockInfo.directiveName} 异常 ,${blockInfo.intervalTime} 秒后重试`,
+                                `执行指令 ${blockInfo.directiveDisplayName} 异常 ,${blockInfo.intervalTime} 秒后重试第${retryCountNum}次`,
                                 blockInfo
                             );
                             await sleep(blockInfo.intervalTime * 1000);
+                            retryCountNum++;
+                            if (retryCountNum > blockInfo.retryCount) {
+                                sendLog(
+                                    'error',
+                                    `执行指令 ${blockInfo.directiveDisplayName} 异常 ,重试次数达到上限`,
+                                    blockInfo
+                                );
+                                process.exit(1);
+                            }
                             console.log('重试执行指令', this, ...args);
-                            return aaa.call(this, args);
+                            return aaa.apply(this, args);
                         }
                     }
                 };

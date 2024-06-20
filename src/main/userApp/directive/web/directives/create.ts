@@ -59,7 +59,7 @@ export const directive: DirectiveTree = {
         const inputWebType = directive.inputs.webType;
         const iw = JSON.parse(JSON.stringify(inputWebType));
         delete iw.addConfig;
-        return `var ${directive.outputs.browser.name} = robotUtil.openBrowser(${JSON.stringify(iw)},${JSON.stringify(block)});`;
+        return `var ${directive.outputs.browser.name} = await robotUtil.openBrowser(${JSON.stringify(iw)},${JSON.stringify(block)});`;
     }
 };
 
