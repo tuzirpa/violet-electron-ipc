@@ -59,7 +59,7 @@ export default class UserApp {
         this.id = id;
         this.appDir = path.join(UserApp.userAppLocalDir, this.id);
         this.appDevDir = path.join(this.appDir, 'dev');
-        this.appRobotUtilDir = path.join(this.appDir, 'robot');
+        this.appRobotUtilDir = path.join(this.appDir, 'robotUtil');
 
         this.init();
     }
@@ -137,7 +137,7 @@ export default class UserApp {
         }
         // 写入robotUtil文件
         const robotUtilContent = fs.readFileSync(rebotUtilPath, 'utf-8');
-        fs.writeFileSync(path.join(this.appRobotUtilDir, 'robotUtil.js'), robotUtilContent);
+        fs.writeFileSync(path.join(this.appRobotUtilDir, 'index.js'), robotUtilContent);
     }
 
     initFlows() {
