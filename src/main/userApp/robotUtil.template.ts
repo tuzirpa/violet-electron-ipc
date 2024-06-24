@@ -78,6 +78,14 @@ export const robotUtil = {
                 block
             );
             return result;
+        },
+        rangeIterator: async function (start: number, end: number, step: number, block: Block) {
+            const result: number[] = [];
+            for (let i = start; i <= end; i += step) {
+                result.push(i);
+            }
+            sendLog('info', `生成循环数成功: [${start},${end}]`, block);
+            return result;
         }
     }
 };

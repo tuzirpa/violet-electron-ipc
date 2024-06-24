@@ -5,6 +5,7 @@ export const directive: DirectiveTree = {
     name: 'flowControl.if',
     displayName: 'IF 条件',
     icon: 'icon-web-create',
+    sort: 10,
     isControl: true,
     isControlEnd: false,
     comment: '判断${operand1} ${operator} ${operand2} 是否成立，如果成立，则执行以下操作',

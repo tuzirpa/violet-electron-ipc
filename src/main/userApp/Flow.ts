@@ -64,7 +64,10 @@ export default class Flow {
             content.push(jsCode);
         }
         content.push(' } catch (error) {');
-        content.push(`   robotUtil.sendLog('error', '致命错误,退出流程', _block);`);
+        content.push(`   console.log(error);`);
+        content.push(
+            `   robotUtil.sendLog('error', '致命错误,退出流程:' + error.message, _block);`
+        );
         content.push(' }');
 
         content.push('}, 1000);');

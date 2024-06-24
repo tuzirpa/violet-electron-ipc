@@ -31,7 +31,7 @@ for (const key in groups) {
 directives.sort((a, b) => {
     const asort = a.sort || 0;
     const bsort = b.sort || 0;
-    return bsort - asort;
+    return asort - bsort;
 });
 
 /**

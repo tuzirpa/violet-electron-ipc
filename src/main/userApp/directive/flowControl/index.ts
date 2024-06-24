@@ -7,7 +7,7 @@ const modules: { [key: string]: { default: DirectiveTree } } = import.meta.glob(
     }
 );
 
-const web: DirectiveTree = {
+const directives: DirectiveTree = {
     name: '',
     sort: 1,
     displayName: '流程控制',
@@ -20,8 +20,14 @@ const web: DirectiveTree = {
 for (const key in modules) {
     if (Object.prototype.hasOwnProperty.call(modules, key)) {
         const module = modules[key];
-        web.children?.push(module.default);
+        directives.children?.push(module.default);
     }
 }
 
-export default web;
+directives.children?.sort((a, b) => {
+    const asort = a.sort || 0;
+    const bsort = b.sort || 0;
+    return asort - bsort;
+});
+
+export default directives;

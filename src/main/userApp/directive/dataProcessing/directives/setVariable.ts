@@ -1,36 +1,6 @@
 import { DirectiveTree, Block } from '../../../types';
 import { typeToCode } from '../../convertUtils';
 
-/**
- * {
-                name: 'setVariable',
-                displayName: '设置变量',
-                isControl: false,
-                isControlEnd: false,
-                comment: '设置${varType}变量 ${varName} 值为 ${varValue}',
-                inputs: {
-                    varType: {
-                        name: '变量类型',
-                        value: '',
-                        display: '',
-                        type: 'string'
-                    },
-                    varValue: {
-                        name: '变量值',
-                        value: '',
-                        type: 'string'
-                    }
-                },
-                outputs: {
-                    varName: {
-                        name: 'variable',
-                        required: true,
-                        type: 'string',
-                        display: '变量名'
-                    }
-                }
-            },
- */
 export const directive: DirectiveTree = {
     name: 'setVariable',
     displayName: '设置变量',
@@ -83,7 +53,6 @@ export const directive: DirectiveTree = {
     outputs: {
         varName: {
             name: 'variable',
-            required: true,
             type: 'string',
             display: '变量名',
             addConfig: {

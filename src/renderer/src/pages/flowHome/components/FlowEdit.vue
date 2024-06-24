@@ -123,13 +123,18 @@ const blocks = computed(() => {
         curOpenFile.value.blocks[index].pdLvn = pdLvn;
         //是否有折叠
         curOpenFile.value.blocks[index].isFold = false;
-
-        if (block.isControl) {
+        if (block.isElse) {
+            pdLvn--;
+            pdLvn = pdLvn < 0 ? 0 : pdLvn;
+            curOpenFile.value.blocks[index].pdLvn = pdLvn;
             curOpenFile.value.blocks[index].isFold = true;
             curOpenFile.value.blocks[index].open = true;
             pdLvn++;
-        }
-        if (block.isControlEnd) {
+        } else if (block.isControl) {
+            curOpenFile.value.blocks[index].isFold = true;
+            curOpenFile.value.blocks[index].open = true;
+            pdLvn++;
+        } else if (block.isControlEnd) {
             pdLvn--;
             pdLvn = pdLvn < 0 ? 0 : pdLvn;
             curOpenFile.value.blocks[index].pdLvn = pdLvn;
@@ -170,6 +175,9 @@ function getFoldSub(blockParam: DirectiveData) {
     const index = curOpenFile.value.blocks.findIndex((block) => block.id === blockParam.id);
     for (let i = index + 1; i < curOpenFile.value.blocks.length; i++) {
         const tempBlock = curOpenFile.value.blocks[i];
+        if (tempBlock.isElse) {
+            break;
+        }
         subBlocks.push(tempBlock);
         if (blockParam.pdLvn === tempBlock.pdLvn) {
             break;

@@ -166,6 +166,11 @@ export interface DirectiveTree {
     isControl?: boolean;
 
     /**
+     * 是否流程控制指令 （else）
+     */
+    isElse?: boolean;
+
+    /**
      * 是否流程控制指令结束 （if, for, while, switch）
      */
     isControlEnd?: boolean;
