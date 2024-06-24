@@ -17,7 +17,8 @@ export const directive: DirectiveTree = {
             // errorHadnler: 'error',
             addConfig: {
                 label: '选择要关闭的浏览器',
-                type: 'variable'
+                type: 'variable',
+                filtersType: 'sq.chrome'
             }
         }
     },

@@ -57,7 +57,7 @@ function varSelectValChange(val: string) {
                         >
                             <div class="item" @click="varSelectValChange(variable.name)">
                                 {{ variable.name }}
-                                ({{ typeDisplay[variable.type] }})
+                                ({{ variable.comment }})
                             </div>
                         </div>
                     </template>

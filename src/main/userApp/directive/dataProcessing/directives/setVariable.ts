@@ -29,10 +29,6 @@ export const directive: DirectiveTree = {
                         value: 'number'
                     },
                     {
-                        label: '浏览器对象',
-                        value: 'chrome'
-                    },
-                    {
                         label: '任意对象',
                         value: 'any'
                     }
@@ -54,7 +50,7 @@ export const directive: DirectiveTree = {
         varName: {
             name: 'variable',
             type: 'string',
-            display: '变量名',
+            display: '字符串',
             addConfig: {
                 label: '变量名',
                 type: 'variable',
@@ -66,12 +62,9 @@ export const directive: DirectiveTree = {
         const name = directive.outputs.varName.name;
         let value = directive.inputs.varValue;
         const varTypeType = directive.inputs.varType.value;
-        let valueCode = typeToCode(value);
-        if (varTypeType === 'chrome') {
-            valueCode = directive.inputs.varValue.value.substring(
-                2,
-                directive.inputs.varValue.value.length - 1
-            );
+        let valueCode = value.value;
+        if (varTypeType === 'number' && varTypeType === 'string') {
+            valueCode = typeToCode(value);
         }
 
         return `var ${name} = await robotUtil.dataProcessing.setVariable('${varTypeType}',${valueCode},${JSON.stringify(block)});`;

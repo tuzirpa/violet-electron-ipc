@@ -9,6 +9,7 @@ export const directive: DirectiveTree = {
     isControl: false,
     isControlEnd: false,
     comment: '启动${webType},保存至：${browser}',
+
     inputs: {
         webType: {
             name: 'webType',
@@ -55,8 +56,8 @@ export const directive: DirectiveTree = {
     outputs: {
         browser: {
             name: 'web_page',
-            display: '浏览器对象',
-            type: 'chrome',
+            display: 'SQ-Web浏览器',
+            type: 'sq.chrome',
             addConfig: {
                 label: '浏览器对象',
                 type: 'variable',

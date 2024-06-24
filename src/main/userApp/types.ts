@@ -17,7 +17,7 @@ export interface FlowVariable {
     /**
      * 变量类型
      */
-    type: DataType;
+    type: string;
     /**
      * 变量描述
      */
@@ -53,6 +53,12 @@ export interface AddConfig<T> {
      * 添加配置类型
      */
     type: T;
+
+    /**
+     * 类型过滤 警告用户输入的类型不符合要求 不做强制
+     */
+    filtersType?: string;
+
     /**
      * type为select时，选项列表
      */
@@ -124,10 +130,11 @@ export interface DirectiveOutput {
      * 描述显示的值 (可选) 不填则显示value
      */
     display?: string;
+
     /**
-     * 输入类型
+     * 输出类型
      */
-    type: DataType;
+    type: string;
 
     addConfig?: AddConfig<AddConfigOnputType>;
 }

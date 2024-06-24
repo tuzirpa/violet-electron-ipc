@@ -14,6 +14,7 @@ const props = defineProps<{
 
 const _directive = ref(props.directive);
 const _variables = ref(props.variables);
+console.log(_variables);
 
 _directive.value.failureStrategy = _directive.value.failureStrategy || 'terminate';
 
@@ -65,6 +66,18 @@ function optionChange(e: string, inputItem: DirectiveInput) {
     }
 
     inputItem.display = inputItem.addConfig.options?.find((item) => item.value === e)?.label;
+
+    //特殊处理 设置变量指令
+    if (_directive.value.name === 'setVariable') {
+        _directive.value.outputs.varName.display = _directive.value.inputs.varType.display;
+        if (_directive.value.inputs.varType.value === 'any') {
+            _directive.value.inputs.varValue.addConfig.type = 'variable';
+            _directive.value.inputs.varValue.value = '';
+        } else {
+            _directive.value.inputs.varValue.addConfig.type = _directive.value.inputs.varType.value;
+        }
+    }
+
     console.log(inputItem.display);
 }
 
