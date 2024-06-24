@@ -15,7 +15,7 @@ export const directive: DirectiveTree = {
             type: 'number',
             addConfig: {
                 required: true,
-                type: 'string',
+                type: 'variable',
                 label: '开始数值',
                 defaultValue: 1
             }
@@ -25,7 +25,7 @@ export const directive: DirectiveTree = {
             value: '',
             type: 'number',
             addConfig: {
-                type: 'string',
+                type: 'variable',
                 label: '结束数值',
                 required: true
             }
@@ -36,7 +36,7 @@ export const directive: DirectiveTree = {
             type: 'number',
             addConfig: {
                 required: true,
-                type: 'string',
+                type: 'variable',
                 label: '增长值（步长）',
                 defaultValue: 1
             }

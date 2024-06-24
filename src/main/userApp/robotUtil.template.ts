@@ -95,7 +95,11 @@ export const robotUtil = {
             for (let i = start; i <= end; i += step) {
                 result.push(i);
             }
-            sendLog('info', `生成循环数成功: [${start},${end}]`, block);
+            sendLog(
+                'info',
+                `生成循环数成功: [${start},${end}],步长${step}，结果：${result}`,
+                block
+            );
             return result;
         }
     }

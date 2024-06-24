@@ -230,7 +230,8 @@ function runLogsRowClassName({
             <div class="flex flex-1 flex-row viewbox">
                 <!-- 指令区 -->
                 <BoxDraggable class="viewbox left-sidebar border-r" :width="250" :resize-right="true">
-                    <DirectiveTree class="directive-edit flex-1 wrapbox p-1"></DirectiveTree>
+                    <DirectiveTree class="directive-edit flex-1 wrapbox p-1" @add-directive="flowEditRef?.addBlock($event)">
+                    </DirectiveTree>
                 </BoxDraggable>
                 <div class="main-content viewbox flex-1 bg-gray-100">
                     <div class="flow-edit flex-1 viewbox p-2">

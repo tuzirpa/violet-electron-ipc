@@ -8,6 +8,11 @@ import { useDirective } from '../directive';
 import { FilterValue, TreeNodeData } from 'element-plus/es/components/tree/src/tree.type';
 import Node from 'element-plus/es/components/tree/src/model/node';
 
+
+const emit = defineEmits<{
+    (e: 'addDirective', data: DirectiveTree): void;
+}>();
+
 const handleNodeClick = (data: DirectiveTree) => {
     console.log(data);
 };
@@ -36,6 +41,8 @@ const filterNode = (value: FilterValue, data: TreeNodeData, _node: Node): boolea
 function handleDragStart(_event: DragEvent, data: DirectiveTree) {
     dragData.value = { add: true, data };
 }
+
+
 </script>
 
 <template>
@@ -44,46 +51,24 @@ function handleDragStart(_event: DragEvent, data: DirectiveTree) {
             <div class="header flex justify-between items-center mt-2 gap-1">
                 <div class="w-8 font-bold text-sm">指令</div>
                 <div class="flex-1">
-                    <ElInput
-                        class="h-6 overflow-hidden"
-                        :prefix-icon="searchIcon"
-                        v-model="searchValue"
-                        placeholder="搜索指令"
-                        clearable
-                    />
+                    <ElInput class="h-6 overflow-hidden" :prefix-icon="searchIcon" v-model="searchValue" placeholder="搜索指令"
+                        clearable />
                 </div>
-                <BtnTip
-                    :icon="'icon-zhankai'"
-                    text="展开全部指令"
-                    class="px-0.5 py-0.5 text-xs text-gray-400"
-                />
-                <BtnTip
-                    :icon="'icon-fanhui'"
-                    text="隐藏"
-                    class="px-0.5 p-0.5 text-xs text-gray-400"
-                />
+                <BtnTip :icon="'icon-zhankai'" text="展开全部指令" class="px-0.5 py-0.5 text-xs text-gray-400" />
+                <BtnTip :icon="'icon-fanhui'" text="隐藏" class="px-0.5 p-0.5 text-xs text-gray-400" />
             </div>
             <div class="wrapbox">
-                <el-tree
-                    ref="treeRef"
-                    style="--el-tree-node-content-height: 34px"
-                    :data="data"
-                    :props="defaultProps"
-                    @node-click="handleNodeClick"
-                    :filterNodeMethod="filterNode"
-                >
+                <el-tree ref="treeRef" style="--el-tree-node-content-height: 34px" :data="data" :props="defaultProps"
+                    @node-click="handleNodeClick" :filterNodeMethod="filterNode">
                     <template #default="{ node, data }">
                         <template v-if="node.isLeaf">
-                            <div
-                                class="flex-1 flex justify-between items-center"
-                                draggable="true"
-                                @dragstart="handleDragStart($event, data)"
-                            >
+                            <div class="flex-1 flex justify-between items-center" draggable="true"
+                                @dblclick="emit('addDirective', data)" @dragstart="handleDragStart($event, data)">
                                 <div class="tree-node py-2 flex items-center gap-1 align-middle">
                                     <i class="iconfont text-xl" :class="data.icon"></i>
                                     <span>{{ data.displayName }}</span>
                                 </div>
-                                <div v-if="node.isLeaf" @click.stop="$emit('addSubTask', data)">
+                                <div v-if="node.isLeaf" @click.stop="emit('addDirective', data)">
                                     <i class="iconfont icon-tianjia mr-1"></i>
                                 </div>
                             </div>

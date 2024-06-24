@@ -24,7 +24,7 @@ function varClick() {
 function varSelectValChange(val: string) {
     console.log(val);
     varShow.value = false;
-    model.value = model.value + `\${${val}}`;
+    model.value = (model.value ?? '') + `\${${val}}`;
 }
 </script>
 
