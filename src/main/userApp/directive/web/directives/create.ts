@@ -14,6 +14,7 @@ export const directive: DirectiveTree = {
         webType: {
             name: 'webType',
             value: '',
+            display: '内置浏览器',
             type: 'string',
             // errorHadnler: 'error',
             addConfig: {
@@ -55,7 +56,7 @@ export const directive: DirectiveTree = {
     },
     outputs: {
         browser: {
-            name: 'web_page',
+            name: '',
             display: 'SQ-Web浏览器',
             type: 'sq.chrome',
             addConfig: {

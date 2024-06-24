@@ -60,6 +60,11 @@ export interface AddConfig<T> {
     filtersType?: string;
 
     /**
+     * 自动补全 从上下文中 过滤出符合 filtersType 出来的第一个值进行自动补全
+     */
+    autoComplete?: true;
+
+    /**
      * type为select时，选项列表
      */
     options?: {

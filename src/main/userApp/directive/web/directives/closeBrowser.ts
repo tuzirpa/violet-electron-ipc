@@ -18,7 +18,8 @@ export const directive: DirectiveTree = {
             addConfig: {
                 label: '选择要关闭的浏览器',
                 type: 'variable',
-                filtersType: 'sq.chrome'
+                filtersType: 'sq.chrome',
+                autoComplete: true
             }
         }
     },

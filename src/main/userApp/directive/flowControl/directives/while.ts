@@ -1,14 +1,13 @@
 import { DirectiveTree, Block } from '../../../types';
-import { typeToCode } from '../../convertUtils';
 
 export const directive: DirectiveTree = {
-    name: 'flowControl.if',
-    displayName: 'IF 条件',
+    name: 'flowControl.while',
+    displayName: 'while 循环',
     icon: 'icon-web-create',
-    sort: 10,
+    sort: 20,
     isControl: true,
     isControlEnd: false,
-    comment: '判断${operand1} ${operator} ${operand2} 是否成立，如果成立，则执行以下操作',
+    comment: '从${startIndex}开始循环到${endIndex}结束，步长为${step}，循环位置保存至${index}',
     inputs: {
         operand1: {
             name: '条件操作数1',
@@ -24,7 +23,7 @@ export const directive: DirectiveTree = {
             name: '关系',
             value: '==',
             display: '等于',
-            type: 'conditions',
+            type: 'string',
             addConfig: {
                 type: 'select',
                 label: '关系',
@@ -35,11 +34,7 @@ export const directive: DirectiveTree = {
                     { value: '>', label: '大于' },
                     { value: '<', label: '小于' },
                     { value: '>=', label: '大于等于' },
-                    { value: '<=', label: '小于等于' },
-                    { value: 'in', label: '包含' },
-                    { value: 'not in', label: '不包含' },
-                    { value: 'is', label: '等于true' },
-                    { value: 'is not', label: '不等true' }
+                    { value: '<=', label: '小于等于' }
                 ],
                 defaultValue: '=='
             }
@@ -55,11 +50,21 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    outputs: {},
+    outputs: {
+        index: {
+            name: 'loop_index',
+            type: 'number',
+            addConfig: {
+                required: true,
+                type: 'variable',
+                label: '循环位置保存至'
+            }
+        }
+    },
     async toCode(directive: DirectiveTree, block: Block) {
-        const { operand1, operator, operand2 } = directive.inputs;
-
-        return `if (await robotUtil.flowControl.test(${typeToCode(operand1)},'${operator.value}',${typeToCode(operand2)},_block = ${JSON.stringify(block)})) {`;
+        const { startIndex, endIndex, step } = directive.inputs;
+        const { index } = directive.outputs;
+        return `for (let ${index.name} of await robotUtil.flowControl.rangeIterator(${startIndex.value}, ${endIndex.value}, ${step.value},_block = ${JSON.stringify(block)})) {`;
     }
 };
 

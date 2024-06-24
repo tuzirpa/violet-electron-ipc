@@ -48,13 +48,13 @@ export const directive: DirectiveTree = {
     },
     outputs: {
         varName: {
-            name: 'variable',
+            name: '',
             type: 'string',
             display: '字符串',
             addConfig: {
                 label: '变量名',
                 type: 'variable',
-                defaultValue: ''
+                defaultValue: 'variable'
             }
         }
     },
