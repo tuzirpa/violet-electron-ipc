@@ -11,13 +11,13 @@ export const directive: DirectiveTree = {
     inputs: {
         startIndex: {
             name: '开始数值',
-            value: '0',
+            value: '1',
             type: 'number',
             addConfig: {
                 required: true,
                 type: 'string',
                 label: '开始数值',
-                defaultValue: 0
+                defaultValue: 1
             }
         },
         endIndex: {
@@ -37,7 +37,8 @@ export const directive: DirectiveTree = {
             addConfig: {
                 required: true,
                 type: 'string',
-                label: '增长值（步长）'
+                label: '增长值（步长）',
+                defaultValue: 1
             }
         }
     },

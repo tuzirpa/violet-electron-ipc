@@ -51,6 +51,7 @@ export const robotUtil = {
             await page.goto(webUrl);
             return browser;
         },
+
         openBrowserPage: async function (webBrow: Browser, url: string, block: Block) {
             // const aaa = await puppeteer.launch(ops);
             const page = await webBrow.newPage();
@@ -59,8 +60,18 @@ export const robotUtil = {
             return page;
         },
 
-        closeBrowserPage: async function (webBrow: Browser, page: Page, block: Block) {
-            if (page) {
+        closeBrowser: async function (webBrow: Browser, block: Block) {
+            await webBrow.close();
+            sendLog('info', `关闭浏览器，成功`, block);
+        },
+
+        closeBrowserPage: async function (
+            flag: string,
+            webBrow: Browser,
+            page: Page,
+            block: Block
+        ) {
+            if (flag === 'closePage') {
                 page.close();
                 sendLog('info', `网页关闭，成功`, block);
             } else {

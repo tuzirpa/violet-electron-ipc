@@ -1,17 +1,30 @@
-import { DirectiveTree } from '../../../types';
+import { DirectiveTree, Block } from '../../../types';
 
 export const directive: DirectiveTree = {
-    name: 'web.openBarClose',
+    name: 'web.closeBar',
     sort: 2,
     displayName: '关闭浏览器标签页',
     icon: 'icon-web-create',
     isControl: false,
     isControlEnd: false,
-    comment: '关闭标签页：${browserPage}',
+    comment: '在浏览器：${webBrowser} 中关闭标签${closePage} ${closeAll}',
     inputs: {
+        webBrowser: {
+            name: 'webBrowser',
+            value: '',
+            display: '',
+            type: 'string',
+            // errorHadnler: 'error',
+            addConfig: {
+                label: '选择要操作的浏览器',
+                type: 'variable'
+            }
+        },
+
         browserPage: {
             name: 'browserPage',
             value: '',
+            display: '关闭指定网页',
             type: 'string',
             // errorHadnler: 'error',
             addConfig: {
@@ -43,14 +56,28 @@ export const directive: DirectiveTree = {
                 type: 'variable',
                 filters: `this.inputs.browserPage.value === 'closePage'`
             }
+        },
+
+        closeAll: {
+            name: 'closeAll',
+            value: '',
+            type: 'string',
+            // errorHadnler: 'error',
+            addConfig: {
+                label: '关闭浏览器',
+                type: 'variable',
+                filters: `this.inputs.browserPage.value === 'closeAll'`
+            }
         }
     },
     outputs: {},
 
-    async toCode(directive: DirectiveTree) {
-        const webBrowserValue = directive.inputs.browserPage.value;
-
-        return `await robotUtil.web.closeBrowserPage('${directive.inputs.url.value}');`;
+    async toCode(directive: DirectiveTree, block: Block) {
+        return `await robotUtil.web.closeBrowserPage(
+                                    '${directive.inputs.browserPage.value}',
+                                    ${directive.inputs.webBrowser.value},
+                                    ${directive.inputs.closePage.value},
+                                    _block=${JSON.stringify(block)});`;
     }
 };
 
