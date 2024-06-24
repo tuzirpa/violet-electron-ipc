@@ -260,7 +260,9 @@ function runLogsRowClassName({
                                     </el-table-column>
                                     <el-table-column label="行号" width="60">
                                         <template #default="scope">
-                                            {{ scope.row.data?.blockLine }}
+                                            <a class="cursor-pointer underline decoration-1 text-blue-500"
+                                                @click="flowEditRef?.scrollIntoRow(scope.row.data?.blockLine)">{{
+                                                    scope.row.data?.blockLine }}</a>
                                         </template>
                                     </el-table-column>
                                 </el-table>

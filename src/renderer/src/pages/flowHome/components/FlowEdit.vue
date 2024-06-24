@@ -727,10 +727,20 @@ const redo = () => {
     emitHistoryChange();
 };
 
+function scrollIntoRow(rowNum: number) {
+    document.getElementById(`row-${rowNum}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+    });
+    curBlocks.value = [curOpenFile.value.blocks[rowNum - 1]];
+}
+
 defineExpose({
     undo,
     redo,
-    addBlock
+    addBlock,
+    scrollIntoRow
 });
 </script>
 
@@ -749,7 +759,7 @@ defineExpose({
                 <div class="col-number flex flex-col items-center mt-2 pb-10 border-r border-gray-300"
                     v-if="blocks.length > 0">
                     <div class="flex justify-between items-center row-number w-20" v-show="!block.hide"
-                        v-for="(block, index) in blocks">
+                        v-for="(block, index) in blocks" :key="`row-${index + 1}`" :id="`row-${index + 1}`">
                         <div class="text-center h-16 flex items-center pl-2">
                             <div @click="breakpointClick(block, index)">{{ index + 1 }}</div>
                             <div class="flex justify-center items-center ml-2 w-6 h-6 cursor-pointer"

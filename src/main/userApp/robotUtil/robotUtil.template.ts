@@ -1,5 +1,6 @@
 import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
-import type { Block, LogLevel } from './types';
+import type { Block, LogLevel } from '../types';
+import dataProcessing from './dataProcessing';
 
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
     console.log(
@@ -12,19 +13,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const robotUtil = {
     sendLog,
-    dataProcessing: {
-        async log(content: string, block: Block) {
-            sendLog('info', content, block);
-        },
-
-        async setVariable(type: string, value: any, block: Block) {
-            //{"type":"number","value":"123213sdfa${ffd}adsfa"}
-            if (type === 'number') {
-                return Number(value);
-            }
-            return value;
-        }
-    },
+    dataProcessing,
     web: {
         openBrowser: async function (
             type: string,

@@ -24,7 +24,7 @@ import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { WindowManage } from '../window/WindowManage';
 import { DevNodeJs, IBreakpoint, IConsoleApiCalled } from './devuserapp/DevNodeJs';
-import rebotUtilPath from './robotUtil.template?modulePath';
+import rebotUtilPath from './robotUtil/robotUtil.template?modulePath';
 
 /**
  * 应用类
@@ -39,6 +39,7 @@ export default class UserApp {
     name: string = '';
     appDir: string = '';
     appDevDir: string = '';
+    appRobotUtilDir: string = '';
     packageJson: any = {};
 
     flows: Flow[] = [];
@@ -58,6 +59,8 @@ export default class UserApp {
         this.id = id;
         this.appDir = path.join(UserApp.userAppLocalDir, this.id);
         this.appDevDir = path.join(this.appDir, 'dev');
+        this.appRobotUtilDir = path.join(this.appDir, 'robot');
+
         this.init();
     }
 
@@ -129,9 +132,12 @@ export default class UserApp {
     }
 
     robotUtilInit() {
+        if (!fs.existsSync(this.appRobotUtilDir)) {
+            fs.mkdirSync(this.appRobotUtilDir, { recursive: true });
+        }
         // 写入robotUtil文件
         const robotUtilContent = fs.readFileSync(rebotUtilPath, 'utf-8');
-        fs.writeFileSync(path.join(this.appDir, 'robotUtil.js'), robotUtilContent);
+        fs.writeFileSync(path.join(this.appRobotUtilDir, 'robotUtil.js'), robotUtilContent);
     }
 
     initFlows() {
@@ -210,7 +216,7 @@ export default class UserApp {
         WindowManage.mainWindow.webContents.send('run-logs', {
             level: 'info',
             time: Date.now(),
-            message: `流程启动`
+            message: `正在启动流程...`
         });
         this.devPrecess = this.shellExeCmd(
             [nodeExeCmd, `--inspect=${port}`, mainFlowJs],
