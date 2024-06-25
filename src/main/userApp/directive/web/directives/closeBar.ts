@@ -72,12 +72,8 @@ export const directive: DirectiveTree = {
     },
     outputs: {},
 
-    async toCode(directive: DirectiveTree, block: Block) {
-        return `await robotUtil.web.closeBrowserPage(
-                                    '${directive.inputs.browserPage.value}',
-                                    ${directive.inputs.webBrowser.value},
-                                    ${directive.inputs.closePage.value},
-                                    _block=${JSON.stringify(block)});`;
+    async toCode(directive: DirectiveTree, block: string) {
+        return `await robotUtil.web.closeBrowserPage('${directive.inputs.browserPage.value}',${directive.inputs.webBrowser.value},${directive.inputs.closePage.value},${block});`;
     }
 };
 

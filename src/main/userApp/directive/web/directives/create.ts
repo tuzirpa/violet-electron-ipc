@@ -48,9 +48,22 @@ export const directive: DirectiveTree = {
             addConfig: {
                 label: '地址',
                 type: 'string',
-                // isHide: true,
+                required: true,
                 defaultValue: 'https://',
                 tip: '打开的地址'
+            }
+        },
+        loadTimeout: {
+            name: 'timeout',
+            value: '',
+            type: 'number',
+            addConfig: {
+                label: '超时',
+                type: 'number',
+                isAdvanced: true,
+                required: true,
+                defaultValue: '30',
+                tip: '超时时间，单位：秒'
             }
         }
     },
@@ -70,8 +83,7 @@ export const directive: DirectiveTree = {
         const inputWebType = directive.inputs.webType;
         const webUrl = directive.inputs.url.value;
         const executablePathValue = await getExeCutablePath(inputWebType.value);
-
-        return `var ${directive.outputs.browser.name} = await robotUtil.web.openBrowser('${inputWebType.value}', '${executablePathValue}','${webUrl}' ,'${inputWebType.display}',_block = ${JSON.stringify(block)});`;
+        return `var ${directive.outputs.browser.name} = await robotUtil.web.openBrowser('${inputWebType.value}', '${executablePathValue}','${webUrl}' ,'${inputWebType.display}',${block});`;
     }
 };
 

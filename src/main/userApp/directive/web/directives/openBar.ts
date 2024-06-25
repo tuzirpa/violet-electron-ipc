@@ -45,11 +45,11 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    async toCode(directive: DirectiveTree, block: Block) {
+    async toCode(directive: DirectiveTree, block: string) {
         const webBrowserValue = directive.inputs.webBrowser.value;
         const webUrl = directive.inputs.url.value;
 
-        return `var ${directive.outputs.pageBar.name} = await robotUtil.web.openBrowserPage(${webBrowserValue},'${webUrl}',_block = ${JSON.stringify(block)});`;
+        return `var ${directive.outputs.pageBar.name} = await robotUtil.web.openBrowserPage(${webBrowserValue},'${webUrl}',${block});`;
     }
 };
 

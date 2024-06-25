@@ -25,9 +25,8 @@ export const directive: DirectiveTree = {
     },
     outputs: {},
 
-    async toCode(directive: DirectiveTree, block: Block) {
-        return `await robotUtil.web.closeBrowser(${directive.inputs.closeBrowser.value},
-        _block=${JSON.stringify(block)});`;
+    async toCode(directive: DirectiveTree, block: string) {
+        return `await robotUtil.web.closeBrowser(${directive.inputs.closeBrowser.value},${block});`;
     }
 };
 

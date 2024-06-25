@@ -1,6 +1,7 @@
 import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import type { Block, LogLevel } from '../types';
 import dataProcessing from './dataProcessing';
+import web from './webBrowser';
 
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
     console.log(
@@ -14,61 +15,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const robotUtil = {
     sendLog,
     dataProcessing,
-    web: {
-        openBrowser: async function (
-            type: string,
-            executablePath: string,
-            webUrl: string,
-            displayName: string,
-            block: Block
-        ) {
-            if (type !== 'tuziChrome') {
-                if (executablePath === '') {
-                    sendLog(
-                        'error',
-                        `本地未安装 ${displayName}，请设置先安装 ${displayName}`,
-                        block
-                    );
-                    throw new Error('未设置chrome路径');
-                }
-            }
-            const ops: PuppeteerLaunchOptions = { headless: false, defaultViewport: null };
-            executablePath && (ops.executablePath = executablePath);
-            const browser = await puppeteer.launch(ops);
-            const pages = await browser.pages();
-            const page = pages[0];
-            await page.goto(webUrl);
-            return browser;
-        },
-
-        openBrowserPage: async function (webBrow: Browser, url: string, block: Block) {
-            // const aaa = await puppeteer.launch(ops);
-            const page = await webBrow.newPage();
-            await page.goto(url);
-            sendLog('info', `打开网页：${url}，成功`, block);
-            return page;
-        },
-
-        closeBrowser: async function (webBrow: Browser, block: Block) {
-            await webBrow.close();
-            sendLog('info', `关闭浏览器，成功`, block);
-        },
-
-        closeBrowserPage: async function (
-            flag: string,
-            webBrow: Browser,
-            page: Page,
-            block: Block
-        ) {
-            if (flag === 'closePage') {
-                page.close();
-                sendLog('info', `网页关闭，成功`, block);
-            } else {
-                webBrow.close();
-                sendLog('info', `关闭浏览器，成功`, block);
-            }
-        }
-    },
+    web,
     flowControl: {
         test: async function (operand1: any, operator: string, operand2: any, block: Block) {
             const result = eval(`${operand1}${operator}${operand2}`);
@@ -111,7 +58,7 @@ function forRobotUtil(obj: any) {
 
                         sendLog(
                             'error',
-                            `执行指令 ${blockInfo.directiveDisplayName} 异常`,
+                            `执行指令 ${blockInfo.directiveDisplayName} 异常: ${error.message}`,
                             blockInfo,
                             error
                         );
@@ -128,15 +75,11 @@ function forRobotUtil(obj: any) {
                                 `执行指令 ${blockInfo.directiveDisplayName} 异常 ,忽略错误`,
                                 blockInfo
                             );
-                            return '';
+                            return null;
                         } else {
-                            sendLog(
-                                'error',
-                                `执行指令 ${blockInfo.directiveDisplayName} 异常 ,${blockInfo.intervalTime} 秒后重试第${retryCountNum}次`,
-                                blockInfo
-                            );
                             await sleep(blockInfo.intervalTime * 1000);
                             retryCountNum++;
+
                             if (retryCountNum > blockInfo.retryCount) {
                                 sendLog(
                                     'error',
@@ -144,6 +87,12 @@ function forRobotUtil(obj: any) {
                                     blockInfo
                                 );
                                 process.exit(1);
+                            } else {
+                                sendLog(
+                                    'error',
+                                    `执行指令 ${blockInfo.directiveDisplayName} 异常 ,${blockInfo.intervalTime} 秒后重试第${retryCountNum}次`,
+                                    blockInfo
+                                );
                             }
                             console.log('重试执行指令', this, ...args);
                             return aaa.apply(this, args);

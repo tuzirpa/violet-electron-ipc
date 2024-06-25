@@ -1,5 +1,5 @@
-import { DirectiveTree, Block } from '../../../types';
-import element from './element';
+import { DirectiveTree, Block } from '../../../../../types';
+import element from '../../element';
 
 export const directive: DirectiveTree = {
     name: 'web.clickElement',
@@ -47,12 +47,9 @@ export const directive: DirectiveTree = {
     },
     outputs: {},
 
-    async toCode(directive: DirectiveTree, block: Block) {
-        return `await robotUtil.web.closeBrowserPage(
-                                    '${directive.inputs.browserPage.value}',
-                                    ${directive.inputs.webBrowser.value},
-                                    ${directive.inputs.closePage.value},
-                                    _block=${JSON.stringify(block)});`;
+    async toCode(directive: DirectiveTree, block: string) {
+        let { browserPage, webBrowser, closePage } = directive.inputs;
+        return `await robotUtil.web.closeBrowserPage('${browserPage.value}',${webBrowser.value},${closePage.value},${block});`;
     }
 };
 
