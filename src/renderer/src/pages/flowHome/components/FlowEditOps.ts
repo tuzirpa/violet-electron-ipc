@@ -61,7 +61,7 @@ export const checkError = (directives: DirectiveData[]) => {
                     errors.push(`变量${input.value}未定义`);
                 }
             } else {
-                const varNames = (input.value as string).match(/\${.*?}/g);
+                const varNames = String(input.value).match(/\${.*?}/g);
                 varNames?.forEach((varName) => {
                     const varItem = vars.find(
                         (item) => item.name === varName.substring(2, varName.length - 1)
