@@ -13,6 +13,9 @@ import type UserApp from 'src/main/userApp/UserApp';
 import _ from 'lodash';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { Action } from '@renderer/lib/action';
+import { showContextFlowMenu, checkError } from './FlowEditOps';
+import { DirectiveData, OpenFile } from './types'
+
 
 const props = defineProps<{
     flows: Flow[];
@@ -32,12 +35,7 @@ const emit = defineEmits<{
     ): void;
 }>();
 
-// 添加逻辑
-export type DirectiveData = DirectiveTree & {
-    foldDesc?: string;
-    pdLvn: number;
-    commentShow?: string;
-};
+
 
 async function executeStep() {
     console.log('executeStep');
@@ -71,19 +69,18 @@ const flows = props.flows.map((item) => {
         blocks: blocks
     };
 });
-console.log(flows);
+
 
 const openFiles = ref<
-    {
-        name: string;
-        historys: { saveName: string; data: any[] }[];
-        curHistoryIndex: number;
-        blocks: DirectiveData[];
-    }[]
+    OpenFile[]
 >(flows);
 
 const curOpenFile = ref(openFiles.value[0]);
 
+/**
+ * 指令描述
+ * @param block 指令数据
+ */
 function commentCompute(block: DirectiveData) {
     if (block.comment) {
         const comment = block.comment.replace(/\${.*?}/g, (substring: string, ..._args: any[]) => {
@@ -117,6 +114,9 @@ function commentCompute(block: DirectiveData) {
     }
 }
 
+/**
+ * 流程块列表
+ */
 const blocks = computed(() => {
     let pdLvn = 0;
     curOpenFile.value.blocks.forEach((block, index) => {
@@ -392,11 +392,16 @@ function blockDbClick(_event: MouseEvent, block: DirectiveData, index: number) {
     editBlock(block, index);
 }
 
+/**
+ * 计算变量列表
+ * @param _directive 指令
+ * @param index 
+ */
 function variablesCompute(_directive: DirectiveTree, index: number) {
     const variablesTemp: FlowVariable[] = [];
     // 获取当前指令之前的指令
-    const beforeBlocks = curOpenFile.value.blocks.slice(0, index);
-    beforeBlocks.forEach((item) => {
+    const beforeBlocks = curOpenFile.value.blocks;
+    beforeBlocks.forEach((item, itemIndex) => {
         // 获取指令的输出
         const outputs = item.outputs || {};
         for (const key in outputs) {
@@ -405,13 +410,15 @@ function variablesCompute(_directive: DirectiveTree, index: number) {
                 variablesTemp.push({
                     name: output.name,
                     type: output.type,
-                    comment: output.display
+                    comment: output.display,
+                    before: itemIndex < index
                 });
             }
         }
     });
     variables.value = variablesTemp;
 }
+
 
 function editBlock(block: DirectiveData, index: number) {
     directiveAddTemp.value = JSON.parse(JSON.stringify(block));
@@ -695,6 +702,7 @@ async function saveCurFlow(saveName?: string) {
     console.log(saveObj, '流程保存');
     await Action.saveFlow(props.appInfo.id, saveObj);
     emitHistoryChange();
+    checkError(curOpenFile.value.blocks);
 }
 
 /**
@@ -747,7 +755,7 @@ defineExpose({
 <template>
     <div class="viewbox rounded bg-white flex-1">
         <div class="header bg-gray-100">
-            <div class="files flex items-center">
+            <div class="files flex items-center" @contextmenu="showContextFlowMenu($event, curOpenFile)">
                 <div class="file py-2 px-4 cursor-pointer hover:bg-white/60" v-for="file in openFiles" :key="file.name"
                     :class="{ 'bg-white': file.name === curOpenFile.name }" @click="curOpenFile = file">
                     {{ file.name }}
@@ -761,7 +769,13 @@ defineExpose({
                     <div class="flex justify-between items-center row-number w-20" v-show="!block.hide"
                         v-for="(block, index) in blocks" :key="`row-${index + 1}`" :id="`row-${index + 1}`">
                         <div class="text-center h-16 flex items-center pl-2">
-                            <div @click="breakpointClick(block, index)">{{ index + 1 }}</div>
+                            <div @click="breakpointClick(block, index)" :class="{ 'text-red-500': block.error }">
+                                <el-tooltip v-if="block.error" class="box-item" :show-arrow="false" effect="dark"
+                                    :content="block.error" placement="bottom-start">
+                                    {{ index + 1 }}
+                                </el-tooltip>
+                                <span v-else>{{ index + 1 }}</span>
+                            </div>
                             <div class="flex justify-center items-center ml-2 w-6 h-6 cursor-pointer"
                                 @click="breakpointClick(block, index)">
                                 <div class="w-3 h-3 rounded-full border-2 border-red-400 bg-red-300"

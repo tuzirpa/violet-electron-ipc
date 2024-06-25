@@ -22,6 +22,11 @@ export interface FlowVariable {
      * 变量描述
      */
     comment?: string;
+
+    /**
+     * 是否在当前指令之后
+     */
+    before: boolean;
 }
 
 export type AddConfigInputType =

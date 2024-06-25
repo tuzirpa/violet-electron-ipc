@@ -1,3 +1,4 @@
+import { shell } from 'electron';
 import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
@@ -49,6 +50,14 @@ class Action {
      */
     static async verifyToken(token: string) {
         return verifyToken(token);
+    }
+
+    /**
+     * 打开文件夹
+     */
+
+    static async openFolder(path: string) {
+        return shell.showItemInFolder(`file://${path}`);
     }
 
     /**

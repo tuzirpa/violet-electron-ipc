@@ -3,7 +3,7 @@ import type { DirectiveInput, DirectiveTree, FlowVariable } from 'src/main/userA
 import InputValueVar from './InputValueVar.vue';
 import OutputValueVar from './OutputValueVar.vue';
 import InputValueVarVariable from './InputValueVarVariable.vue';
-import { getCurrentInstance, onMounted, ref } from 'vue';
+import { getCurrentInstance, nextTick, onMounted, ref } from 'vue';
 import { ElSelect, ElTooltip } from 'element-plus';
 
 // 添加逻辑
@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const _directive = ref(props.directive);
 const _variables = ref(props.variables);
-console.log(_variables);
+
 
 _directive.value.failureStrategy = _directive.value.failureStrategy || 'terminate';
 
@@ -30,39 +30,46 @@ function groupClick(group: any) {
 }
 
 const advancedNum = ref(0);
-//输入变量处理
-for (const key in _directive.value.inputs) {
-    if (Object.prototype.hasOwnProperty.call(_directive.value.inputs, key)) {
-        const input = _directive.value.inputs[key];
-        //自动补全处理
-        if (input.addConfig.autoComplete) {
-            const variable = _variables.value.find((item) => item.type === input.addConfig.filtersType);
-            input.value = variable?.name;
-        } else {
-            input.value = input.value || input.addConfig.defaultValue;
-        }
 
 
-        if (input.addConfig.isAdvanced) {
-            advancedNum.value++;
-        }
-    }
-}
+nextTick(() => {
+    setTimeout(() => {
 
-//输出变量处理
-for (const key in _directive.value.outputs) {
-    if (Object.prototype.hasOwnProperty.call(_directive.value.outputs, key)) {
-        const output = _directive.value.outputs[key];
-        if (!output.name) {
-            //未设置 获取默认值 如果默认值有被设置过 则加上序号
-            output.name = output.name || output.addConfig?.defaultValue;
-            let index = _variables.value.findLastIndex((item) => item.name.startsWith(output.name));
-            if (index !== -1) {
-                output.name = output.name + (index++);
+        //输入变量处理
+        for (const key in _directive.value.inputs) {
+            if (Object.prototype.hasOwnProperty.call(_directive.value.inputs, key)) {
+                const input = _directive.value.inputs[key];
+                //自动补全处理
+                if (input.addConfig.autoComplete) {
+                    const variable = _variables.value.find((item) => item.type === input.addConfig.filtersType);
+                    input.value = variable?.name;
+                } else {
+                    input.value = input.value || input.addConfig.defaultValue;
+                }
+
+
+                if (input.addConfig.isAdvanced) {
+                    advancedNum.value++;
+                }
             }
         }
-    }
-}
+
+        //输出变量处理
+        for (const key in _directive.value.outputs) {
+            if (Object.prototype.hasOwnProperty.call(_directive.value.outputs, key)) {
+                const output = _directive.value.outputs[key];
+                if (!output.name) {
+                    //未设置 获取默认值 如果默认值有被设置过 则加上序号
+                    output.name = output.name || output.addConfig?.defaultValue;
+                    let index = _variables.value.findLastIndex((item) => item.name.startsWith(output.name));
+                    if (index !== -1) {
+                        output.name = output.name + (index++);
+                    }
+                }
+            }
+        }
+    }, 300);
+});
 
 console.log(advancedNum.value, '高级参数数量');
 
