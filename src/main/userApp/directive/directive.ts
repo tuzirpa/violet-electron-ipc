@@ -12,6 +12,19 @@ export const directiveToCodeMap = new Map<
 
 export const directives: DirectiveTree[] = [];
 
+function toCode2Map(children: DirectiveTree[]) {
+    if (children.length === 0) {
+        return;
+    }
+    children.forEach((child) => {
+        if (child.toCode) {
+            directiveToCodeMap.set(child.name, child.toCode);
+        } else {
+            toCode2Map(child.children || []);
+        }
+    });
+}
+
 for (const key in groups) {
     if (Object.prototype.hasOwnProperty.call(groups, key)) {
         const module = groups[key];
@@ -21,13 +34,10 @@ for (const key in groups) {
         if (!groupDirectives) {
             continue;
         }
-        for (const directive of groupDirectives) {
-            if (directive.toCode) {
-                directiveToCodeMap.set(directive.name, directive.toCode);
-            }
-        }
+        toCode2Map(groupDirectives);
     }
 }
+
 directives.sort((a, b) => {
     const asort = a.sort || 0;
     const bsort = b.sort || 0;
