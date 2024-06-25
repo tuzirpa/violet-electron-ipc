@@ -795,8 +795,8 @@ defineExpose({
                     @dragenter="flowEditDragEnter" @dragover="flowEditDragOver" @dragleave="flowEditDragLeave">
                     <template v-if="blocks.length > 0">
                         <div class="directive-block" v-for="(element, index) in blocks" :data-id="element.id"
-                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line }" :key="element.id"
-                            draggable="true" @dragstart="blockDragStart(element, index)"
+                            :class="{ 'border-red-500 border-l': element.error }" :key="element.id" draggable="true"
+                            @dragstart="blockDragStart(element, index)"
                             @contextmenu="directiveShowContextMenu($event, element)">
                             <div class="row flex items-center" :class="{ 'text-gray-400/50': element.disabled }">
                                 <div class="flex flex-1 h-16" v-show="!element.hide">

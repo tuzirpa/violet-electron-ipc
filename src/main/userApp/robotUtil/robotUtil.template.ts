@@ -77,7 +77,6 @@ function forRobotUtil(obj: any) {
                             );
                             return null;
                         } else {
-                            await sleep(blockInfo.intervalTime * 1000);
                             retryCountNum++;
 
                             if (retryCountNum > blockInfo.retryCount) {
@@ -94,6 +93,7 @@ function forRobotUtil(obj: any) {
                                     blockInfo
                                 );
                             }
+                            await sleep(blockInfo.intervalTime * 1000);
                             console.log('重试执行指令', this, ...args);
                             return aaa.apply(this, args);
                         }
