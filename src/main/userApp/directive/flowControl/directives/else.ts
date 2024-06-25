@@ -11,7 +11,7 @@ export const directive: DirectiveTree = {
     comment: '否则执行以下操作',
     inputs: {},
     outputs: {},
-    async toCode(_directive: DirectiveTree, _block: Block) {
+    async toCode(_directive: DirectiveTree, _block: string) {
         return `} else {`;
     }
 };

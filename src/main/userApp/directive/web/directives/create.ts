@@ -66,7 +66,7 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    async toCode(directive: DirectiveTree, block: Block) {
+    async toCode(directive: DirectiveTree, block: string) {
         const inputWebType = directive.inputs.webType;
         const webUrl = directive.inputs.url.value;
         const executablePathValue = await getExeCutablePath(inputWebType.value);

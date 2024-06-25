@@ -58,7 +58,7 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    async toCode(directive, block: Block) {
+    async toCode(directive, block: string) {
         const name = directive.outputs.varName.name;
         let value = directive.inputs.varValue;
         const varTypeType = directive.inputs.varType.value;
@@ -67,7 +67,7 @@ export const directive: DirectiveTree = {
             valueCode = typeToCode(value);
         }
 
-        return `var ${name} = await robotUtil.dataProcessing.setVariable('${varTypeType}',${valueCode},${JSON.stringify(block)});`;
+        return `var ${name} = await robotUtil.dataProcessing.setVariable('${varTypeType}',${valueCode},${block});`;
     }
 };
 

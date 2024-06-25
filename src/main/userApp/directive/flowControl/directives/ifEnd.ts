@@ -10,7 +10,7 @@ export const directive: DirectiveTree = {
     comment: '结束条件',
     inputs: {},
     outputs: {},
-    async toCode(_directive: DirectiveTree, _block: Block) {
+    async toCode(_directive: DirectiveTree, _block: string) {
         return `}`;
     }
 };

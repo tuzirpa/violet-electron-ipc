@@ -14,7 +14,17 @@ export async function convertDirective(directive: DirectiveTree, index: number, 
             intervalTime: directive.intervalTime || 0,
             retryCount: directive.retryCount || 0
         };
-        return await toCode(directive, block);
+        const {
+            blockLine,
+            flowName,
+            directiveName,
+            directiveDisplayName,
+            failureStrategy,
+            intervalTime,
+            retryCount
+        } = block;
+        const blockCode = `_block = generateBlock(${blockLine}, "${flowName}", "${directiveName}", "${directiveDisplayName}", "${failureStrategy}", ${intervalTime}, ${retryCount})`;
+        return await toCode(directive, blockCode);
     }
 
     return 'console.log("未提供代码转换器")// 未提供代码转换器';

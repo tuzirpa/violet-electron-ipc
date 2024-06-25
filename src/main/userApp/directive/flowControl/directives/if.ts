@@ -56,10 +56,10 @@ export const directive: DirectiveTree = {
         }
     },
     outputs: {},
-    async toCode(directive: DirectiveTree, block: Block) {
+    async toCode(directive: DirectiveTree, block: string) {
         const { operand1, operator, operand2 } = directive.inputs;
 
-        return `if (await robotUtil.flowControl.test(${typeToCode(operand1)},'${operator.value}',${typeToCode(operand2)},_block = ${JSON.stringify(block)})) {`;
+        return `if (await robotUtil.flowControl.test(${typeToCode(operand1)},'${operator.value}',${typeToCode(operand2)},${block})) {`;
     }
 };
 

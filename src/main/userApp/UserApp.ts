@@ -23,8 +23,14 @@ import Flow from './Flow';
 import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { WindowManage } from '../window/WindowManage';
-import { DevNodeJs, IBreakpoint, IConsoleApiCalled } from './devuserapp/DevNodeJs';
+import {
+    DevNodeJs,
+    IBreakpoint,
+    IConsoleApiCalled,
+    IExecutionThrown
+} from './devuserapp/DevNodeJs';
 import rebotUtilPath from './robotUtil/robotUtil.template?modulePath';
+import { LogLevel } from './types';
 
 /**
  * 应用类
@@ -208,56 +214,7 @@ export default class UserApp {
 
     run() {
         // 运行
-        // 调试启动
-        const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
-        const mainFlowJs = path.join(this.appDir, 'main.flow.js');
-        const port = 9339;
-        let breakpoints: IBreakpoint[] = [];
-        WindowManage.mainWindow.webContents.send('run-logs', {
-            level: 'info',
-            time: Date.now(),
-            message: `正在启动流程...`
-        });
-        this.devPrecess = this.shellExeCmd(
-            [nodeExeCmd, `--inspect=${port}`, mainFlowJs],
-            (data: string) => {
-                //匹配出调试路径
-                const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
-
-                if (data.includes('Debugger listening on ws://127.0.0.1:') && matchData) {
-                    const wsUrl = matchData[0];
-
-                    this.devNodeJs = new DevNodeJs(wsUrl, breakpoints);
-                    this.devNodeJs.onBreakpoint((breakpoint: IBreakpoint) => {
-                        //发给前端需要从1开始
-                        breakpoint.line = breakpoint.line + 1 - Flow.headLinkCount;
-                        WindowManage.mainWindow.webContents.send('breakpoint', breakpoint);
-                    });
-                    this.devNodeJs.onConsoleApiCalled((params: IConsoleApiCalled) => {
-                        console.log(params.type, params.args, params.timestamp);
-                        if (params.args[0].value === 'robotUtilLog') {
-                            WindowManage.mainWindow.webContents.send(
-                                'run-logs',
-                                JSON.parse(params.args[1].value)
-                            );
-                        }
-                    });
-                    this.devNodeJs.start();
-                } else if (
-                    this.devNodeJs &&
-                    data.includes('Waiting for the debugger to disconnect.')
-                ) {
-                    this.devNodeJs.close();
-                    this.devNodeJs = null;
-                    WindowManage.mainWindow.webContents.send('run-logs', {
-                        level: 'info',
-                        time: Date.now(),
-                        message: `流程结束`
-                    });
-                    WindowManage.mainWindow.webContents.send('devRunEnd');
-                }
-            }
-        );
+        return this.start();
     }
 
     async devStepOver() {
@@ -286,16 +243,24 @@ export default class UserApp {
     }
 
     async dev() {
-        // 调试启动
+        // 调试启动 带断点启动
+        return this.start(this.breakpoints);
+    }
+
+    sendRunLogs(data: { level: LogLevel; time: number; message: string; data?: any }) {
+        WindowManage.mainWindow.webContents.send('run-logs', data);
+    }
+
+    start(breakpoints: IBreakpoint[] = []) {
         const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
         const mainFlowJs = path.join(this.appDir, 'main.flow.js');
         const port = 9339;
-        let breakpoints: IBreakpoint[] = [];
-        breakpoints = this.breakpoints;
-        WindowManage.mainWindow.webContents.send('run-logs', {
+        // let breakpoints: IBreakpoint[] = [];
+        // breakpoints = this.breakpoints;
+        this.sendRunLogs({
             level: 'info',
             time: Date.now(),
-            message: `流程启动`
+            message: `流程正在启动...`
         });
         this.devPrecess = this.shellExeCmd(
             [nodeExeCmd, `--inspect=${port}`, mainFlowJs],
@@ -315,27 +280,38 @@ export default class UserApp {
                     this.devNodeJs.onConsoleApiCalled((params: IConsoleApiCalled) => {
                         console.log(params.type, params.args, params.timestamp);
                         if (params.args[0].value === 'robotUtilLog') {
-                            WindowManage.mainWindow.webContents.send(
-                                'run-logs',
-                                JSON.parse(params.args[1].value)
-                            );
+                            this.sendRunLogs(JSON.parse(params.args[1].value));
                         }
+                    });
+                    this.devNodeJs.onExecutionThrown((context: IExecutionThrown) => {
+                        this.sendRunLogs({
+                            level: 'fatalError',
+                            time: Date.now(),
+                            message: context.description,
+                            data: context
+                        });
                     });
                     this.devNodeJs.start();
                 } else if (
                     this.devNodeJs &&
                     data.includes('Waiting for the debugger to disconnect.')
                 ) {
-                    this.devNodeJs.close();
-                    this.devNodeJs = null;
-                    WindowManage.mainWindow.webContents.send('run-logs', {
-                        level: 'info',
-                        time: Date.now(),
-                        message: `流程结束`
-                    });
-                    WindowManage.mainWindow.webContents.send('devRunEnd');
+                    //如果有异常 需要等待获取异常信息
+                    setTimeout(() => {
+                        if (this.devNodeJs) {
+                            this.devNodeJs.close();
+                        }
+                        this.devNodeJs = null;
+                        this.sendRunLogs({
+                            level: 'info',
+                            time: Date.now(),
+                            message: `流程结束`
+                        });
+                        WindowManage.mainWindow.webContents.send('devRunEnd');
+                    }, 1000);
                 }
             }
         );
+        return port;
     }
 }

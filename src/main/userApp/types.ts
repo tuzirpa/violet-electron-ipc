@@ -237,7 +237,7 @@ export interface DirectiveTree {
      */
     retryCount?: number;
 
-    toCode?: (directive: DirectiveTree, block: Block) => Promise<string>;
+    toCode?: (directive: DirectiveTree, block: string) => Promise<string>;
 }
 
 export interface Block {
@@ -250,4 +250,4 @@ export interface Block {
     retryCount: number;
 }
 
-export type LogLevel = 'info' | 'warn' | 'error';
+export type LogLevel = 'info' | 'warn' | 'error' | 'fatalError';

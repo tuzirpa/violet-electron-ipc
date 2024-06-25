@@ -14,6 +14,18 @@ export interface IConsoleApiCalled {
     stackTrace: any;
 }
 
+/**
+ * {"blockLine":7,"flowName":"main.flow","directiveName":"web.create","directiveDisplayName":"启动浏览器","failureStrategy":"terminate","intervalTime":0,"retryCount":0}
+ */
+export interface IExecutionThrown {
+    description: string;
+    blockLine: number;
+    flowName: string;
+    directiveName: string;
+    directiveDisplayName: string;
+    failureStrategy: string;
+}
+
 export class DevNodeJs {
     async getProperties(objectId: string) {
         const data = await this.sendCommand('Runtime.getProperties', {
@@ -46,7 +58,8 @@ export class DevNodeJs {
         public wsUrl: string,
         public breakpoints: IBreakpoint[] = [],
         public breakpointCallbacks: ((breakpoint: IBreakpoint) => void)[] = [],
-        public consoleApiCalledCallbacks: ((breakpoint: IConsoleApiCalled) => void)[] = []
+        public consoleApiCalledCallbacks: ((breakpoint: IConsoleApiCalled) => void)[] = [],
+        public exceptionThrownCallbacks: ((exception: IExecutionThrown) => void)[] = []
     ) {}
 
     async start() {
@@ -69,7 +82,7 @@ export class DevNodeJs {
             } else if (cdpRes.method === 'Debugger.paused') {
                 this.paused(cdpRes.params);
             } else if (cdpRes.method === 'Runtime.exceptionThrown') {
-                console.log('executionContextCreated', cdpRes.params);
+                this.exceptionThrown(cdpRes.params);
             } else if (cdpRes.method === 'Runtime.consoleAPICalled') {
                 console.log('consoleAPICalled', cdpRes.params);
                 this.consoleApiCalledCallbacks.forEach((callback) => {
@@ -164,5 +177,44 @@ export class DevNodeJs {
 
     onConsoleApiCalled(callback: (breakpoint: IConsoleApiCalled) => void) {
         this.consoleApiCalledCallbacks.push(callback);
+    }
+
+    onExecutionThrown(callback: (breakpoint) => void) {
+        this.exceptionThrownCallbacks.push(callback);
+    }
+
+    async exceptionThrown(params) {
+        console.log('exceptionThrown', params);
+        const description = params.exceptionDetails.exception.description;
+        for (let i = 0; i < params.exceptionDetails.stackTrace.callFrames.length; i++) {
+            const callFrame = params.exceptionDetails.stackTrace.callFrames[i];
+            console.log('callFrame', callFrame);
+            if (callFrame.url.includes('flow.js')) {
+                const lineNumber = callFrame.lineNumber;
+                //读取脚本源码
+                const res = await this.sendCommand('Debugger.getScriptSource', {
+                    scriptId: callFrame.scriptId
+                });
+                const scriptLines = res.result.scriptSource.split('\n');
+                const lineContent = scriptLines[lineNumber];
+                //代码中匹配出流程名称 等块信息
+                //{"blockLine":8,"flowName":"main.flow","directiveName":"web.openBarClose","directiveDisplayName":"关闭浏览器","failureStrategy":"terminate","intervalTime":0,"retryCount":0}
+
+                const blockLine = lineContent.match(/blockLine:\s*(\d+)/)?.[1];
+
+                console.log(lineContent);
+            }
+        }
+
+        this.exceptionThrownCallbacks.forEach((callback) => {
+            callback({
+                description,
+                blockLine: 0,
+                flowName: '',
+                directiveName: '',
+                directiveDisplayName: '',
+                failureStrategy: ''
+            });
+        });
     }
 }

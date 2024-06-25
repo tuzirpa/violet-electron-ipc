@@ -61,7 +61,7 @@ export const directive: DirectiveTree = {
             }
         }
     },
-    async toCode(directive: DirectiveTree, block: Block) {
+    async toCode(directive: DirectiveTree, block: string) {
         const { startIndex, endIndex, step } = directive.inputs;
         const { index } = directive.outputs;
         return `for (let ${index.name} of await robotUtil.flowControl.rangeIterator(${startIndex.value}, ${endIndex.value}, ${step.value},_block = ${JSON.stringify(block)})) {`;

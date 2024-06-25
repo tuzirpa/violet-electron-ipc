@@ -40,20 +40,22 @@ export default class Flow {
      * 转换流程到js文件
      */
     public async convert() {
-        let content = ['// 头部说明'];
-        content.push(`//const axios = require('axios');`);
+        let content = ['//流程自动生成'];
         content.push(`let robotUtil = require('./robotUtil');`);
-        content.push(`robotUtil = robotUtil.default;_block = {};`);
+        content.push(`robotUtil = robotUtil.default;`);
+        content.push(`let _block = {};`);
+        content.push(
+            `const generateBlock = (blockLine,flowName,directiveName,directiveDisplayName,failureStrategy,intervalTime,retryCount)=>{return {blockLine,flowName,directiveName,directiveDisplayName,failureStrategy,intervalTime,retryCount}}`
+        );
         content.push(`setTimeout(async ()=>{`);
-        content.push(` try {`);
-        // content.push(`const response = await axios.post(url, data);`);
+        // content.push(`  try {`);
 
         for (let index = 0; index < this.blocks.length; index++) {
             const block = this.blocks[index];
             const convertCode = await convertDirective(block, index, this);
-            let indent = '  ';
+            let indent = '    ';
             if (block.pdLvn) {
-                for (let index = 0; index < block.pdLvn * 4; index++) {
+                for (let index = 0; index < block.pdLvn * 2; index++) {
                     indent += ' ';
                 }
             }
@@ -63,13 +65,12 @@ export default class Flow {
             }
             content.push(jsCode);
         }
-        content.push(' } catch (error) {');
-        content.push(`   console.log(error);`);
-        content.push(
-            `   robotUtil.sendLog('error', '致命错误,退出流程:' + error.message, _block);`
-        );
-        content.push(' }');
-
+        // content.push('  } catch (error) {');
+        // content.push(`    console.log(error);`);
+        // content.push(
+        //     `    robotUtil.sendLog('error', '致命错误,退出流程:' + error.message, _block);`
+        // );
+        // content.push('  }');
         content.push('}, 1000);');
 
         return content.join('\n');
