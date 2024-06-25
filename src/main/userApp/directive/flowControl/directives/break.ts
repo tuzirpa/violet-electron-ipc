@@ -1,18 +1,17 @@
 import { DirectiveTree } from '../../../types';
 
 export const directive: DirectiveTree = {
-    name: 'flowControl.else',
-    displayName: 'Else',
+    name: 'flowControl.break',
+    displayName: '退出循环',
     icon: 'icon-web-create',
-    sort: 11,
-    isControl: true,
-    isElse: true,
+    isControl: false,
+    sort: 31,
     isControlEnd: false,
-    comment: '否则执行以下操作',
+    comment: '仅在循环中有效，用于退出循环',
     inputs: {},
     outputs: {},
     async toCode(_directive: DirectiveTree, _block: string) {
-        return `} else {`;
+        return `break;`;
     }
 };
 

@@ -1,4 +1,5 @@
-import { DirectiveTree, Block } from '../../../types';
+import { DirectiveTree } from '../../../types';
+import { typeToCode } from '../../convertUtils';
 
 export const directive: DirectiveTree = {
     name: 'flowControl.for',
@@ -12,10 +13,10 @@ export const directive: DirectiveTree = {
         startIndex: {
             name: '开始数值',
             value: '1',
-            type: 'number',
+            type: 'string',
             addConfig: {
                 required: true,
-                type: 'variable',
+                type: 'string',
                 label: '开始数值',
                 defaultValue: 1
             }
@@ -23,9 +24,9 @@ export const directive: DirectiveTree = {
         endIndex: {
             name: '结束数值',
             value: '',
-            type: 'number',
+            type: 'string',
             addConfig: {
-                type: 'variable',
+                type: 'string',
                 label: '结束数值',
                 required: true
             }
@@ -33,10 +34,10 @@ export const directive: DirectiveTree = {
         step: {
             name: '增长值（步长）',
             value: '',
-            type: 'number',
+            type: 'string',
             addConfig: {
                 required: true,
-                type: 'variable',
+                type: 'string',
                 label: '增长值（步长）',
                 defaultValue: 1
             }
@@ -46,6 +47,7 @@ export const directive: DirectiveTree = {
         index: {
             name: 'loop_index',
             type: 'number',
+            display: '数字',
             addConfig: {
                 required: true,
                 type: 'variable',
@@ -56,7 +58,7 @@ export const directive: DirectiveTree = {
     async toCode(directive: DirectiveTree, block: string) {
         const { startIndex, endIndex, step } = directive.inputs;
         const { index } = directive.outputs;
-        return `for (let ${index.name} of await robotUtil.flowControl.rangeIterator(${startIndex.value}, ${endIndex.value}, ${step.value},${block})) {`;
+        return `for (let ${index.name} of await robotUtil.flowControl.rangeIterator(Number(${typeToCode(startIndex)}), Number(${typeToCode(endIndex)}), Number(${typeToCode(step)}),${block})) {`;
     }
 };
 

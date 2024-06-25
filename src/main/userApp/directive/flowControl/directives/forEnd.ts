@@ -1,8 +1,7 @@
-import { DirectiveTree, Block } from '../../../types';
-
+import { DirectiveTree } from '../../../types';
 export const directive: DirectiveTree = {
     name: 'flowControl.for.end',
-    displayName: 'For 循环结束',
+    displayName: '循环结束标记',
     icon: 'icon-web-create',
     isControl: false,
     sort: 21,

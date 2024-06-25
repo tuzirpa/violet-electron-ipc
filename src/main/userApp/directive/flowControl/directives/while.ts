@@ -1,10 +1,11 @@
 import { DirectiveTree, Block } from '../../../types';
+import { typeToCode } from '../../convertUtils';
 
 export const directive: DirectiveTree = {
     name: 'flowControl.while',
     displayName: 'while 循环',
     icon: 'icon-web-create',
-    sort: 20,
+    sort: 30,
     isControl: true,
     isControlEnd: false,
     comment: '从${startIndex}开始循环到${endIndex}结束，步长为${step}，循环位置保存至${index}',
@@ -34,7 +35,13 @@ export const directive: DirectiveTree = {
                     { value: '>', label: '大于' },
                     { value: '<', label: '小于' },
                     { value: '>=', label: '大于等于' },
-                    { value: '<=', label: '小于等于' }
+                    { value: '<=', label: '小于等于' },
+                    { value: 'in', label: '包含' },
+                    { value: 'notin', label: '不包含' },
+                    { value: 'isTrue', label: '等于true' },
+                    { value: 'noTrue', label: '不等true' },
+                    { value: 'isNull', label: '是空值' },
+                    { value: 'noNull', label: '不是空值' }
                 ],
                 defaultValue: '=='
             }
@@ -62,9 +69,8 @@ export const directive: DirectiveTree = {
         }
     },
     async toCode(directive: DirectiveTree, block: string) {
-        const { startIndex, endIndex, step } = directive.inputs;
-        const { index } = directive.outputs;
-        return `for (let ${index.name} of await robotUtil.flowControl.rangeIterator(${startIndex.value}, ${endIndex.value}, ${step.value},_block = ${JSON.stringify(block)})) {`;
+        const { operand1, operator, operand2 } = directive.inputs;
+        return `while (await robotUtil.flowControl.test(${typeToCode(operand1)},'${operator.value}',${typeToCode(operand2)},${block})) {`;
     }
 };
 

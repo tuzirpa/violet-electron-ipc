@@ -1,4 +1,3 @@
-import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import type { Block, LogLevel } from '../types';
 import dataProcessing from './dataProcessing';
 import web from './webBrowser';
@@ -18,13 +17,30 @@ export const robotUtil = {
     web,
     flowControl: {
         test: async function (operand1: any, operator: string, operand2: any, block: Block) {
+            /**
+             * 
+                { value: 'in', label: '包含' },
+                { value: 'notin', label: '不包含' },
+                { value: 'isTrue', label: '等于true' },
+                { value: 'noTrue', label: '不等true' },
+                { value: 'isNull', label: '是空值' },
+                { value: 'noNull', label: '不是空值' }
+             */
+            if (operator === 'isNull') {
+                return operand1 === null;
+            } else if (operator === 'noNull') {
+                return operand1 !== null;
+            } else if (operator === 'isTrue') {
+                return operand1 === true;
+            } else if (operator === 'noTrue') {
+                return operand1 !== true;
+            } else if (operator === 'in') {
+                return operand1.includes(operand2);
+            } else if (operator === 'notin') {
+                return !operand1.includes(operand2);
+            }
             const result = eval(`${operand1}${operator}${operand2}`);
-            sendLog(
-                'info',
-                `if条件判断结果：${operand1} ${operator} ${operand2} = ${result}`,
-                block
-            );
-            return result;
+            return !!result;
         },
         rangeIterator: async function (start: number, end: number, step: number, block: Block) {
             const result: number[] = [];

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { ElMessage } from 'element-plus';
@@ -646,6 +646,22 @@ function addBlockTemp() {
             };
             curOpenFile.value.blocks.splice(addTempIndex.value + 1, 0, controlEnd);
         }
+        if (addDirective.isControl && (addDirective.name === 'flowControl.for' || addDirective.name === 'flowControl.while')) {
+            const controlEnd: DirectiveData = {
+                id: uuid(),
+                pdLvn: 0,
+                name: 'flowControl.for.end',
+                displayName: '循环结束标记',
+                comment: '表示循环区域的尾部',
+                isControl: false,
+                isControlEnd: true,
+                inputs: {},
+                outputs: {}
+            };
+            curOpenFile.value.blocks.splice(addTempIndex.value + 1, 0, controlEnd);
+        }
+
+
         saveCurFlow('添加');
     } else {
         //有id 说明是编辑节点
@@ -673,6 +689,16 @@ function emitHistoryChange() {
     });
 }
 
+const saveFlowDebounce = _.debounce(() => {
+    const saveObj: any = JSON.parse(JSON.stringify(curOpenFile.value));
+    saveObj.blocks = saveObj.blocks.map((item) => {
+        delete item.commentShow;
+        delete item.foldDesc;
+        return item;
+    });
+    Action.saveFlow(props.appInfo.id, saveObj);
+}, 1000);
+
 /**
  * 保存流程
  */
@@ -694,16 +720,19 @@ async function saveCurFlow(saveName?: string) {
     }
     curOpenFile.value.curHistoryIndex = history.length - 1;
 
-    saveObj.blocks = saveObj.blocks.map((item) => {
-        delete item.commentShow;
-        delete item.foldDesc;
-        return item;
-    });
-    console.log(saveObj, '流程保存');
-    await Action.saveFlow(props.appInfo.id, saveObj);
+    saveFlowDebounce();
     emitHistoryChange();
     checkError(curOpenFile.value.blocks);
 }
+
+/**
+ * 保存流程 不处理历史
+ */
+async function saveCurFlowNoHistory() {
+    saveFlowDebounce();
+    checkError(curOpenFile.value.blocks);
+}
+
 
 /**
  * 撤销
@@ -718,7 +747,7 @@ const undo = () => {
 
     curOpenFile.value.blocks = curOpenFile.value.historys[curOpenFile.value.curHistoryIndex].data;
     curBlocks.value = [];
-
+    saveCurFlowNoHistory();
     emitHistoryChange();
 };
 
@@ -731,7 +760,7 @@ const redo = () => {
     }
     curOpenFile.value.curHistoryIndex++;
     curOpenFile.value.blocks = curOpenFile.value.historys[curOpenFile.value.curHistoryIndex].data;
-
+    saveCurFlowNoHistory();
     emitHistoryChange();
 };
 
@@ -795,8 +824,8 @@ defineExpose({
                     @dragenter="flowEditDragEnter" @dragover="flowEditDragOver" @dragleave="flowEditDragLeave">
                     <template v-if="blocks.length > 0">
                         <div class="directive-block" v-for="(element, index) in blocks" :data-id="element.id"
-                            :class="{ 'border-red-500 border-l': element.error }" :key="element.id" draggable="true"
-                            @dragstart="blockDragStart(element, index)"
+                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line, 'border-red-500 border-l': element.error }"
+                            :key="element.id" draggable="true" @dragstart="blockDragStart(element, index)"
                             @contextmenu="directiveShowContextMenu($event, element)">
                             <div class="row flex items-center" :class="{ 'text-gray-400/50': element.disabled }">
                                 <div class="flex flex-1 h-16" v-show="!element.hide">

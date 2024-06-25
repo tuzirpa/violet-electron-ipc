@@ -1,4 +1,4 @@
-import { DirectiveTree, Block } from '../../../types';
+import { DirectiveTree } from '../../../types';
 import { typeToCode } from '../../convertUtils';
 
 export const directive: DirectiveTree = {
@@ -24,7 +24,7 @@ export const directive: DirectiveTree = {
             name: '关系',
             value: '==',
             display: '等于',
-            type: 'conditions',
+            type: 'string',
             addConfig: {
                 type: 'select',
                 label: '关系',
@@ -37,9 +37,11 @@ export const directive: DirectiveTree = {
                     { value: '>=', label: '大于等于' },
                     { value: '<=', label: '小于等于' },
                     { value: 'in', label: '包含' },
-                    { value: 'not in', label: '不包含' },
-                    { value: 'is', label: '等于true' },
-                    { value: 'is not', label: '不等true' }
+                    { value: 'notin', label: '不包含' },
+                    { value: 'isTrue', label: '等于true' },
+                    { value: 'noTrue', label: '不等true' },
+                    { value: 'isNull', label: '是空值' },
+                    { value: 'noNull', label: '不是空值' }
                 ],
                 defaultValue: '=='
             }
@@ -49,9 +51,15 @@ export const directive: DirectiveTree = {
             value: '',
             type: 'string',
             addConfig: {
-                required: true,
                 type: 'string',
-                label: '对象2'
+                label: '对象2',
+                /**
+                 * { value: 'isTrue', label: '等于true' },
+                    { value: 'noTrue', label: '不等true' },
+                    { value: 'isNull', label: '是空值' },
+                    { value: 'noNull', label: '不是空值' }
+                 */
+                filters: `!(this.inputs.operator.value === 'isTrue' || this.inputs.operator.value === 'noTrue' || this.inputs.operator.value === 'isNull' || this.inputs.operator.value === 'noNull')`
             }
         }
     },

@@ -5,7 +5,7 @@ import { convertDirective } from './directiveconvert';
 
 export default class Flow {
     blocks: DirectiveTree[] = [];
-    static headLinkCount = 5;
+    static headLinkCount = 6;
     constructor(
         public appDir: string,
         public filePath: string,
@@ -49,7 +49,7 @@ export default class Flow {
         );
         content.push(`setTimeout(async ()=>{`);
         // content.push(`  try {`);
-
+        let flowControlBlock = '';
         for (let index = 0; index < this.blocks.length; index++) {
             const block = this.blocks[index];
             const convertCode = await convertDirective(block, index, this);
@@ -60,9 +60,27 @@ export default class Flow {
                 }
             }
             let jsCode = indent + convertCode;
+
             if (block.disabled) {
                 jsCode = '//' + jsCode;
+            } else {
+                // continue break 这两个指令只能在循环中使用
+                if (block.name === 'flowControl.continue' || block.name === 'flowControl.break') {
+                    if (
+                        flowControlBlock !== 'flowControl.for' &&
+                        flowControlBlock !== 'flowControl.while'
+                    ) {
+                        jsCode = '//' + jsCode;
+                    }
+                }
             }
+            //记录是否在for或while中
+            if (block.name === 'flowControl.for' || block.name === 'flowControl.while') {
+                flowControlBlock = block.name;
+            } else if (block.name === 'flowControl.for.end') {
+                flowControlBlock = '';
+            }
+
             content.push(jsCode);
         }
         // content.push('  } catch (error) {');
