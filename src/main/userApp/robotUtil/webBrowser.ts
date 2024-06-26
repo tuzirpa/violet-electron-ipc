@@ -1,6 +1,30 @@
-import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, Frame, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import { Block } from '../types';
 import { sendLog } from './robotUtil.template';
+
+/**
+ * 当前页以及所有iframe 获取元素
+ * @param selector
+ * @param page
+ * @returns
+ */
+async function getElements(selector: string, page: Page): Promise<Element[]> {
+    const iframeAll: Frame[] = [];
+    function dumpFrameTree(frame: Frame) {
+        iframeAll.push(frame);
+        for (let child of frame.childFrames()) dumpFrameTree(child);
+    }
+    dumpFrameTree(page.mainFrame());
+    const promises: any[] = [];
+    iframeAll.forEach((frame) => {
+        const frameSelector = `${frame.name()} ${selector}`;
+        promises.push(frame.$(frameSelector));
+    });
+    let res = await Promise.all(promises).then((results) => {
+        return results.filter((element) => element !== null);
+    });
+    return res;
+}
 
 const webBrowser = {
     openBrowser: async function (
