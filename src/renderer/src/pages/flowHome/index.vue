@@ -323,6 +323,25 @@ function runLogsRowClassName({
     color: blue;
 }
 
+::v-deep(.el-table .fatalError) {
+    //动画闪烁
+    animation: shan 1s infinite;
+}
+
+@keyframes shan {
+    0% {
+        color: red;
+    }
+
+    50% {
+        color: yellow;
+    }
+
+    100% {
+        color: red;
+    }
+}
+
 ::v-deep(.el-tabs__content) {
     overflow: auto;
     margin-bottom: 4px;
