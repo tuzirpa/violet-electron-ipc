@@ -1,7 +1,8 @@
-import { DirectiveTree } from 'src/main/userApp/types';
+import type { DirectiveTree } from 'src/main/userApp/types';
 import { ref } from 'vue';
+import { OpenFile } from './types';
 
-type DirectiveTreeError = DirectiveTree & { line: number };
+type DirectiveTreeError = { directive: DirectiveTree; file: OpenFile; line: number };
 /**
  * 错误指令列表
  */

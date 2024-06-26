@@ -4,6 +4,11 @@ import { uuid } from '@shared/Utils';
 import Flow from './Flow';
 
 export class UserAppManage {
+    updateUserAppName(appId: string, name: string) {
+        const userApp = this.findUserApp(appId);
+        userApp.name = name;
+        return userApp.save();
+    }
     devGetProperties(appId: string, objectId: string) {
         const userApp = this.findUserApp(appId);
         return userApp.devGetProperties(objectId);

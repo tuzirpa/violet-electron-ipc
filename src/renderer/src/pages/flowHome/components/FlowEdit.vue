@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { ElMessage } from 'element-plus';
@@ -703,6 +703,8 @@ const saveFlowDebounce = (() => {
                 return item;
             });
             Action.saveFlow(props.appInfo.id, saveObj);
+
+            checkError(curOpenFile.value.blocks, curOpenFile.value);
             curOpenFile.value.edit = false;
         }, 1000);
     }
@@ -731,7 +733,7 @@ async function saveCurFlow(saveName?: string) {
 
     saveFlowDebounce();
     emitHistoryChange();
-    checkError(curOpenFile.value.blocks);
+
 }
 
 /**
@@ -739,7 +741,6 @@ async function saveCurFlow(saveName?: string) {
  */
 async function saveCurFlowNoHistory() {
     saveFlowDebounce();
-    checkError(curOpenFile.value.blocks);
 }
 
 
@@ -781,6 +782,8 @@ function scrollIntoRow(rowNum: number) {
     });
     curBlocks.value = [curOpenFile.value.blocks[rowNum - 1]];
 }
+
+checkError(curOpenFile.value.blocks, curOpenFile.value);
 
 defineExpose({
     undo,

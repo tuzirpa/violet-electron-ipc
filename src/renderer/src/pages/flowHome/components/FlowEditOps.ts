@@ -1,7 +1,7 @@
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { Action } from '@renderer/lib/action';
 import { DirectiveData, OpenFile } from './types';
-import { FlowVariable } from 'src/main/userApp/types';
+import type { FlowVariable } from 'src/main/userApp/types';
 import { errorDirectives } from './FlowEditStore';
 
 export const showContextFlowMenu = (event: MouseEvent, curOpenFile: OpenFile) => {
@@ -43,7 +43,8 @@ function variablesCompute(directives: DirectiveData[], index: number) {
     return variablesTemp;
 }
 
-export const checkError = (directives: DirectiveData[]) => {
+export const checkError = (directives: DirectiveData[], file: OpenFile) => {
+    errorDirectives.value = [];
     directives.forEach((directive, index) => {
         //获取当前指令之前的变量
         const vars = variablesCompute(directives, index);
@@ -63,9 +64,8 @@ export const checkError = (directives: DirectiveData[]) => {
             } else {
                 const varNames = String(input.value).match(/\${.*?}/g);
                 varNames?.forEach((varName) => {
-                    const varItem = vars.find(
-                        (item) => item.name === varName.substring(2, varName.length - 1)
-                    );
+                    varName = varName.substring(2, varName.length - 1);
+                    const varItem = vars.find((item) => item.name === varName);
                     if (!varItem) {
                         errors.push(`变量${varName}未定义`);
                     }
@@ -74,7 +74,7 @@ export const checkError = (directives: DirectiveData[]) => {
         }
         if (errors.length > 0) {
             directive.error = errors.join('\n');
-            errorDirectives.value.push({ ...directive, line: index + 1 });
+            errorDirectives.value.push({ file, directive, line: index + 1 });
         }
     });
 };

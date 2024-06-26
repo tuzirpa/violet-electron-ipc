@@ -109,6 +109,10 @@ class Action {
         return UserAppManage.devGetProperties(appId, objectId);
     }
 
+    static async updateUserAppName(appId: string, name: string) {
+        return UserAppManage.updateUserAppName(appId, name);
+    }
+
     static async getDirectives() {
         return useDirective();
     }

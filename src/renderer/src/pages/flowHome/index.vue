@@ -4,7 +4,7 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { ElButton } from 'element-plus';
+import { ElButton, ElMessageBox, ElTable, ElTableColumn } from 'element-plus';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Action } from '@renderer/lib/action';
@@ -12,6 +12,7 @@ import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { typeDisplay } from './directiveConfig';
 import type { LogLevel, Block } from 'src/main/userApp/types';
+import { errorDirectives } from './components/FlowEditStore';
 
 const route = useRoute();
 const id = route.query.appId as string;
@@ -144,10 +145,30 @@ const historys = ref<{
 });
 const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
 
+/**
+ * 日志行样式
+ * @param param0 
+ */
 function runLogsRowClassName({
     row
 }) {
     return row.level;
+}
+
+async function clickUserAppName() {
+    if (!userAppDetail.value) {
+        return;
+    }
+    const { value } = await ElMessageBox.prompt('请输入应用名称', '修改应用名称', {
+        inputValue: userAppDetail.value?.name,
+        inputType: 'text',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+    });
+    if (value) {
+        await Action.updateUserAppName(userAppDetail.value.id, value);
+        userAppDetail.value.name = value;
+    }
 }
 
 // 添加逻辑
@@ -168,10 +189,10 @@ function runLogsRowClassName({
 
                         <el-tooltip class="box-item" effect="dark" content="编辑应用信息" placement="bottom-start"
                             :show-after="100">
-                            <div
+                            <div @click="clickUserAppName"
                                 class="btn-item group non-draggable flex justify-center items-center gap-2 rounded py-1 px-2 pr-8 cursor-pointer hover:bg-slate-400/30">
                                 <i class="iconfont icon-yingyongming"></i>
-                                <div>应用名称</div>
+                                <div class="w-20 truncate group-hover:text-gray-800">{{ userAppDetail?.name }}</div>
                                 <i class="iconfont icon-bianji opacity-30 group-hover:opacity-100"></i>
                             </div>
                         </el-tooltip>
@@ -277,6 +298,40 @@ function runLogsRowClassName({
                                     <el-table-column prop="type" label="变量类型" />
                                 </el-table>
                             </el-tab-pane>
+                            <el-tab-pane class="error-list" label="错误列表" name="error-list">
+                                <template #label>
+                                    <div class="error-list-title" :class="{ 'cornerMark': errorDirectives.length }">错误列表
+                                    </div>
+                                </template>
+                                <ElTable :data="errorDirectives" style="
+                                        width: 100%;
+                                        height: calc(var(--draggable-height) - 60px);
+                                    ">
+                                    <ElTableColumn label="流程名" width="180">
+                                        <template #default="scope">
+                                            {{ scope.row.file.name }}
+                                        </template>
+                                    </ElTableColumn>
+                                    <el-table-column label="错误指令" width="180">
+                                        <template #default="scope">
+                                            {{ scope.row.directive.displayName }}
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="错误描述">
+                                        <template #default="scope">
+                                            {{ scope.row.directive.error }}
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="line" label="行号" width="180">
+                                        <template #default="scope">
+                                            <a class="cursor-pointer underline decoration-1 text-blue-500"
+                                                @click="flowEditRef?.scrollIntoRow(scope.row.line)">
+                                                {{ scope.row.line }}
+                                            </a>
+                                        </template>
+                                    </el-table-column>
+                                </ElTable>
+                            </el-tab-pane>
                         </el-tabs>
                     </BoxDraggable>
                 </div>
@@ -314,6 +369,22 @@ function runLogsRowClassName({
     transform: scaleX(-1);
 }
 
+.cornerMark {
+    position: relative;
+
+    &::after {
+        position: absolute;
+        content: "";
+        display: block;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: #f56c6c;
+        top: 0;
+        right: 0;
+        transform: translateX(100%);
+    }
+}
 
 ::v-deep(.el-table .error) {
     color: red;

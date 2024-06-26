@@ -79,6 +79,7 @@ export default class UserApp {
             path.join(this.appDir, 'package.json'),
             JSON.stringify(this.packageJson, null, 2)
         );
+        return true;
     }
 
     init() {
