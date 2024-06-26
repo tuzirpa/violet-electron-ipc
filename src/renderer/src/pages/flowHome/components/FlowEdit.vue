@@ -919,8 +919,8 @@ defineExpose({
         </el-dialog>
         <!-- 确认添加指令弹框 -->
         <el-dialog v-if="directiveAddTemp" v-model="addTempDialogVisible" @close="directiveAddTemp = void 0"
-            :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`" width="642" top="30vh" draggable>
-            <div class="flex flex-col max-h-80">
+            :title="`${directiveAddTemp.id ? '编辑' : '添加'}指令`" draggable>
+            <div class="flex flex-col">
                 <AddDirective :directive="directiveAddTemp" :variables="variables" />
             </div>
             <template #footer>

@@ -4,7 +4,7 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { ElButton, ElMessageBox, ElTable, ElTableColumn } from 'element-plus';
+import { ElButton, ElMessage, ElMessageBox, ElTable, ElTableColumn } from 'element-plus';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Action } from '@renderer/lib/action';
@@ -43,6 +43,10 @@ async function installPackage() {
 
 async function run() {
     if (userAppDetail.value?.id) {
+        if (isDev.value || isRun.value) {
+            ElMessage.info('正在运行中...');
+            return;
+        }
         await Action.userAppRun(userAppDetail.value?.id);
         isRun.value = true;
         window.electron.ipcRenderer.on('breakpoint', breakpointCallback);
@@ -91,6 +95,10 @@ const devRunEndCallback = (_event) => {
 
 async function devRun() {
     if (userAppDetail.value?.id) {
+        if (isDev.value || isRun.value) {
+            ElMessage.info('正在运行中...');
+            return;
+        }
         await Action.userAppDevRun(userAppDetail.value?.id);
         bottomTabsActiveName.value = 'dev-variable';
         window.electron.ipcRenderer.on('breakpoint', breakpointCallback);
@@ -224,12 +232,12 @@ const directiveWidth = ref(250);
                                 :text="'安装依赖包'" @click="installPackage">
                                 安装包
                             </BtnTip>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-yunxing'"
-                                :text="'运行流程'" @click="run">
+                            <BtnTip class="bg-slate-400/20 rounded" :class="{ 'text-gray-300': isRun || isDev }"
+                                :icon-class="'text-green-500'" :icon="'icon-yunxing'" :text="'运行流程'" @click="run">
                                 运行
                             </BtnTip>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
-                                :text="'调试流程'" @click="devRun">
+                            <BtnTip class="bg-slate-400/20 rounded" :class="{ 'text-gray-300': isRun || isDev }"
+                                :icon-class="'text-green-500'" :icon="'icon-tiaoshi'" :text="'调试流程'" @click="devRun">
                                 调试
                             </BtnTip>
                         </template>
@@ -244,7 +252,7 @@ const directiveWidth = ref(250);
                             </BtnTip>
                         </template>
                         <BtnTip class="bg-slate-400/20 rounded text-gray-300" :icon-class="'text-green-500'"
-                            :icon="'icon-stop'" :text="'停止'" @click="devStop" :class="{ 'text-gray-600 ': isDev || isRun }">
+                            :icon="'icon-stop'" :text="'停止'" @click="devStop" :class="{ 'text-red-600 ': isDev || isRun }">
                             停止
                         </BtnTip>
                     </div>

@@ -15,7 +15,7 @@ export const directive: DirectiveTree = {
             type: 'string',
             addConfig: {
                 label: '输出内容',
-                type: 'string',
+                type: 'textarea',
                 defaultValue: 'test',
                 tip: '输出内容'
             }

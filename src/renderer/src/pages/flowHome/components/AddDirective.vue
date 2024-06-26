@@ -149,7 +149,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="add-directive-container flex flex-col gap-3">
+    <div class="add-directive-container flex flex-col overflow-auto gap-3">
         <div class="directive-header flex justify-between items-center">
             <div class="left flex gap-3">
                 <div class="directive-icon">
@@ -346,6 +346,11 @@ onMounted(() => {
 
 <style lang="less" scoped>
 // 添加样式
+
+.add-directive-container {
+    max-height: 70vh;
+}
+
 .open {
     .el-select-dropdown {
         display: block !important;

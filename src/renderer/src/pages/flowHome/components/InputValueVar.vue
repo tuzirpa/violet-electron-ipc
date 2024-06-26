@@ -30,7 +30,12 @@ function varSelectValChange(val: string) {
 
 <template>
     <div class="relative">
-        <el-input v-model="model" :placeholder="inputItem.addConfig?.placeholder">
+        <div class="flex items-center gap-2" v-if="inputItem.addConfig.type === 'textarea'">
+            <el-input type="textarea" v-model="model" :placeholder="inputItem.addConfig?.placeholder">
+            </el-input>
+            <div class="text-blue-500 text-sm cursor-pointer w-20" @click="varClick">使用变量</div>
+        </div>
+        <el-input v-else v-model="model" :placeholder="inputItem.addConfig?.placeholder">
             <template #append>
                 <div class="text-gray-500 text-sm cursor-pointer" @click="varClick">使用变量</div>
             </template>
