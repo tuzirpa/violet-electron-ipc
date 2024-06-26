@@ -186,20 +186,17 @@ export class DevNodeJs {
     async exceptionThrown(params) {
         console.log('exceptionThrown', params);
         const description = params.exceptionDetails.exception.description;
-        const lineNumber = params.exceptionDetails.lineNumber;
-        const scriptId = params.exceptionDetails.scriptId;
-        const res = await this.sendCommand('Debugger.getScriptSource', {
-            scriptId: scriptId
-        });
-        const scriptLines = res.result.scriptSource.split('\n');
-        const lineContent = scriptLines[lineNumber];
+        // const lineNumber = params.exceptionDetails.lineNumber;
+        // const scriptId = params.exceptionDetails.scriptId;
+        // const res = await this.sendCommand('Debugger.getScriptSource', {
+        //     scriptId: scriptId
+        // });
+        // const scriptLines = res.result.scriptSource.split('\n');
+        // const lineContent = scriptLines[lineNumber];
         //代码中匹配出流程名称 等块信息
         //{"blockLine":8,"flowName":"main.flow","directiveName":"web.openBarClose","directiveDisplayName":"关闭浏览器","failureStrategy":"terminate","intervalTime":0,"retryCount":0}
 
-        const blockLine = lineContent.match(/blockLine:\s*(\d+)/)?.[1];
-
-        console.log(lineContent);
-
+        // const blockLine = lineContent.match(/blockLine:\s*(\d+)/)?.[1];
         this.exceptionThrownCallbacks.forEach((callback) => {
             callback({
                 description,
