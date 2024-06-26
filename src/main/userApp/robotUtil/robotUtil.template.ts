@@ -2,6 +2,7 @@ import type { Block, LogLevel } from '../types';
 import dataProcessing from './dataProcessing';
 import web from './webBrowser';
 import flowControl from './flowControl';
+import wait from './wait';
 import fs from 'fs';
 
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
@@ -17,7 +18,8 @@ export const robotUtil = {
     sendLog,
     dataProcessing,
     web,
-    flowControl
+    flowControl,
+    wait
 };
 
 //循环执行指令 给指令套上一层 异常处理

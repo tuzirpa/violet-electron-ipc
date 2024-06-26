@@ -12,7 +12,7 @@
 </template>
   
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 const props = defineProps<{
     width?: number;
@@ -31,6 +31,12 @@ const box = ref<HTMLElement>();
 
 const styleWidth = ref(props.width || '100%');
 const styleHeight = ref(props.height || '100%');
+
+watch(() => props.width, (newVal) => {
+    if (newVal) {
+        styleWidth.value = newVal + 'px';
+    }
+});
 
 const width = ref(props.width);
 const minWidth = ref((props.minWidth || props.width) ?? 0);

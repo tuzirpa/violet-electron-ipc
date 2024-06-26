@@ -7,15 +7,29 @@ import { dragData } from '../dragVar';
 import { useDirective } from '../directive';
 import { FilterValue, TreeNodeData } from 'element-plus/es/components/tree/src/tree.type';
 import Node from 'element-plus/es/components/tree/src/model/node';
+import { useElementSize } from '@vueuse/core'
+
 
 
 const emit = defineEmits<{
     (e: 'addDirective', data: DirectiveTree): void;
+    (e: 'hideDirectiveTree', hideDirectiveTree: boolean): void;
 }>();
 
 const handleNodeClick = (data: DirectiveTree) => {
     console.log(data);
 };
+
+const el = ref(null)
+const { width } = useElementSize(el)
+watch(width, (newVal) => {
+    if (newVal > 100) {
+        hideDirectiveTree.value = false
+    }
+    if (newVal < 100) {
+        hideDirectiveTree.value = true
+    }
+})
 
 const data = useDirective();
 
@@ -23,6 +37,24 @@ const defaultProps = {
     children: 'children',
     label: 'name'
 };
+
+const hideDirectiveTree = ref(false);
+
+watch(hideDirectiveTree, (newVal) => {
+    emit('hideDirectiveTree', newVal);
+})
+
+const expandAll = ref(false);
+function expandAllNodes() {
+    expandAll.value = !expandAll.value;
+    Object.values(treeRef.value!.store.nodesMap).forEach((node) => {
+        if (!expandAll.value) {
+            node.collapse();
+        } else {
+            node.expand();
+        }
+    });
+}
 
 const searchValue = ref('');
 const searchIcon = <i class="iconfont icon-sousuo"></i>;
@@ -35,7 +67,7 @@ watch(searchValue, (val) => {
 
 const filterNode = (value: FilterValue, data: TreeNodeData, _node: Node): boolean => {
     if (!value) return true;
-    return data.paretObjName.includes(value);
+    return data.displayName.includes(value);
 };
 
 function handleDragStart(_event: DragEvent, data: DirectiveTree) {
@@ -46,20 +78,26 @@ function handleDragStart(_event: DragEvent, data: DirectiveTree) {
 </script>
 
 <template>
-    <div class="tree-container viewbox text-xs font-sans">
+    <div class="tree-container viewbox text-xs font-sans" ref="el">
         <div class="px-2 py-1 viewbox gap-4">
             <div class="header flex justify-between items-center mt-2 gap-1">
-                <div class="w-8 font-bold text-sm">指令</div>
-                <div class="flex-1">
-                    <ElInput class="h-6 overflow-hidden" :prefix-icon="searchIcon" v-model="searchValue" placeholder="搜索指令"
-                        clearable />
-                </div>
-                <BtnTip :icon="'icon-zhankai'" text="展开全部指令" class="px-0.5 py-0.5 text-xs text-gray-400" />
-                <BtnTip :icon="'icon-fanhui'" text="隐藏" class="px-0.5 p-0.5 text-xs text-gray-400" />
+                <template v-if="!hideDirectiveTree">
+                    <div class="w-8 font-bold text-sm">指令</div>
+                    <div class="flex-1">
+                        <ElInput class="h-6 overflow-hidden" :prefix-icon="searchIcon" v-model="searchValue"
+                            placeholder="搜索指令" clearable />
+                    </div>
+                    <BtnTip :icon="'icon-zhankai'" :class="{ '-scale-y-100': expandAll }" text="展开/收缩全部指令"
+                        @click="expandAllNodes" class="px-0.5 py-0.5 text-xs text-gray-400" />
+                </template>
+                <BtnTip :icon="'icon-fanhui'" text="隐藏" v-if="!hideDirectiveTree" @click="hideDirectiveTree = true"
+                    class="px-0.5 p-0.5 text-xs text-gray-400" />
+                <BtnTip :icon="'icon-fanhui'" :class="{ '-scale-x-100': hideDirectiveTree }" text="指令" v-else
+                    @click="hideDirectiveTree = false" class="px-0.5 p-0.5 text-xs text-gray-400" />
             </div>
-            <div class="wrapbox">
+            <div class="wrapbox" v-show="!hideDirectiveTree">
                 <el-tree ref="treeRef" style="--el-tree-node-content-height: 34px" :data="data" :props="defaultProps"
-                    @node-click="handleNodeClick" :filterNodeMethod="filterNode">
+                    @node-click="handleNodeClick" :filterNodeMethod="filterNode" :default-expand-all="expandAll">
                     <template #default="{ node, data }">
                         <template v-if="node.isLeaf">
                             <div class="flex-1 flex justify-between items-center" draggable="true"

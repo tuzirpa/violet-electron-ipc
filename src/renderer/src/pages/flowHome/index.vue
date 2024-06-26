@@ -44,6 +44,8 @@ async function installPackage() {
 async function run() {
     if (userAppDetail.value?.id) {
         await Action.userAppRun(userAppDetail.value?.id);
+        window.electron.ipcRenderer.on('breakpoint', breakpointCallback);
+        window.electron.ipcRenderer.on('devRunEnd', devRunEndCallback);
     }
 }
 
@@ -55,6 +57,7 @@ const breakpointData = ref<IBreakpoint>({
 const breakpointCallback = async (_event, data: IBreakpoint) => {
     console.log(data, 'breakpoint');
     breakpointData.value = data;
+    isDev.value = true;
 
     //获取断点变量列表
     if (
@@ -87,7 +90,6 @@ const devRunEndCallback = (_event) => {
 async function devRun() {
     if (userAppDetail.value?.id) {
         await Action.userAppDevRun(userAppDetail.value?.id);
-        isDev.value = true;
         bottomTabsActiveName.value = 'dev-variable';
         window.electron.ipcRenderer.on('breakpoint', breakpointCallback);
         window.electron.ipcRenderer.on('devRunEnd', devRunEndCallback);
@@ -170,6 +172,12 @@ async function clickUserAppName() {
         userAppDetail.value.name = value;
     }
 }
+const hideDirective = ref(false);
+const hideDirectiveTree = (e: boolean) => {
+    hideDirective.value = e;
+    directiveWidth.value = e ? 60 : 250;
+};
+const directiveWidth = ref(250);
 
 // 添加逻辑
 </script>
@@ -206,7 +214,7 @@ async function clickUserAppName() {
                             :icon="'icon-chexiao'" :text="'重做'" @click="flowEditRef?.redo()">
                         </BtnTip>
 
-                        <BtnTip :icon="'icon-zhedie'" :text="'折叠'"></BtnTip>
+                        <!-- <BtnTip :icon="'icon-zhedie'" :text="'折叠'"></BtnTip> -->
                         <template v-if="!isDev">
                             <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
                                 :text="'安装依赖包'" @click="installPackage">
@@ -250,10 +258,13 @@ async function clickUserAppName() {
         <div class="viewbox">
             <div class="flex flex-1 flex-row viewbox">
                 <!-- 指令区 -->
-                <BoxDraggable class="viewbox left-sidebar border-r" :width="250" :resize-right="true">
-                    <DirectiveTree class="directive-edit flex-1 wrapbox p-1" @add-directive="flowEditRef?.addBlock($event)">
+                <BoxDraggable class="viewbox left-sidebar border-r" :width="directiveWidth" :min-width="60"
+                    :resize-right="true">
+                    <DirectiveTree @hide-directive-tree="hideDirectiveTree" class="directive-edit flex-1 wrapbox p-1"
+                        @add-directive="flowEditRef?.addBlock($event)">
                     </DirectiveTree>
                 </BoxDraggable>
+
                 <div class="main-content viewbox flex-1 bg-gray-100">
                     <div class="flow-edit flex-1 viewbox p-2">
                         <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"
