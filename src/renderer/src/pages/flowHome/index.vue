@@ -44,6 +44,7 @@ async function installPackage() {
 async function run() {
     if (userAppDetail.value?.id) {
         await Action.userAppRun(userAppDetail.value?.id);
+        isRun.value = true;
         window.electron.ipcRenderer.on('breakpoint', breakpointCallback);
         window.electron.ipcRenderer.on('devRunEnd', devRunEndCallback);
     }
@@ -81,6 +82,7 @@ const breakpointCallback = async (_event, data: IBreakpoint) => {
 
 const devRunEndCallback = (_event) => {
     isDev.value = false;
+    isRun.value = false;
     window.electron.ipcRenderer.removeAllListeners('breakpoint');
     window.electron.ipcRenderer.removeAllListeners('devRunEnd');
     breakpointData.value = { line: 0, url: '' };
@@ -105,6 +107,7 @@ async function devStop() {
         await Action.devStop(userAppDetail.value?.id);
     }
 }
+
 
 async function devResume() {
     if (userAppDetail.value?.id) {
@@ -133,6 +136,7 @@ const devVariableData = ref([]);
  * 是否处于调试状态
  */
 const isDev = ref(false);
+const isRun = ref(false);
 
 const historys = ref<{
     curIndex: number;
@@ -238,11 +242,11 @@ const directiveWidth = ref(250);
                                 :icon="'icon-nextstep'" @click="devStepOver">
                                 下一步
                             </BtnTip>
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-stop'"
-                                :text="'停止调试'" @click="devStop">
-                                停止
-                            </BtnTip>
                         </template>
+                        <BtnTip class="bg-slate-400/20 rounded text-gray-300" :icon-class="'text-green-500'"
+                            :icon="'icon-stop'" :text="'停止'" @click="devStop" :class="{ 'text-gray-600 ': isDev || isRun }">
+                            停止
+                        </BtnTip>
                     </div>
                 </div>
                 <div class="viewbox flex flex-row justify-end items-center gap-2">

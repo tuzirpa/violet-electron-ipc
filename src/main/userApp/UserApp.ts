@@ -237,10 +237,18 @@ export default class UserApp {
         }
     }
     async devStop() {
+        if (!this.devPrecess) {
+            return;
+        }
         if (this.devNodeJs) {
             this.devNodeJs.stop();
         }
         this.devPrecess && this.devPrecess.kill();
+        this.sendRunLogs({
+            level: 'info',
+            time: Date.now(),
+            message: `停止流程`
+        });
         WindowManage.mainWindow.webContents.send('devRunEnd');
     }
 
@@ -317,6 +325,7 @@ export default class UserApp {
                             message: `流程结束`
                         });
                         WindowManage.mainWindow.webContents.send('devRunEnd');
+                        this.devPrecess = null;
                     }, 1000);
                 }
             }
