@@ -11,6 +11,7 @@ export type DirectiveData = DirectiveTree & {
 export type OpenFile = {
     name: string;
     filePath: string;
+    edit?: boolean;
     historys: { saveName: string; data: any[] }[];
     curHistoryIndex: number;
     blocks: DirectiveData[];

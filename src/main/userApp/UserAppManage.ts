@@ -54,8 +54,11 @@ export class UserAppManage {
     }
 
     getUserApp(id: string): UserApp | undefined {
-        return this.userApps.find((app) => app.id === id);
+        const userApp = this.findUserApp(id);
+        userApp.initFlows();
+        return userApp;
     }
+
     findUserApp(id: string): UserApp {
         const userApp = this.userApps.find((app) => app.id === id);
         if (!userApp) {

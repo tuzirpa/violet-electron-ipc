@@ -5,7 +5,7 @@ import { convertDirective } from './directiveconvert';
 
 export default class Flow {
     blocks: DirectiveTree[] = [];
-    static headLinkCount = 6;
+    static headLinkCount = 7;
     constructor(
         public appDir: string,
         public filePath: string,
@@ -41,14 +41,14 @@ export default class Flow {
      */
     public async convert() {
         let content = ['//流程自动生成'];
-        content.push(`let robotUtil = require('./robotUtil');`);
-        content.push(`robotUtil = robotUtil.default;`);
+        content.push(`let robotUtilAll = require('./robotUtil');let fs = require('fs');`);
+        content.push(`robotUtil = robotUtilAll.default;`);
         content.push(`let _block = {};`);
         content.push(
-            `const generateBlock = (blockLine,flowName,directiveName,directiveDisplayName,failureStrategy,intervalTime,retryCount)=>{return {blockLine,flowName,directiveName,directiveDisplayName,failureStrategy,intervalTime,retryCount}}`
+            `const generateBlock = robotUtilAll.generateBlock;const fatalError = robotUtilAll.fatalError;`
         );
         content.push(`setTimeout(async ()=>{`);
-        // content.push(`  try {`);
+        content.push(`  try {`);
         let flowControlBlock = '';
         for (let index = 0; index < this.blocks.length; index++) {
             const block = this.blocks[index];
@@ -83,12 +83,9 @@ export default class Flow {
 
             content.push(jsCode);
         }
-        // content.push('  } catch (error) {');
-        // content.push(`    console.log(error);`);
-        // content.push(
-        //     `    robotUtil.sendLog('error', '致命错误,退出流程:' + error.message, _block);`
-        // );
-        // content.push('  }');
+        content.push('  } catch (error) {');
+        content.push(`    fatalError(error,__filename);`);
+        content.push('  }');
         content.push('}, 1000);');
 
         return content.join('\n');

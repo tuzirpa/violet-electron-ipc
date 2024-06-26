@@ -689,15 +689,24 @@ function emitHistoryChange() {
     });
 }
 
-const saveFlowDebounce = _.debounce(() => {
-    const saveObj: any = JSON.parse(JSON.stringify(curOpenFile.value));
-    saveObj.blocks = saveObj.blocks.map((item) => {
-        delete item.commentShow;
-        delete item.foldDesc;
-        return item;
-    });
-    Action.saveFlow(props.appInfo.id, saveObj);
-}, 1000);
+
+const saveFlowDebounce = (() => {
+    let st: any;
+    return function () {
+        clearTimeout(st);
+        curOpenFile.value.edit = true;
+        st = setTimeout(() => {
+            const saveObj: any = JSON.parse(JSON.stringify(curOpenFile.value));
+            saveObj.blocks = saveObj.blocks.map((item) => {
+                delete item.commentShow;
+                delete item.foldDesc;
+                return item;
+            });
+            Action.saveFlow(props.appInfo.id, saveObj);
+            curOpenFile.value.edit = false;
+        }, 1000);
+    }
+})();
 
 /**
  * 保存流程
@@ -785,9 +794,14 @@ defineExpose({
     <div class="viewbox rounded bg-white flex-1">
         <div class="header bg-gray-100">
             <div class="files flex items-center" @contextmenu="showContextFlowMenu($event, curOpenFile)">
-                <div class="file py-2 px-4 cursor-pointer hover:bg-white/60" v-for="file in openFiles" :key="file.name"
+                <div class="file flex py-2 px-4 cursor-pointer hover:bg-white/60" v-for="file in openFiles" :key="file.name"
                     :class="{ 'bg-white': file.name === curOpenFile.name }" @click="curOpenFile = file">
-                    {{ file.name }}
+                    <div class="flow-name text-sm">
+                        {{ file.name }}
+                    </div>
+                    <div class="flow-edit ml-1" v-show="file.edit">
+                        *
+                    </div>
                 </div>
             </div>
         </div>

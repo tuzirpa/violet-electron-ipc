@@ -51,6 +51,7 @@ export default class UserApp {
     flows: Flow[] = [];
     devNodeJs: DevNodeJs | null = null;
     devPrecess: ChildProcessWithoutNullStreams | null = null;
+    private _initFlow: boolean = false;
 
     static get userAppLocalDir() {
         const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
@@ -92,7 +93,7 @@ export default class UserApp {
         this.packageJson = JSON.parse(packageJsonStr);
         this.name = this.packageJson.name;
 
-        this.initFlows();
+        // this.initFlows();
         this.robotUtilInit();
     }
 
@@ -146,8 +147,15 @@ export default class UserApp {
         fs.writeFileSync(path.join(this.appRobotUtilDir, 'index.js'), robotUtilContent);
     }
 
+    /**
+     * 加载 flows
+     */
     initFlows() {
         // 初始化flows
+        if (this._initFlow) {
+            return;
+        }
+        this._initFlow = true;
         this.getFlows();
     }
 
