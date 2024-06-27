@@ -17,8 +17,7 @@ async function getElements(selector: string, page: Page): Promise<Element[]> {
     dumpFrameTree(page.mainFrame());
     const promises: any[] = [];
     iframeAll.forEach((frame) => {
-        const frameSelector = `${frame.name()} ${selector}`;
-        promises.push(frame.$(frameSelector));
+        promises.push(frame.$(selector));
     });
     let res = await Promise.all(promises).then((results) => {
         return results.filter((element) => element !== null);
@@ -27,6 +26,27 @@ async function getElements(selector: string, page: Page): Promise<Element[]> {
 }
 
 const webBrowser = {
+    create2: async function (
+        params: { webType: string; url: string; loadTimeout: number },
+        _block: Block
+    ) {
+        const { webType: type, url: webUrl, loadTimeout } = params;
+
+        if (type !== 'tuziChrome') {
+            // if (executablePath === '') {
+            //     sendLog('error', `本地未安装 ${displayName}，请设置先安装 ${displayName}`, block);
+            //     throw new Error('未设置chrome路径');
+            // }
+        }
+        const ops: PuppeteerLaunchOptions = { headless: false, defaultViewport: null };
+        // executablePath && (ops.executablePath = executablePath);
+        const browser = await puppeteer.launch(ops);
+        const pages = await browser.pages();
+        const page = pages[0];
+        await page.goto(webUrl, { timeout: loadTimeout * 1000 });
+        return { browser };
+    },
+
     openBrowser: async function (
         type: string,
         executablePath: string,
@@ -95,11 +115,16 @@ const webBrowser = {
         timeout: number,
         block: Block
     ) {
-        try {
-            await page.waitForSelector(selector, { timeout: timeout * 1000 });
-        } catch (error) {
-            throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
-        }
+        // try {
+        //     await page.waitForSelector(selector, { timeout: timeout * 1000 });
+        // } catch (error) {
+        //     throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
+        // }
+
+        let res = await getElements(selector, page);
+        console.log('========================================================');
+        console.log(res);
+        console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
 
         let element = await page.$(selector);
         sendLog('info', `css方式获取元素：${element}`, block);

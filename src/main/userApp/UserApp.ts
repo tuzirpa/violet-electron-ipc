@@ -198,7 +198,7 @@ export default class UserApp {
             // WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
         });
         child.stderr.on('data', (data) => {
-            console.log(`stderr: ${data}`);
+            console.error(`stderr: ${data}`);
             data = data.toString();
             stdCallback && stdCallback(data);
             // WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
