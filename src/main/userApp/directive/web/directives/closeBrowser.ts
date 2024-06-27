@@ -1,7 +1,7 @@
 import { DirectiveTree, Block } from '../../../types';
 
 export const directive: DirectiveTree = {
-    name: 'web.openBarClose',
+    name: 'web.closeBrowser',
     sort: 2,
     displayName: '关闭浏览器',
     icon: 'icon-web-create',
@@ -13,7 +13,7 @@ export const directive: DirectiveTree = {
             name: 'closeBrowser',
             value: '',
             display: '',
-            type: 'string',
+            type: 'variable',
             // errorHadnler: 'error',
             addConfig: {
                 label: '选择要关闭的浏览器',
@@ -21,13 +21,20 @@ export const directive: DirectiveTree = {
                 filtersType: 'sq.chrome',
                 autoComplete: true
             }
+        },
+        closeaaa: {
+            name: 'closeBrowser',
+            value: '',
+            display: '',
+            type: 'boolean',
+            // errorHadnler: 'error',
+            addConfig: {
+                label: '强制',
+                type: 'string'
+            }
         }
     },
-    outputs: {},
-
-    async toCode(directive: DirectiveTree, block: string) {
-        return `await robotUtil.web.closeBrowser(${directive.inputs.closeBrowser.value},${block});`;
-    }
+    outputs: {}
 };
 
 export default directive;

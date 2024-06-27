@@ -77,8 +77,8 @@ const webBrowser = {
         return page;
     },
 
-    closeBrowser: async function (webBrow: Browser, block: Block) {
-        await webBrow.close();
+    closeBrowser: async function ({ closeBrowser }: { closeBrowser: Browser }, block: Block) {
+        await closeBrowser.close();
         sendLog('info', `关闭浏览器，成功`, block);
     },
 
@@ -115,17 +115,11 @@ const webBrowser = {
         timeout: number,
         block: Block
     ) {
-        // try {
-        //     await page.waitForSelector(selector, { timeout: timeout * 1000 });
-        // } catch (error) {
-        //     throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
-        // }
-
-        let res = await getElements(selector, page);
-        console.log('========================================================');
-        console.log(res);
-        console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-
+        try {
+            await page.waitForSelector(selector, { timeout: timeout * 1000 });
+        } catch (error) {
+            throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
+        }
         let element = await page.$(selector);
         sendLog('info', `css方式获取元素：${element}`, block);
         return element;

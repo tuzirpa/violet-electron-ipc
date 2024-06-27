@@ -1,13 +1,4 @@
-export type DataType =
-    | 'string'
-    | 'number'
-    | 'boolean'
-    | 'conditions'
-    | 'object'
-    | 'array'
-    | 'any'
-    | 'chrome'
-    | 'chromePage';
+export type DataType = 'string' | 'number' | 'boolean' | 'variable';
 
 export interface FlowVariable {
     /**

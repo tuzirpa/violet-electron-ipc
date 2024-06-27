@@ -17,13 +17,11 @@ const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
         const inputValueArr: string[] = [];
         inputKeys.forEach((key) => {
             const input = directive.inputs[key];
-            const type = input.type;
-            const types = ['number', 'string'];
             let codeValue = '';
-            if (types.includes(type)) {
-                codeValue = typeToCode(input);
-            } else if (input.addConfig.type === 'variable') {
+            if (input.type === 'variable') {
                 codeValue = input.value;
+            } else {
+                codeValue = typeToCode(input);
             }
             inputValueArr.push(`"${key}":${codeValue}`);
         });
@@ -31,7 +29,6 @@ const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
         paramArr.push('}');
         params = paramArr.join('');
     }
-    console.log(params);
 
     let returnVal = '';
     const outputKeys = Object.keys(directive.outputs);

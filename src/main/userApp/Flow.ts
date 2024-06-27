@@ -49,7 +49,7 @@ export default class Flow {
         );
         content.push(`setTimeout(async ()=>{`);
         content.push(`  try {`);
-        let flowControlBlock = '';
+        let flowControlBlock = 0;
         for (let index = 0; index < this.blocks.length; index++) {
             const block = this.blocks[index];
             const convertCode = await convertDirective(block, index, this);
@@ -66,19 +66,16 @@ export default class Flow {
             } else {
                 // continue break 这两个指令只能在循环中使用
                 if (block.name === 'flowControl.continue' || block.name === 'flowControl.break') {
-                    if (
-                        flowControlBlock !== 'flowControl.for' &&
-                        flowControlBlock !== 'flowControl.while'
-                    ) {
+                    if (flowControlBlock <= 0) {
                         jsCode = '//' + jsCode;
                     }
                 }
             }
             //记录是否在for或while中
             if (block.name === 'flowControl.for' || block.name === 'flowControl.while') {
-                flowControlBlock = block.name;
+                flowControlBlock++;
             } else if (block.name === 'flowControl.for.end') {
-                flowControlBlock = '';
+                flowControlBlock--;
             }
 
             content.push(jsCode);
