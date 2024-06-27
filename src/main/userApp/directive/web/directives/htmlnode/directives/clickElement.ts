@@ -1,5 +1,4 @@
-import { DirectiveTree, Block } from '../../../../../types';
-import element from '../../element';
+import { DirectiveTree } from '../../../../../types';
 
 export const directive: DirectiveTree = {
     name: 'web.clickElement',

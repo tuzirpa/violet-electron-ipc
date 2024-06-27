@@ -7,8 +7,8 @@ import fs from 'fs';
 
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
     console.log(
-        `robotUtilLog`,
-        `${JSON.stringify({ level, time: Date.now(), message, data, error })}`
+        `robotUtilLog-` +
+            `${encodeURIComponent(JSON.stringify({ level, time: Date.now(), message, data, error }))}`
     );
 };
 
@@ -30,13 +30,23 @@ function forRobotUtil(obj: any) {
             if (typeof value === 'function') {
                 let retryCountNum = 0;
                 obj[key] = async function aaa(...args: any[]) {
+                    const blockInfo = args[args.length - 1] as Block;
                     try {
+                        console.log(
+                            `robotUtilRunStep-` +
+                                `${encodeURIComponent(
+                                    JSON.stringify({
+                                        level: 'info',
+                                        time: Date.now(),
+                                        message: `执行指令${blockInfo.directiveDisplayName}`,
+                                        data: blockInfo
+                                    })
+                                )}`
+                        );
                         const result = await (value as Function).apply(this, args);
                         return result;
                     } catch (error: any) {
-                        const blockInfo = args[args.length - 1] as Block;
                         console.log(error);
-
                         sendLog(
                             'error',
                             `执行指令 ${blockInfo.directiveDisplayName} 异常: ${error.message}`,

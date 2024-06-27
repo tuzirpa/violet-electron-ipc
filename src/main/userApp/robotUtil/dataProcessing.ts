@@ -1,12 +1,12 @@
 import { Block } from '../types';
-import { sendLog } from './robotUtil.template';
+import { sendLog } from './robotUtil';
 
 const dataProcessing = {
     async log(content: string, block: Block) {
         sendLog('info', content, block);
     },
 
-    async setVariable(type: string, value: any, block: Block) {
+    async setVariable(type: string, value: any, _block: Block) {
         //{"type":"number","value":"123213sdfa${ffd}adsfa"}
         if (type === 'number') {
             return Number(value);

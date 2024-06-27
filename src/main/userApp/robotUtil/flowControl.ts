@@ -1,8 +1,8 @@
 import { Block } from '../types';
-import { sendLog } from './robotUtil.template';
+import { sendLog } from './robotUtil';
 
 export default {
-    test: async function (operand1: any, operator: string, operand2: any, block: Block) {
+    test: async function (operand1: any, operator: string, operand2: any, _block: Block) {
         /**
          * 
             { value: 'in', label: '包含' },

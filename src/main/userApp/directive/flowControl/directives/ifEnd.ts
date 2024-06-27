@@ -1,4 +1,4 @@
-import { DirectiveTree, Block } from '../../../types';
+import { DirectiveTree } from '../../../types';
 
 export const directive: DirectiveTree = {
     name: 'flowControl.if.end',

@@ -1,6 +1,43 @@
-import puppeteer, { Browser, ElementHandle, Frame, Page, PuppeteerLaunchOptions } from 'puppeteer';
+import child_process from 'child_process';
+import puppeteer, { Browser, ElementHandle, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import { Block } from '../types';
-import { sendLog } from './robotUtil.template';
+import { sendLog } from './robotUtil';
+
+function regQueryExeCutablePath(regPath: string) {
+    return new Promise<string>((resolve, reject) => {
+        child_process.exec(`REG QUERY "${regPath}"`, function (error, stdout, _stderr) {
+            if (error != null) {
+                reject(error);
+                return;
+            }
+            const exePath = stdout.substring(stdout.indexOf('REG_SZ') + 6, stdout.indexOf(','));
+            const ep = exePath.trim().replace(/\\/g, '/');
+            resolve(ep);
+        });
+    });
+}
+
+export async function getExeCutablePath(type: string) {
+    //读取注册表获取浏览器路径
+    let path = '';
+    switch (type) {
+        case 'chrome':
+            //读取windows注册表 HKEY_LOCAL_MACHINE\SOFTWARE\Clients\StartMenuInternet\Google Chrome\DefaultIcon
+            path = await regQueryExeCutablePath(
+                'HKEY_LOCAL_MACHINE\\SOFTWARE\\Clients\\StartMenuInternet\\Google Chrome\\DefaultIcon'
+            );
+            break;
+        case 'edge':
+            //HKEY_LOCAL_MACHINE\SOFTWARE\Clients\StartMenuInternet\Microsoft Edge\DefaultIcon
+            path = await regQueryExeCutablePath(
+                'HKEY_LOCAL_MACHINE\\SOFTWARE\\Clients\\StartMenuInternet\\Microsoft Edge\\DefaultIcon'
+            );
+            break;
+        default:
+            break;
+    }
+    return path;
+}
 
 /**
  * 当前页以及所有iframe 获取元素
@@ -8,22 +45,22 @@ import { sendLog } from './robotUtil.template';
  * @param page
  * @returns
  */
-async function getElements(selector: string, page: Page): Promise<Element[]> {
-    const iframeAll: Frame[] = [];
-    function dumpFrameTree(frame: Frame) {
-        iframeAll.push(frame);
-        for (let child of frame.childFrames()) dumpFrameTree(child);
-    }
-    dumpFrameTree(page.mainFrame());
-    const promises: any[] = [];
-    iframeAll.forEach((frame) => {
-        promises.push(frame.$(selector));
-    });
-    let res = await Promise.all(promises).then((results) => {
-        return results.filter((element) => element !== null);
-    });
-    return res;
-}
+// async function getElements(selector: string, page: Page): Promise<Element[]> {
+//     const iframeAll: Frame[] = [];
+//     function dumpFrameTree(frame: Frame) {
+//         iframeAll.push(frame);
+//         for (let child of frame.childFrames()) dumpFrameTree(child);
+//     }
+//     dumpFrameTree(page.mainFrame());
+//     const promises: any[] = [];
+//     iframeAll.forEach((frame) => {
+//         promises.push(frame.$(selector));
+//     });
+//     let res = await Promise.all(promises).then((results) => {
+//         return results.filter((element) => element !== null);
+//     });
+//     return res;
+// }
 
 const webBrowser = {
     create2: async function (
@@ -31,20 +68,21 @@ const webBrowser = {
         _block: Block
     ) {
         const { webType: type, url: webUrl, loadTimeout } = params;
-
+        let executablePath = '';
         if (type !== 'tuziChrome') {
+            executablePath = await getExeCutablePath(type);
             // if (executablePath === '') {
             //     sendLog('error', `本地未安装 ${displayName}，请设置先安装 ${displayName}`, block);
             //     throw new Error('未设置chrome路径');
             // }
         }
         const ops: PuppeteerLaunchOptions = { headless: false, defaultViewport: null };
-        // executablePath && (ops.executablePath = executablePath);
+        executablePath && (ops.executablePath = executablePath);
         const browser = await puppeteer.launch(ops);
         const pages = await browser.pages();
         const page = pages[0];
         await page.goto(webUrl, { timeout: loadTimeout * 1000 });
-        return { browser };
+        return { browser, page };
     },
 
     openBrowser: async function (

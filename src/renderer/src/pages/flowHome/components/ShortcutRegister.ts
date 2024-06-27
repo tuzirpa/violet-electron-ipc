@@ -43,6 +43,7 @@ export class Shortcut {
         const keyStr = `${ctrlKey}${shiftKey}${altKey}${key}`;
         const callback = this.handlers.get(keyStr);
         if (callback) {
+            event.preventDefault();
             callback();
         }
     }

@@ -1,4 +1,4 @@
-import { DirectiveTree, Block } from '../../../types';
+import { DirectiveTree } from '../../../types';
 
 export const directive: DirectiveTree = {
     name: 'flowControl.debugger',
@@ -10,7 +10,7 @@ export const directive: DirectiveTree = {
     comment: '暂停流程,进入调试模式',
     inputs: {},
     outputs: {},
-    async toCode(_directive: DirectiveTree, block: string) {
+    async toCode(_directive: DirectiveTree, _block: string) {
         return `debugger;`;
     }
 };

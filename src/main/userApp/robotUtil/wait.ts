@@ -1,5 +1,5 @@
 import { Block } from '../types';
-import { sendLog } from './robotUtil.template';
+import { sendLog } from './robotUtil';
 
 export default {
     delay(time: number, block: Block) {

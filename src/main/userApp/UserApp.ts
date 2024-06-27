@@ -16,26 +16,24 @@
 
  */
 
-import { app } from 'electron';
-import path from 'path';
-import fs from 'fs';
-import Flow from './Flow';
-import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { app } from 'electron';
+import fs from 'fs';
+import path from 'path';
+import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
+import StepWindow from '../window/StepWindow';
 import { WindowManage } from '../window/WindowManage';
-import {
-    DevNodeJs,
-    IBreakpoint,
-    IConsoleApiCalled,
-    IExecutionThrown
-} from './devuserapp/DevNodeJs';
-import rebotUtilPath from './robotUtil/robotUtil.template?modulePath';
+import Flow from './Flow';
+import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs';
+// import rebotUtilPath from './robotUtil?modulePath';
 import { LogLevel } from './types';
 
 /**
  * 应用类
  */
 export default class UserApp {
+    static rebotUtilPath = '';
+
     id: string;
     version: string = '1.0.0';
     main: string = 'main.flow.js';
@@ -52,6 +50,7 @@ export default class UserApp {
     devNodeJs: DevNodeJs | null = null;
     devPrecess: ChildProcessWithoutNullStreams | null = null;
     private _initFlow: boolean = false;
+    private stepWindow: StepWindow | null = null;
 
     static get userAppLocalDir() {
         const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
@@ -144,7 +143,7 @@ export default class UserApp {
             fs.mkdirSync(this.appRobotUtilDir, { recursive: true });
         }
         // 写入robotUtil文件
-        const robotUtilContent = fs.readFileSync(rebotUtilPath, 'utf-8');
+        const robotUtilContent = fs.readFileSync(UserApp.rebotUtilPath, 'utf-8');
         fs.writeFileSync(path.join(this.appRobotUtilDir, 'index.js'), robotUtilContent);
     }
 
@@ -279,57 +278,91 @@ export default class UserApp {
             time: Date.now(),
             message: `流程正在启动...`
         });
-        this.devPrecess = this.shellExeCmd(
-            [nodeExeCmd, `--inspect=${port}`, mainFlowJs],
-            (data: string) => {
-                //匹配出调试路径
-                const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
+        this.stepWindow = this.stepWindow || new StepWindow();
 
-                if (data.includes('Debugger listening on ws://127.0.0.1:') && matchData) {
-                    const wsUrl = matchData[0];
+        const cmds = [nodeExeCmd];
+        if (breakpoints.length > 0) {
+            cmds.push(`--inspect-brk=${port}`);
+        }
+        cmds.push(mainFlowJs);
+        this.devPrecess = this.shellExeCmd(cmds, (data: string) => {
+            //匹配出调试路径
+            const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
 
-                    this.devNodeJs = new DevNodeJs(wsUrl, breakpoints);
-                    this.devNodeJs.onBreakpoint((breakpoint: IBreakpoint) => {
-                        //发给前端需要从1开始
-                        breakpoint.line = breakpoint.line + 1 - Flow.headLinkCount;
-                        WindowManage.mainWindow.webContents.send('breakpoint', breakpoint);
+            if (data.includes('Debugger listening on ws://127.0.0.1:') && matchData) {
+                const wsUrl = matchData[0];
+
+                this.devNodeJs = new DevNodeJs(wsUrl, breakpoints);
+                this.devNodeJs.onBreakpoint((breakpoint: IBreakpoint) => {
+                    //发给前端需要从1开始
+                    breakpoint.line = breakpoint.line + 1 - Flow.headLinkCount;
+                    WindowManage.mainWindow.webContents.send('breakpoint', breakpoint);
+                });
+                // this.devNodeJs.onConsoleApiCalled((params: IConsoleApiCalled) => {
+                //     console.log(params.type, params.args, params.timestamp);
+                //     if (params.args[0].value === 'robotUtilLog') {
+                //         this.sendRunLogs(JSON.parse(params.args[1].value));
+                //     }
+                // });
+                this.devNodeJs.onExecutionThrown((context: IExecutionThrown) => {
+                    this.sendRunLogs({
+                        level: 'fatalError',
+                        time: Date.now(),
+                        message: context.description,
+                        data: context
                     });
-                    this.devNodeJs.onConsoleApiCalled((params: IConsoleApiCalled) => {
-                        console.log(params.type, params.args, params.timestamp);
-                        if (params.args[0].value === 'robotUtilLog') {
-                            this.sendRunLogs(JSON.parse(params.args[1].value));
-                        }
-                    });
-                    this.devNodeJs.onExecutionThrown((context: IExecutionThrown) => {
-                        this.sendRunLogs({
-                            level: 'fatalError',
-                            time: Date.now(),
-                            message: context.description,
-                            data: context
-                        });
-                    });
-                    this.devNodeJs.start();
-                } else if (
-                    this.devNodeJs &&
-                    data.includes('Waiting for the debugger to disconnect.')
-                ) {
-                    //如果有异常 需要等待获取异常信息
-                    setTimeout(() => {
-                        if (this.devNodeJs) {
-                            this.devNodeJs.close();
-                        }
-                        this.devNodeJs = null;
-                        this.sendRunLogs({
-                            level: 'info',
-                            time: Date.now(),
-                            message: `流程结束`
-                        });
-                        WindowManage.mainWindow.webContents.send('devRunEnd');
-                        this.devPrecess = null;
-                    }, 1000);
-                }
+                });
+                this.devNodeJs.start();
+            } else if (this.devNodeJs && data.includes('Waiting for the debugger to disconnect.')) {
+                //如果有异常 需要等待获取异常信息
+                // setTimeout(() => {
+                //     if (this.devNodeJs) {
+                //         this.devNodeJs.close();
+                //     }
+                //     this.devNodeJs = null;
+                //     this.sendRunLogs({
+                //         level: 'info',
+                //         time: Date.now(),
+                //         message: `流程结束`
+                //     });
+                //     WindowManage.mainWindow.webContents.send('devRunEnd');
+                //     this.devPrecess = null;
+                // }, 1000);
+            } else {
+                data.split('\n').forEach((line) => {
+                    if (line.startsWith('robotUtilLog-')) {
+                        const logData = JSON.parse(
+                            decodeURIComponent(line.replace('robotUtilLog-', ''))
+                        );
+                        this.sendRunLogs(logData);
+                    } else if (line.startsWith('robotUtilRunStep')) {
+                        if (!this.stepWindow?.isVisible()) this.stepWindow?.show();
+                        const stepData = decodeURIComponent(line.replace('robotUtilRunStep-', ''));
+                        const logData = JSON.parse(stepData);
+
+                        this.stepWindow?.webContents.send('run-step', logData);
+
+                        // this.sendRunLogs(logData);
+                    }
+                });
             }
-        );
+        });
+        this.devPrecess.on('exit', (code) => {
+            console.log(`子进程已退出，退出码 ${code}`);
+            if (this.devNodeJs) {
+                this.devNodeJs.close();
+            }
+            this.devNodeJs = null;
+            this.sendRunLogs({
+                level: 'info',
+                time: Date.now(),
+                message: `流程结束`
+            });
+            WindowManage.mainWindow.webContents.send('devRunEnd');
+            this.devPrecess = null;
+            // this.stepWindow?.hide();
+        });
+
         return port;
     }
 }

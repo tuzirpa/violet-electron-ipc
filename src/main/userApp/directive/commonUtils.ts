@@ -2,7 +2,7 @@ import child_process from 'child_process';
 
 function regQueryExeCutablePath(regPath: string) {
     return new Promise<string>((resolve, reject) => {
-        child_process.exec(`REG QUERY "${regPath}"`, function (error, stdout, stderr) {
+        child_process.exec(`REG QUERY "${regPath}"`, function (error, stdout, _stderr) {
             if (error != null) {
                 reject(error);
                 return;

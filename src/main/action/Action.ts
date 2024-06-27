@@ -1,4 +1,4 @@
-import { shell } from 'electron';
+import { clipboard, shell } from 'electron';
 import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
@@ -58,6 +58,14 @@ class Action {
 
     static async openFolder(path: string) {
         return shell.showItemInFolder(`file://${path}`);
+    }
+
+    /**
+     * 复制内容到粘贴板
+     */
+
+    static async copyToClipboard(content: string) {
+        return clipboard.writeText(content);
     }
 
     /**

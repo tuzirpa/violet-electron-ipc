@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { DirectiveOutput, FlowVariable } from 'src/main/userApp/types';
+import type { DirectiveOutput, FlowVariable } from 'src/main/userApp/types';
 import { ref } from 'vue';
 
 // 添加逻辑
@@ -22,7 +22,7 @@ function varClick() {
 
 <template>
     <div class="relative">
-        <el-input v-model="outputItem.name" :placeholder="outputItem.placeholder">
+        <el-input v-model="outputItem.name" :placeholder="outputItem.addConfig?.placeholder">
             <template #append>
                 <div class="text-gray-500 text-sm cursor-pointer" @click="varClick">
                     fx</div>

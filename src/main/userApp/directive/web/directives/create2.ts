@@ -69,12 +69,22 @@ export const directive: DirectiveTree = {
     outputs: {
         browser: {
             name: '',
-            display: 'SQ-Web浏览器',
+            display: '浏览器对象',
             type: 'sq.chrome',
             addConfig: {
                 label: '浏览器对象',
                 type: 'variable',
-                defaultValue: 'web_page'
+                defaultValue: 'web_browser'
+            }
+        },
+        page: {
+            name: '',
+            display: '标签页对象',
+            type: 'sq.page',
+            addConfig: {
+                label: '浏览器对象',
+                type: 'variable',
+                defaultValue: 'page'
             }
         }
     }

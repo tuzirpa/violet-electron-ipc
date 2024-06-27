@@ -10,7 +10,6 @@ import { Shortcut } from './ShortcutRegister';
 import AddDirective from './AddDirective.vue';
 import type Flow from 'src/main/userApp/Flow';
 import type UserApp from 'src/main/userApp/UserApp';
-import _ from 'lodash';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { Action } from '@renderer/lib/action';
 import { showContextFlowMenu, checkError } from './FlowEditOps';
@@ -463,6 +462,13 @@ async function copyBlocks() {
 }
 
 /**
+ * 选中所有块
+ */
+async function allBlocks() {
+    curBlocks.value = curOpenFile.value.blocks;
+}
+
+/**
  * 粘贴选中的块
  */
 async function pasteBlocks() {
@@ -573,7 +579,11 @@ function directiveShowContextMenu(event: any, block: DirectiveData) {
 const editNode = ref<HTMLElement>();
 onMounted(() => {
     if (editNode.value) {
+        //注册快捷键
         const shortcut = new Shortcut(editNode.value);
+        shortcut.register({ keys: ['Z', 'z'], ctrlKey: true }, undo);
+        shortcut.register({ keys: ['Z', 'z'], ctrlKey: true, shiftKey: true }, redo);
+        shortcut.register({ keys: ['A', 'a'], ctrlKey: true }, allBlocks);
         shortcut.register({ keys: ['C', 'c'], ctrlKey: true }, copyBlocks);
         shortcut.register({ keys: ['V', 'v'], ctrlKey: true }, pasteBlocks);
         shortcut.register({ keys: ['X', 'x'], ctrlKey: true }, cutBlocks);

@@ -1,5 +1,7 @@
 export type DataType = 'string' | 'number' | 'boolean' | 'variable';
 
+export type UserAppType = any;
+
 export interface FlowVariable {
     /**
      * 变量名称

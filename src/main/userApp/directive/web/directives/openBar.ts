@@ -1,4 +1,4 @@
-import { DirectiveTree, Block } from 'src/main/userApp/types';
+import { DirectiveTree } from 'src/main/userApp/types';
 
 export const directive: DirectiveTree = {
     name: 'web.openBar',

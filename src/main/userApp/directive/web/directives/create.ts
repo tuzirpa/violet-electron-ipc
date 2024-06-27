@@ -1,4 +1,4 @@
-import { DirectiveTree, Block } from '../../../types';
+import { DirectiveTree } from '../../../types';
 import { getExeCutablePath } from '../../commonUtils';
 
 export const directive: DirectiveTree = {

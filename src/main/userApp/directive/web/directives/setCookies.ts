@@ -1,4 +1,4 @@
-import { DirectiveTree, Block } from '../../../types';
+import { DirectiveTree } from '../../../types';
 import { typeToCode } from '../../convertUtils';
 
 export const directive: DirectiveTree = {

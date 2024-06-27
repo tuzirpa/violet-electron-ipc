@@ -10,9 +10,8 @@ import { useRoute } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
-import { typeDisplay } from './directiveConfig';
-import type { LogLevel, Block } from 'src/main/userApp/types';
 import { errorDirectives } from './components/FlowEditStore';
+import { handleRunLogsContextMenu, runLogs } from './indexvue';
 
 const route = useRoute();
 const id = route.query.appId as string;
@@ -76,7 +75,7 @@ const breakpointCallback = async (_event, data: IBreakpoint) => {
         devVariableData.value = res.result.map((item) => {
             const name = item.name;
             return {
-                type: item.value.type ? typeDisplay[item.value.type] : '未初始化',
+                type: item.value.type ?? '未初始化',
                 name,
                 val: item.value.value
             };
@@ -124,12 +123,6 @@ async function devResume() {
     }
 }
 
-const runLogs = ref<{ level: LogLevel, message: string, time: number, data: Block }[]>([]);
-window.electron.ipcRenderer.on('run-logs', (_event, log) => {
-    console.log(log, 'run-logs');
-    log.time = new Date(log.time).toLocaleString();
-    runLogs.value.unshift(log);
-});
 
 /**
  * 底部tab激活状态
@@ -291,7 +284,8 @@ const directiveWidth = ref(250);
                     <BoxDraggable class="viewbox left-sidebar border-t" :height="270" :resize-top="true">
                         <el-tabs v-model="bottomTabsActiveName" :size="'small'" class="viewbox flex-1">
                             <el-tab-pane label="运行日志" name="run-logs">
-                                <el-table :data="runLogs" :border="true" :row-class-name="runLogsRowClassName" style="width: 100%;
+                                <el-table @row-contextmenu="handleRunLogsContextMenu" :data="runLogs" :border="true"
+                                    :row-class-name="runLogsRowClassName" style="width: 100%;
                                         height: calc(var(--draggable-height) - 60px);
                                     ">
                                     <el-table-column prop="level" label="消息类型" width="100" />

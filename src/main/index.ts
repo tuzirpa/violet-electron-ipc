@@ -5,6 +5,9 @@ import MethodsUtils from '@shared/MethodsUtils';
 import { registerAssetsProtocol } from './serve';
 import { WindowManage } from './window/WindowManage';
 import nodeEvbitonment from './nodeEnvironment/NodeEvbitonment';
+import robotUtil from './userApp/robotUtil/robotUtil?modulePath';
+import UserApp from './userApp/UserApp';
+import UserAppManage from './userApp/UserAppManage';
 
 let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
@@ -44,6 +47,10 @@ function start() {
         if (import.meta.env.DEV) {
             mainWindow.webContents.openDevTools();
         }
+
+        //扫码本地app
+        UserApp.rebotUtilPath = robotUtil;
+        UserAppManage.scanLocalApp();
     }
 
     // This method will be called when Electron has finished

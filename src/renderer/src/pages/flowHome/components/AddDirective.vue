@@ -68,10 +68,11 @@ nextTick(() => {
                 }
             }
         }
+        console.log(advancedNum.value, '高级参数数量');
     }, 300);
 });
 
-console.log(advancedNum.value, '高级参数数量');
+
 
 function optionChange(e: string, inputItem: DirectiveInput) {
     console.log(inputItem.value, '选择的值');

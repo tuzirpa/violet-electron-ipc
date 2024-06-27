@@ -1,4 +1,4 @@
-import { DirectiveTree } from 'src/main/userApp/types';
+import type { DirectiveTree } from 'src/main/userApp/types';
 
 // 添加逻辑
 export type DirectiveData = DirectiveTree & {

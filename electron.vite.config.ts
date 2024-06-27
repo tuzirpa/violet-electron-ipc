@@ -19,6 +19,14 @@ export default defineConfig({
         plugins: [externalizeDepsPlugin(), bytecodePlugin()]
     },
     renderer: {
+        build: {
+            rollupOptions: {
+                input: {
+                    index: resolve(__dirname, 'src/renderer/index.html'),
+                    stepTip: resolve(__dirname, 'src/renderer/stoptip.html')
+                }
+            }
+        },
         resolve: {
             alias: {
                 '@renderer': resolve('src/renderer/src'),

@@ -41,7 +41,7 @@ export class UserAppManage {
     userApps: UserApp[] = [];
 
     constructor() {
-        this.scanLocalApp();
+        // this.scanLocalApp();
     }
 
     /**
