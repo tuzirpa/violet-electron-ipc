@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Frame, Page, PuppeteerLaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, ElementHandle, Frame, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import { Block } from '../types';
 import { sendLog } from './robotUtil.template';
 
@@ -72,15 +72,102 @@ const webBrowser = {
         }
     },
 
-    getElementInfo: async function (page: Page, selector: string, timeout: number, block: Block) {
+    getElementInfoByXpath: async function (
+        page: Page,
+        selector: string,
+        timeout: number,
+        block: Block
+    ) {
+        try {
+            await page.waitForSelector(`::-p-xpath(${selector})`, { timeout: timeout * 1000 });
+        } catch (error) {
+            throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
+        }
+
+        let element = await page.$(`::-p-xpath(${selector})`);
+        sendLog('info', `xpath方式获取元素：${element}`, block);
+        return element;
+    },
+
+    getElementInfoBySelector: async function (
+        page: Page,
+        selector: string,
+        timeout: number,
+        block: Block
+    ) {
         try {
             await page.waitForSelector(selector, { timeout: timeout * 1000 });
         } catch (error) {
-            throw new Error(`超时未找到元素：${selector}`);
+            throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
         }
+
         let element = await page.$(selector);
-        sendLog('info', `获取元素：${element}`, block);
+        sendLog('info', `css方式获取元素：${element}`, block);
         return element;
+    },
+
+    getElementTextByCss: async function (
+        page: Page,
+        selector: string,
+        timeout: number,
+        block: Block
+    ) {
+        try {
+            await page.waitForSelector(selector, { timeout: timeout * 1000 });
+        } catch (error) {
+            throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
+        }
+        const text = await page.$eval(selector, (e) => e.textContent);
+        sendLog('info', `获取元素文本：${text}`, block);
+        return text;
+    },
+
+    getElementTextByXpath: async function (
+        page: Page,
+        selector: string,
+        timeout: number,
+        block: Block
+    ) {
+        try {
+            await page.waitForSelector(`::-p-xpath(${selector})`, { timeout: timeout * 1000 });
+        } catch (error) {
+            throw new Error(`超时${timeout}秒，未找到元素：${selector}`);
+        }
+
+        let element = await page.$(`::-p-xpath(${selector})`);
+        if (element) {
+            // 获取元素的文本内容
+            const textContent = await element.getProperty('textContent');
+            const text = await textContent.jsonValue();
+            sendLog('info', `xpath方式获取元素：${text}`, block);
+            return text;
+        }
+        return null;
+    },
+
+    clickElement: async function (element: ElementHandle, block: Block) {
+        element.click();
+        sendLog('info', `点击元素：${element}`, block);
+    },
+
+    setCookies: async function (page: Page, cookies: string, domain: string, block: Block) {
+        cookies.split(';').forEach((item) => {
+            const [key, value] = item.split('=');
+            if (key && value) {
+                if (domain) {
+                    page.setCookie({ name: key.trim(), value: value.trim(), domain: domain });
+                } else {
+                    page.setCookie({ name: key.trim(), value: value.trim() });
+                }
+            }
+        });
+
+        sendLog('info', `设置cookie：${cookies}`, block);
+    },
+
+    refreshPage: async function (page: Page, block: Block) {
+        page.reload();
+        sendLog('info', `刷新页面`, block);
     }
 };
 

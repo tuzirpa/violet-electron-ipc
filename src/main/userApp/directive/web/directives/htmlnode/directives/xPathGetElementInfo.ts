@@ -7,7 +7,7 @@ export const directive: DirectiveTree = {
     icon: 'icon-web-create',
     isControl: false,
     isControlEnd: false,
-    comment: '获取元素信息${selection},超时时间${timeout}秒,并保存到变量${elementInfo}',
+    comment: '获取元素信息${selection},超时时间${timeout}秒,并保存到变量${xElementInfo}',
     inputs: {
         browserPage: {
             name: 'browserPage',
@@ -45,8 +45,8 @@ export const directive: DirectiveTree = {
     },
 
     outputs: {
-        elementInfo: {
-            name: 'elementInfo',
+        xElementInfo: {
+            name: 'xElementInfo',
             display: '元素信息',
             type: 'sq.ElementObject',
             addConfig: {
@@ -59,7 +59,7 @@ export const directive: DirectiveTree = {
 
     async toCode(directive: DirectiveTree, block: string) {
         const { browserPage, selection, timeout } = directive.inputs;
-        return `var ${directive.outputs.elementInfo.name} = await robotUtil.web.getElementInfo(${browserPage.value},'${selection.value}',${timeout.value},${block})`;
+        return `var ${directive.outputs.xElementInfo.name} = await robotUtil.web.getElementInfoByXpath(${browserPage.value},'${selection.value}',${timeout.value},${block})`;
     }
 };
 

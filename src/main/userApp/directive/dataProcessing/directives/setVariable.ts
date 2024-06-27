@@ -63,7 +63,7 @@ export const directive: DirectiveTree = {
         let value = directive.inputs.varValue;
         const varTypeType = directive.inputs.varType.value;
         let valueCode = value.value;
-        if (varTypeType === 'number' && varTypeType === 'string') {
+        if (varTypeType === 'number' || varTypeType === 'string') {
             valueCode = typeToCode(value);
         }
 
