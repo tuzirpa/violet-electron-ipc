@@ -47,8 +47,8 @@ export default class UserApp {
     packageJson: any = {};
 
     flows: Flow[] = [];
-    devNodeJs: DevNodeJs | null = null;
-    devPrecess: ChildProcessWithoutNullStreams | null = null;
+    private devNodeJs: DevNodeJs | null = null;
+    private devPrecess: ChildProcessWithoutNullStreams | null = null;
     private _initFlow: boolean = false;
     private stepWindow: StepWindow | null = null;
 
@@ -341,6 +341,14 @@ export default class UserApp {
                         const logData = JSON.parse(stepData);
 
                         this.stepWindow?.webContents.send('run-step', logData);
+
+                        // this.sendRunLogs(logData);
+                    }else if (line.startsWith('Error: Cannot find module')) {
+                        this.sendRunLogs({
+                            level: 'fatalError',
+                            time: Date.now(),
+                            message: '依赖缺失: ' + line,
+                        });
 
                         // this.sendRunLogs(logData);
                     }
