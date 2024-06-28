@@ -2,7 +2,7 @@
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
   "include": [
     "src/renderer/src/env.d.ts",
-    "src/renderer/src/**/*",
+    "src/renderer/**/*",
     "src/main/src/**/*",
     "src/shared/**/*",
     "src/renderer/src/**/*.vue",

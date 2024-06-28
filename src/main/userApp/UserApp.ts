@@ -26,7 +26,8 @@ import { WindowManage } from '../window/WindowManage';
 import Flow from './Flow';
 import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs';
 // import rebotUtilPath from './robotUtil?modulePath';
-import { LogLevel } from './types';
+import { LogLevel, LogMessage } from './types';
+import { Block } from 'typescript';
 
 /**
  * 应用类
@@ -263,7 +264,7 @@ export default class UserApp {
         return this.start(this.breakpoints);
     }
 
-    sendRunLogs(data: { level: LogLevel; time: number; message: string; data?: any }) {
+    sendRunLogs(data: LogMessage) {
         WindowManage.mainWindow.webContents.send('run-logs', data);
     }
 
@@ -309,7 +310,7 @@ export default class UserApp {
                         level: 'fatalError',
                         time: Date.now(),
                         message: context.description,
-                        data: context
+                        data: context as any
                     });
                 });
                 this.devNodeJs.start();
@@ -368,7 +369,7 @@ export default class UserApp {
             });
             WindowManage.mainWindow.webContents.send('devRunEnd');
             this.devPrecess = null;
-            // this.stepWindow?.hide();
+            this.stepWindow?.hide();
         });
 
         return port;

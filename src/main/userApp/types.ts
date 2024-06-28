@@ -1,6 +1,14 @@
+
+export type LogMessage = {
+    level: LogLevel;
+    time: number;
+    message: string;
+    data?: Block;
+    error?: Error;
+};
+
 export type DataType = 'string' | 'number' | 'boolean' | 'variable';
 
-export type UserAppType = any;
 
 export interface FlowVariable {
     /**

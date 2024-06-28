@@ -3,7 +3,6 @@ import { DirectiveTree } from 'src/main/userApp/types';
 const groups: { [key: string]: { default: DirectiveTree } } = import.meta.glob('./*/index.ts', {
     eager: true
 });
-console.log(groups, 'groups');
 
 export const directiveToCodeMap = new Map<
     string,
