@@ -5,28 +5,62 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 import vueSetupExtend from 'unplugin-vue-setup-extend-plus/vite';
 // import Inspect from 'vite-plugin-inspect';
 import { readdirSync } from 'fs';
+import { Plugin } from 'vite';
+
+// import { fileURLToPath } from 'url';
+// import { Plugin, PluginOption, build } from 'vite';
+
+// const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+// (async () => {
+//     await build({
+//         root: path.resolve(__dirname, './src/apptemplate'),
+//         base: '/',
+//         build: {
+//             rollupOptions: {
+//                 // ...
+//             }
+//         },
+//         plugins: [vue(), vueJsx() /* , Inspect() */, vueSetupExtend({})]
+//     });
+// })();
+
 const evtryPath = resolve(__dirname, './src/renderer');
 const entrys = readdirSync(evtryPath).reduce((obj, dirname) => {
     console.log(dirname);
     obj[dirname] = join(evtryPath, dirname);
     return obj;
-},{});
+}, {});
 const keys = Object.keys(entrys);
-console.log('keys',keys);
+console.log('keys', keys);
 
-const paths = keys.filter((key) => key.endsWith('.html')).map(key=>key.replace('.html',''));
-console.log('paths',paths);
+const paths = keys.filter((key) => key.endsWith('.html')).map((key) => key.replace('.html', ''));
+console.log('paths', paths);
 
-const getEntryPath = ()=>{
+const getEntryPath = () => {
     const pageEntry = {};
-    paths.forEach(path => {
+    paths.forEach((path) => {
         pageEntry[path] = resolve(__dirname, `src/renderer/${path}.html`);
     });
     return pageEntry;
-}
+};
 const rendererInput = getEntryPath();
-console.log('rendererInput',rendererInput);
+console.log('rendererInput', rendererInput);
 
+const userAppVue: Plugin = {
+    name: 'userAppCopy',
+    load(id, options) {
+        if (id.indexOf('steptip') != -1) {
+            console.log('userAppCopyLoad: ', id, options);
+        }
+    },
+    transform(_code, id, _options) {
+        if (id.indexOf('steptip') != -1) {
+            console.log('userAppCopy: ', id, _code);
+        }
+        return _code;
+    }
+};
 
 export default defineConfig({
     main: {
@@ -43,7 +77,7 @@ export default defineConfig({
     },
     renderer: {
         build: {
-            minify:'esbuild',
+            minify: 'esbuild',
             rollupOptions: {
                 input: rendererInput
             }

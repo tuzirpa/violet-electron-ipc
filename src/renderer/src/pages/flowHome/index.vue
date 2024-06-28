@@ -19,11 +19,13 @@ const id = route.query.appId as string;
 // 定义变量
 const userAppDetail = ref<UserApp>();
 
+
 async function getAppDetail() {
     // 获取应用详情
     // 这里应该调用后端接口获取应用详情
     const res = await Action.getUserApp(id);
     userAppDetail.value = res;
+    runLogs.value = [];
     console.log(userAppDetail.value, 'userAppDetail');
     if (userAppDetail.value?.flows && userAppDetail.value.flows.length > 0) {
         curActiveFlowIndex.value = 0;

@@ -7,7 +7,6 @@ export default class StepWindow extends BrowserWindow {
         const { width, height } = screen.getPrimaryDisplay().workAreaSize;
         const x = width - 400;
         const y = height - 300;
-
         super({
             width: 400,
             height: 300,
@@ -17,16 +16,20 @@ export default class StepWindow extends BrowserWindow {
                 sandbox: false,
                 contextIsolation: false
             },
-            frame: false,
-            show: false,
             x,
-            y
+            y,
+            show: false,
+            frame: false
         });
         const url = import.meta.env.DEV ? process.env['ELECTRON_RENDERER_URL'] : 'assets://app';
         this.loadURL(url + '/steptip.html?userAppId=' + userAppId);
+        this.setAlwaysOnTop(true, 'floating');
         if (import.meta.env.DEV) {
             this.webContents.openDevTools();
         }
-        this.setAlwaysOnTop(true, 'floating');
+        this.on('close', (e) => {
+            e.preventDefault();
+            this.hide();
+        });
     }
 }

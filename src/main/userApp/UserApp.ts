@@ -25,9 +25,9 @@ import StepWindow from '../window/StepWindow';
 import { WindowManage } from '../window/WindowManage';
 import Flow from './Flow';
 import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs';
-// import rebotUtilPath from './robotUtil?modulePath';
-import { LogLevel, LogMessage } from './types';
-import { Block } from 'typescript';
+import { LogMessage } from './types';
+
+import { sleep } from '@shared/Utils';
 
 /**
  * 应用类
@@ -48,10 +48,10 @@ export default class UserApp {
     packageJson: any = {};
 
     flows: Flow[] = [];
-    private devNodeJs: DevNodeJs | null = null;
-    private devPrecess: ChildProcessWithoutNullStreams | null = null;
-    private _initFlow: boolean = false;
-    private stepWindow: StepWindow | null = null;
+    #devNodeJs: DevNodeJs | null = null;
+    #devPrecess: ChildProcessWithoutNullStreams | null = null;
+    #_initFlow: boolean = false;
+    #stepWindow: StepWindow | null = null;
 
     static get userAppLocalDir() {
         const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
@@ -120,7 +120,10 @@ export default class UserApp {
             },
             dependencies: {
                 axios: '^1.7.2',
-                puppeteer: '^22.11.0'
+                puppeteer: '^22.11.0',
+                electron: '^22.3.7',
+                '@electron-toolkit/preload': '^3.0.0',
+                '@electron-toolkit/utils': '^3.0.0'
             }
         };
         fs.writeFileSync(
@@ -146,6 +149,23 @@ export default class UserApp {
         // 写入robotUtil文件
         const robotUtilContent = fs.readFileSync(UserApp.rebotUtilPath, 'utf-8');
         fs.writeFileSync(path.join(this.appRobotUtilDir, 'index.js'), robotUtilContent);
+        const reloadContent = `\
+            const electron = require("electron");
+            const preload = require("@electron-toolkit/preload");
+            const api = {};
+            if (process.contextIsolated) {
+                try {
+                    electron.contextBridge.exposeInMainWorld("electron", preload.electronAPI);
+                    electron.contextBridge.exposeInMainWorld("api", api);
+                } catch (error) {
+                    console.error(error);
+                }
+            } else {
+                window.electron = preload.electronAPI;
+                window.api = api;
+            }
+            `;
+        fs.writeFileSync(path.join(this.appRobotUtilDir, 'reload.js'), reloadContent);
     }
 
     /**
@@ -153,10 +173,10 @@ export default class UserApp {
      */
     initFlows() {
         // 初始化flows
-        if (this._initFlow) {
+        if (this.#_initFlow) {
             return;
         }
-        this._initFlow = true;
+        this.#_initFlow = true;
         this.getFlows();
     }
 
@@ -227,23 +247,23 @@ export default class UserApp {
     }
 
     async devStepOver() {
-        if (this.devNodeJs) {
-            this.devNodeJs.stepOver();
+        if (this.#devNodeJs) {
+            this.#devNodeJs.stepOver();
         }
     }
     async devResume() {
-        if (this.devNodeJs) {
-            this.devNodeJs.resume();
+        if (this.#devNodeJs) {
+            this.#devNodeJs.resume();
         }
     }
     async devStop() {
-        if (!this.devPrecess) {
+        if (!this.#devPrecess) {
             return;
         }
-        if (this.devNodeJs) {
-            this.devNodeJs.stop();
+        if (this.#devNodeJs) {
+            this.#devNodeJs.stop();
         }
-        this.devPrecess && this.devPrecess.kill();
+        this.#devPrecess && this.#devPrecess.kill();
         this.sendRunLogs({
             level: 'info',
             time: Date.now(),
@@ -253,10 +273,10 @@ export default class UserApp {
     }
 
     async devGetProperties(objectId: string) {
-        if (!this.devNodeJs) {
+        if (!this.#devNodeJs) {
             throw new Error('DevNodeJs is not inited');
         }
-        return this.devNodeJs.getProperties(objectId);
+        return this.#devNodeJs.getProperties(objectId);
     }
 
     async dev() {
@@ -268,10 +288,21 @@ export default class UserApp {
         WindowManage.mainWindow.webContents.send('run-logs', data);
     }
 
+    sendRunStep(data: LogMessage) {
+        this.#stepWindow?.webContents.send('run-step', data);
+    }
+
     start(breakpoints: IBreakpoint[] = []) {
+        this.#stepWindow = this.#stepWindow || new StepWindow(this.id);
+        this.#stepWindow.once('show', async () => {
+            await sleep(1000);
+            this.startRun(breakpoints);
+        });
+        if (!this.#stepWindow?.isVisible()) this.#stepWindow?.show();
+    }
+    startRun(breakpoints: IBreakpoint[] = []) {
         const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
         const mainFlowJs = path.join(this.appDir, 'main.flow.js');
-        const port = 9339;
         // let breakpoints: IBreakpoint[] = [];
         // breakpoints = this.breakpoints;
         this.sendRunLogs({
@@ -279,22 +310,21 @@ export default class UserApp {
             time: Date.now(),
             message: `流程正在启动...`
         });
-        this.stepWindow = this.stepWindow || new StepWindow();
 
         const cmds = [nodeExeCmd];
         if (breakpoints.length > 0) {
-            cmds.push(`--inspect-brk=${port}`);
+            cmds.push(`--inspect`);
         }
         cmds.push(mainFlowJs);
-        this.devPrecess = this.shellExeCmd(cmds, (data: string) => {
+        this.#devPrecess = this.shellExeCmd(cmds, (data: string) => {
             //匹配出调试路径
             const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
 
             if (data.includes('Debugger listening on ws://127.0.0.1:') && matchData) {
                 const wsUrl = matchData[0];
 
-                this.devNodeJs = new DevNodeJs(wsUrl, breakpoints);
-                this.devNodeJs.onBreakpoint((breakpoint: IBreakpoint) => {
+                this.#devNodeJs = new DevNodeJs(wsUrl, breakpoints);
+                this.#devNodeJs.onBreakpoint((breakpoint: IBreakpoint) => {
                     //发给前端需要从1开始
                     breakpoint.line = breakpoint.line + 1 - Flow.headLinkCount;
                     WindowManage.mainWindow.webContents.send('breakpoint', breakpoint);
@@ -305,7 +335,7 @@ export default class UserApp {
                 //         this.sendRunLogs(JSON.parse(params.args[1].value));
                 //     }
                 // });
-                this.devNodeJs.onExecutionThrown((context: IExecutionThrown) => {
+                this.#devNodeJs.onExecutionThrown((context: IExecutionThrown) => {
                     this.sendRunLogs({
                         level: 'fatalError',
                         time: Date.now(),
@@ -313,22 +343,18 @@ export default class UserApp {
                         data: context as any
                     });
                 });
-                this.devNodeJs.start();
-            } else if (this.devNodeJs && data.includes('Waiting for the debugger to disconnect.')) {
-                //如果有异常 需要等待获取异常信息
-                // setTimeout(() => {
-                //     if (this.devNodeJs) {
-                //         this.devNodeJs.close();
-                //     }
-                //     this.devNodeJs = null;
-                //     this.sendRunLogs({
-                //         level: 'info',
-                //         time: Date.now(),
-                //         message: `流程结束`
-                //     });
-                //     WindowManage.mainWindow.webContents.send('devRunEnd');
-                //     this.devPrecess = null;
-                // }, 1000);
+                this.#devNodeJs.start();
+            } else if (
+                this.#devNodeJs &&
+                data.includes('Waiting for the debugger to disconnect.')
+            ) {
+                // 如果有异常 需要等待获取异常信息
+                setTimeout(() => {
+                    if (this.#devNodeJs) {
+                        this.#devNodeJs.close();
+                    }
+                    this.#devNodeJs = null;
+                }, 1000);
             } else {
                 data.split('\n').forEach((line) => {
                     if (line.startsWith('robotUtilLog-')) {
@@ -337,18 +363,15 @@ export default class UserApp {
                         );
                         this.sendRunLogs(logData);
                     } else if (line.startsWith('robotUtilRunStep')) {
-                        if (!this.stepWindow?.isVisible()) this.stepWindow?.show();
-                        const stepData = decodeURIComponent(line.replace('robotUtilRunStep-', ''));
-                        const logData = JSON.parse(stepData);
-
-                        this.stepWindow?.webContents.send('run-step', logData);
-
+                        // const stepData = decodeURIComponent(line.replace('robotUtilRunStep-', ''));
+                        // const logData = JSON.parse(stepData) as LogMessage;
+                        // this.sendRunStep(logData);
                         // this.sendRunLogs(logData);
-                    }else if (line.startsWith('Error: Cannot find module')) {
+                    } else if (line.startsWith('Error: Cannot find module')) {
                         this.sendRunLogs({
                             level: 'fatalError',
                             time: Date.now(),
-                            message: '依赖缺失: ' + line,
+                            message: '依赖缺失: ' + line
                         });
 
                         // this.sendRunLogs(logData);
@@ -356,22 +379,20 @@ export default class UserApp {
                 });
             }
         });
-        this.devPrecess.on('exit', (code) => {
+        this.#devPrecess.on('exit', (code) => {
             console.log(`子进程已退出，退出码 ${code}`);
-            if (this.devNodeJs) {
-                this.devNodeJs.close();
+            if (this.#devNodeJs) {
+                this.#devNodeJs.close();
             }
-            this.devNodeJs = null;
+            this.#devNodeJs = null;
             this.sendRunLogs({
                 level: 'info',
                 time: Date.now(),
                 message: `流程结束`
             });
             WindowManage.mainWindow.webContents.send('devRunEnd');
-            this.devPrecess = null;
-            this.stepWindow?.hide();
+            this.#devPrecess = null;
+            this.#stepWindow?.hide();
         });
-
-        return port;
     }
 }

@@ -32,6 +32,11 @@ function start() {
         ipcMain.handle(name, async (_e, ...args) => {
             const result = await method(...args);
             if (result) {
+                //去除私有属性
+                Object.keys(result).forEach((key) => {
+                    const proDesc = Object.getOwnPropertyDescriptor(result, key);
+                    console.log(key, proDesc?.writable);
+                });
                 return JSON.parse(JSON.stringify(result));
             }
             return result;
