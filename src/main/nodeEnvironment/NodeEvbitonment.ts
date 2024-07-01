@@ -4,6 +4,7 @@ import fs from 'fs';
 import { downloadFileWithResume } from '../utils/download';
 import { unzip } from '../utils/zipUtils';
 import { sleep } from '@shared/Utils';
+import UserApp from '../userApp/UserApp';
 
 export class NodeEvbitonment {
     nodePath: string;
@@ -31,6 +32,7 @@ export class NodeEvbitonment {
             console.log('本地环境已安装');
             return;
         }
+        // 下载node环境并安装
         await this.installNode();
     }
 

@@ -1,7 +1,7 @@
 import child_process from 'child_process';
 import puppeteer, { Browser, ElementHandle, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import { Block } from '../types';
-import { sendLog } from './robotUtil';
+import { sendLog } from './log';
 
 function regQueryExeCutablePath(regPath: string) {
     return new Promise<string>((resolve, reject) => {

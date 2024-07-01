@@ -6,6 +6,7 @@ import { registerAssetsProtocol } from './serve';
 import { WindowManage } from './window/WindowManage';
 import nodeEvbitonment from './nodeEnvironment/NodeEvbitonment';
 import robotUtil from './userApp/robotUtil/robotUtil?modulePath';
+import robotLog from './userApp/robotUtil/log?modulePath';
 import UserApp from './userApp/UserApp';
 import UserAppManage from './userApp/UserAppManage';
 
@@ -32,11 +33,6 @@ function start() {
         ipcMain.handle(name, async (_e, ...args) => {
             const result = await method(...args);
             if (result) {
-                //去除私有属性
-                Object.keys(result).forEach((key) => {
-                    const proDesc = Object.getOwnPropertyDescriptor(result, key);
-                    console.log(key, proDesc?.writable);
-                });
                 return JSON.parse(JSON.stringify(result));
             }
             return result;
@@ -55,6 +51,7 @@ function start() {
 
         //扫码本地app
         UserApp.rebotUtilPath = robotUtil;
+        UserApp.rebotUtilLogPath = robotLog;
         UserAppManage.scanLocalApp();
     }
 
@@ -65,6 +62,7 @@ function start() {
         registerAssetsProtocol();
         createWindow();
         nodeEvbitonment.autoInstallNode();
+        UserApp.init();
         // Set app user model id for windows
         electronApp.setAppUserModelId('com.tuzi_robot.app');
 

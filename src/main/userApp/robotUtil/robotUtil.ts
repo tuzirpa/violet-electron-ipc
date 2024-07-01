@@ -1,25 +1,23 @@
-import type { Block, LogLevel } from '../types';
+import type { Block } from '../types';
 import dataProcessing from './dataProcessing';
 import web from './webBrowser';
 import flowControl from './flowControl';
 import wait from './wait';
+import { sendLog, sendStepLog } from './log';
 import fs from 'fs';
 
-export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
-    console.log(
-        `robotUtilLog-` +
-            `${encodeURIComponent(JSON.stringify({ level, time: Date.now(), message, data, error }))}`
-    );
-};
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const extendDirective = require('../../extend');
+const extend = extendDirective || {};
 
 export const robotUtil = {
     sendLog,
     dataProcessing,
     web,
     flowControl,
-    wait
+    wait,
+    extend
 };
 
 //循环执行指令 给指令套上一层 异常处理
@@ -32,7 +30,7 @@ function forRobotUtil(obj: any) {
                 obj[key] = async function aaa(...args: any[]) {
                     const blockInfo = args[args.length - 1] as Block;
                     try {
-                        console.log(
+                        sendStepLog(
                             `robotUtilRunStep-` +
                                 `${encodeURIComponent(
                                     JSON.stringify({

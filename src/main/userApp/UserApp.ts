@@ -19,21 +19,33 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { app } from 'electron';
 import fs from 'fs';
-import path from 'path';
+import path, { join } from 'path';
 import NodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
 import StepWindow from '../window/StepWindow';
 import { WindowManage } from '../window/WindowManage';
 import Flow from './Flow';
 import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs';
 import { LogMessage } from './types';
+import basePackagePath from '../../../resources/node_modules.zip?asset';
 
 import { sleep } from '@shared/Utils';
+import { unzip } from '../utils/zipUtils';
 
 /**
  * 应用类
  */
 export default class UserApp {
+    static init() {
+        //解压基础包到userApp目录
+        if (fs.existsSync(join(this.userAppLocalDir, 'package.json'))) {
+            console.log('基础包已安装');
+            return;
+        }
+        unzip(basePackagePath, this.userAppLocalDir);
+        console.log('安装基础包完成');
+    }
     static rebotUtilPath = '';
+    static rebotUtilLogPath = '';
 
     id: string;
     version: string = '1.0.0';
@@ -66,7 +78,7 @@ export default class UserApp {
         this.id = id;
         this.appDir = path.join(UserApp.userAppLocalDir, this.id);
         this.appDevDir = path.join(this.appDir, 'dev');
-        this.appRobotUtilDir = path.join(this.appDir, 'robotUtil');
+        this.appRobotUtilDir = path.join(this.appDir, '../node_modules/tuzirobot');
 
         this.init();
     }
@@ -146,26 +158,20 @@ export default class UserApp {
         if (!fs.existsSync(this.appRobotUtilDir)) {
             fs.mkdirSync(this.appRobotUtilDir, { recursive: true });
         }
+
         // 写入robotUtil文件
         const robotUtilContent = fs.readFileSync(UserApp.rebotUtilPath, 'utf-8');
-        fs.writeFileSync(path.join(this.appRobotUtilDir, 'index.js'), robotUtilContent);
-        const reloadContent = `\
-            const electron = require("electron");
-            const preload = require("@electron-toolkit/preload");
-            const api = {};
-            if (process.contextIsolated) {
-                try {
-                    electron.contextBridge.exposeInMainWorld("electron", preload.electronAPI);
-                    electron.contextBridge.exposeInMainWorld("api", api);
-                } catch (error) {
-                    console.error(error);
-                }
-            } else {
-                window.electron = preload.electronAPI;
-                window.api = api;
-            }
-            `;
-        fs.writeFileSync(path.join(this.appRobotUtilDir, 'reload.js'), reloadContent);
+        fs.writeFileSync(
+            path.join(this.appDir, '../node_modules/tuzirobot/index.js'),
+            robotUtilContent
+        );
+        const logContent = fs.readFileSync(UserApp.rebotUtilLogPath, 'utf-8');
+        const logFileName = path.basename(UserApp.rebotUtilLogPath);
+        fs.writeFileSync(
+            path.join(this.appDir, `../node_modules/tuzirobot/${logFileName}`),
+            logContent
+        );
+        fs.writeFileSync(path.join(this.appDir, `../node_modules/tuzirobot/log.js`), logContent);
     }
 
     /**

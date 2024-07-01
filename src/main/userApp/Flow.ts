@@ -41,12 +41,18 @@ export default class Flow {
      */
     public async convert() {
         let content = ['//流程自动生成'];
-        content.push(`let robotUtilAll = require('./robotUtil');let fs = require('fs');`);
+        content.push(`let robotUtilAll = require('tuzirobot');`);
+        content.push(`let log = require("tuzirobot/log");`);
+        content.push(`let fs = require('fs');`);
         content.push(`robotUtil = robotUtilAll.default;`);
         content.push(`let _block = {};`);
         content.push(
             `const generateBlock = robotUtilAll.generateBlock;const fatalError = robotUtilAll.fatalError;`
         );
+        content.push(`console.log = function (...args) {`);
+        content.push(`	log.sendLog("info", args.join(" "), _block);`);
+        content.push(`};`);
+
         content.push(`setTimeout(async ()=>{`);
         content.push(`  try {`);
         let flowControlBlock = 0;

@@ -1,5 +1,5 @@
 import { Block } from '../types';
-import { sendLog } from './robotUtil';
+import { sendLog } from './log';
 
 export default {
     test: async function (operand1: any, operator: string, operand2: any, _block: Block) {

@@ -1,5 +1,5 @@
 import { Block } from '../types';
-import { sendLog } from './robotUtil';
+import { sendLog } from './log';
 
 const dataProcessing = {
     async log(content: string, block: Block) {
