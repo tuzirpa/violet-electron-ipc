@@ -46,7 +46,7 @@ export const directive: DirectiveTree = {
 
     outputs: {
         csElementInfo: {
-            name: 'csElementInfo',
+            name: 'cssElementInfo',
             display: '元素信息',
             type: 'sq.ElementObject',
             addConfig: {
@@ -55,11 +55,6 @@ export const directive: DirectiveTree = {
                 defaultValue: 'elementInfo'
             }
         }
-    },
-
-    async toCode(directive: DirectiveTree, block: string) {
-        const { browserPage, selection, timeout } = directive.inputs;
-        return `var ${directive.outputs.csElementInfo.name} = await robotUtil.web.getElementInfoBySelector(${browserPage.value},'${selection.value}',${timeout.value},${block})`;
     }
 };
 

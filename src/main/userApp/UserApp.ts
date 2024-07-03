@@ -39,11 +39,32 @@ export default class UserApp {
         //解压基础包到userApp目录
         if (fs.existsSync(join(this.userAppLocalDir, 'package.json'))) {
             console.log('基础包已安装');
-            return;
+        } else {
+            unzip(basePackagePath, this.userAppLocalDir);
+            console.log('安装基础包完成');
         }
-        unzip(basePackagePath, this.userAppLocalDir);
-        console.log('安装基础包完成');
+        this.robotUtilInit();
     }
+
+    static robotUtilInit() {
+        // 写入robotUtil文件
+        const robotUtilContent = fs.readFileSync(UserApp.rebotUtilPath, 'utf-8');
+        fs.writeFileSync(
+            path.join(this.userAppLocalDir, 'node_modules/tuzirobot/index.js'),
+            robotUtilContent
+        );
+        const logContent = fs.readFileSync(UserApp.rebotUtilLogPath, 'utf-8');
+        const logFileName = path.basename(UserApp.rebotUtilLogPath);
+        fs.writeFileSync(
+            path.join(this.userAppLocalDir, `node_modules/tuzirobot/${logFileName}`),
+            logContent
+        );
+        fs.writeFileSync(
+            path.join(this.userAppLocalDir, `node_modules/tuzirobot/commonUtil.js`),
+            logContent
+        );
+    }
+
     static rebotUtilPath = '';
     static rebotUtilLogPath = '';
 
@@ -107,7 +128,6 @@ export default class UserApp {
         this.name = this.packageJson.name;
 
         // this.initFlows();
-        this.robotUtilInit();
     }
 
     create() {
@@ -130,13 +150,7 @@ export default class UserApp {
                 dev: 'node --inspect-brk=2017 main.flow.js',
                 start: 'node main.flow.js'
             },
-            dependencies: {
-                axios: '^1.7.2',
-                puppeteer: '^22.11.0',
-                electron: '^22.3.7',
-                '@electron-toolkit/preload': '^3.0.0',
-                '@electron-toolkit/utils': '^3.0.0'
-            }
+            dependencies: {}
         };
         fs.writeFileSync(
             path.join(this.appDir, 'package.json'),
@@ -150,28 +164,6 @@ export default class UserApp {
         fs.mkdirSync(this.appDevDir, { recursive: true });
         // 写入dev/main.flow文件
         fs.writeFileSync(path.join(this.appDevDir, 'main.flow'), '');
-
-        this.robotUtilInit();
-    }
-
-    robotUtilInit() {
-        if (!fs.existsSync(this.appRobotUtilDir)) {
-            fs.mkdirSync(this.appRobotUtilDir, { recursive: true });
-        }
-
-        // 写入robotUtil文件
-        const robotUtilContent = fs.readFileSync(UserApp.rebotUtilPath, 'utf-8');
-        fs.writeFileSync(
-            path.join(this.appDir, '../node_modules/tuzirobot/index.js'),
-            robotUtilContent
-        );
-        const logContent = fs.readFileSync(UserApp.rebotUtilLogPath, 'utf-8');
-        const logFileName = path.basename(UserApp.rebotUtilLogPath);
-        fs.writeFileSync(
-            path.join(this.appDir, `../node_modules/tuzirobot/${logFileName}`),
-            logContent
-        );
-        fs.writeFileSync(path.join(this.appDir, `../node_modules/tuzirobot/log.js`), logContent);
     }
 
     /**
@@ -218,7 +210,7 @@ export default class UserApp {
         console.log('执行命令', cmd, args);
         const child = spawn(cmd, args, { cwd: this.appDir, env: {} });
         child.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
+            // console.log(`stdout: ${data}`);
             data = data.toString();
             stdCallback && stdCallback(data);
             // WindowManage.getWindow('login').webContents.send('run-logs', `${data}`);
@@ -269,7 +261,9 @@ export default class UserApp {
         if (this.#devNodeJs) {
             this.#devNodeJs.stop();
         }
-        this.#devPrecess && this.#devPrecess.kill();
+        const exitRes = this.#devPrecess && this.#devPrecess.kill(2);
+        console.log('退出结果', exitRes);
+
         this.sendRunLogs({
             level: 'info',
             time: Date.now(),
@@ -290,8 +284,20 @@ export default class UserApp {
         return this.start(this.breakpoints);
     }
 
-    sendRunLogs(data: LogMessage) {
+    #logsData: LogMessage[] = [];
+    #lastLogsOutIndex: number = 0;
+    #logsOutSt: string | number | NodeJS.Timeout | undefined;
+
+    _sendRunLogs(data: LogMessage | LogMessage[]) {
         WindowManage.mainWindow.webContents.send('run-logs', data);
+    }
+
+    sendRunLogs(data: LogMessage | LogMessage[]) {
+        if (Array.isArray(data)) {
+            this.#logsData.push(...data);
+        } else {
+            this.#logsData.push(data);
+        }
     }
 
     sendRunStep(data: LogMessage) {
@@ -322,6 +328,17 @@ export default class UserApp {
             cmds.push(`--inspect`);
         }
         cmds.push(mainFlowJs);
+
+        //启动日志输出进程
+        this.#logsOutSt = setInterval(() => {
+            if (this.#logsData.length <= this.#lastLogsOutIndex) {
+                return;
+            }
+            const data = this.#logsData.splice(this.#lastLogsOutIndex, this.#logsData.length);
+            this.#lastLogsOutIndex = this.#logsData.length;
+            this._sendRunLogs(data);
+        }, 300);
+
         this.#devPrecess = this.shellExeCmd(cmds, (data: string) => {
             //匹配出调试路径
             const matchData = data.match(/ws:\/\/127.0.0.1:\d{4}\/[0-9A-Za-z-]+/);
@@ -362,27 +379,28 @@ export default class UserApp {
                     this.#devNodeJs = null;
                 }, 1000);
             } else {
+                const logs: LogMessage[] = [];
                 data.split('\n').forEach((line) => {
                     if (line.startsWith('robotUtilLog-')) {
                         const logData = JSON.parse(
                             decodeURIComponent(line.replace('robotUtilLog-', ''))
                         );
-                        this.sendRunLogs(logData);
+                        logs.push(logData);
                     } else if (line.startsWith('robotUtilRunStep')) {
                         // const stepData = decodeURIComponent(line.replace('robotUtilRunStep-', ''));
                         // const logData = JSON.parse(stepData) as LogMessage;
                         // this.sendRunStep(logData);
                         // this.sendRunLogs(logData);
                     } else if (line.startsWith('Error: Cannot find module')) {
-                        this.sendRunLogs({
+                        logs.push({
                             level: 'fatalError',
                             time: Date.now(),
                             message: '依赖缺失: ' + line
                         });
-
                         // this.sendRunLogs(logData);
                     }
                 });
+                this.sendRunLogs(logs);
             }
         });
         this.#devPrecess.on('exit', (code) => {
@@ -399,6 +417,11 @@ export default class UserApp {
             WindowManage.mainWindow.webContents.send('devRunEnd');
             this.#devPrecess = null;
             this.#stepWindow?.hide();
+
+            this.#logsOutSt && clearInterval(this.#logsOutSt);
+            const data = this.#logsData.splice(this.#lastLogsOutIndex, this.#logsData.length);
+            this.#lastLogsOutIndex = this.#logsData.length;
+            this._sendRunLogs(data);
         });
     }
 }

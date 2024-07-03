@@ -23,3 +23,11 @@ loadDirective();
 export function useDirective() {
     return directives;
 }
+
+/**
+ * 重新加载指令列表
+ */
+export async function reloadDirective() {
+    await Action.reloadDirective();
+    loadDirective();
+}

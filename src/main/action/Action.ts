@@ -2,7 +2,7 @@ import { clipboard, shell } from 'electron';
 import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
-import { useDirective } from '../userApp/directive/directive';
+import { reloadDirective, useDirective } from '../userApp/directive/directive';
 import { WindowManage, WindowNameType } from '../window/WindowManage';
 
 class Action {
@@ -122,6 +122,10 @@ class Action {
     }
 
     static async getDirectives() {
+        return useDirective();
+    }
+    static async reloadDirective() {
+        reloadDirective();
         return useDirective();
     }
 }

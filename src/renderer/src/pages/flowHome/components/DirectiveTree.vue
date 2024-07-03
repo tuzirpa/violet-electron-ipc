@@ -4,12 +4,10 @@ import { ElInput, ElTree } from 'element-plus';
 import { ref, watch } from 'vue';
 import type { DirectiveTree } from 'src/main/userApp/types';
 import { dragData } from '../dragVar';
-import { useDirective } from '../directive';
+import { useDirective, reloadDirective } from '../directive';
 import { FilterValue, TreeNodeData } from 'element-plus/es/components/tree/src/tree.type';
 import Node from 'element-plus/es/components/tree/src/model/node';
-import { useElementSize } from '@vueuse/core'
-
-
+import { useElementSize } from '@vueuse/core';
 
 const emit = defineEmits<{
     (e: 'addDirective', data: DirectiveTree): void;
@@ -75,6 +73,7 @@ function handleDragStart(_event: DragEvent, data: DirectiveTree) {
 }
 
 
+
 </script>
 
 <template>
@@ -89,11 +88,14 @@ function handleDragStart(_event: DragEvent, data: DirectiveTree) {
                     </div>
                     <BtnTip :icon="'icon-zhankai'" :class="{ '-scale-y-100': expandAll }" text="展开/收缩全部指令"
                         @click="expandAllNodes" class="px-0.5 py-0.5 text-xs text-gray-400" />
+                    <BtnTip :class="{ '-scale-x-100': hideDirectiveTree }" text="重载指令" @click="reloadDirective"
+                        class="text-xs p-0">重载</BtnTip>
                 </template>
                 <BtnTip :icon="'icon-fanhui'" text="隐藏" v-if="!hideDirectiveTree" @click="hideDirectiveTree = true"
                     class="px-0.5 p-0.5 text-xs text-gray-400" />
                 <BtnTip :icon="'icon-fanhui'" :class="{ '-scale-x-100': hideDirectiveTree }" text="指令" v-else
                     @click="hideDirectiveTree = false" class="px-0.5 p-0.5 text-xs text-gray-400" />
+
             </div>
             <div class="wrapbox" v-show="!hideDirectiveTree">
                 <el-tree ref="treeRef" style="--el-tree-node-content-height: 34px" :data="data" :props="defaultProps"

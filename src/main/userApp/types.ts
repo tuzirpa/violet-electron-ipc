@@ -1,4 +1,3 @@
-
 export type LogMessage = {
     level: LogLevel;
     time: number;
@@ -8,7 +7,6 @@ export type LogMessage = {
 };
 
 export type DataType = 'string' | 'number' | 'boolean' | 'variable';
-
 
 export interface FlowVariable {
     /**
@@ -172,6 +170,11 @@ export interface DirectiveTree {
      * name 指令名称 需要全局唯一
      */
     name: string;
+
+    /**
+     * 指令name 的别名
+     */
+    key?: string;
 
     /**
      * 指令描述 支持变量占位符

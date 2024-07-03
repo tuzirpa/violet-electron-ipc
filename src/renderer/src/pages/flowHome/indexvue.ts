@@ -8,10 +8,21 @@ import { ref } from 'vue';
  * 运行日志
  */
 export const runLogs = ref<{ level: LogLevel; message: string; time: number; data: Block }[]>([]);
+console.log(runLogs, 'runLogs11');
+
 window.electron.ipcRenderer.on('run-logs', (_event, log) => {
     console.log(log, 'run-logs');
-    log.time = new Date(log.time).toLocaleString();
-    runLogs.value.unshift(log);
+    if (Array.isArray(log)) {
+        log.forEach((item) => {
+            item.time = new Date(item.time).toLocaleString();
+        });
+        //倒序
+        log.reverse();
+        runLogs.value.unshift(...log);
+    } else {
+        log.time = new Date(log.time).toLocaleString();
+        runLogs.value.unshift(log);
+    }
 });
 
 /**

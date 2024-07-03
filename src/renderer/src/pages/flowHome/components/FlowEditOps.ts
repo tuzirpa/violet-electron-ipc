@@ -65,6 +65,8 @@ export const checkError = (directives: DirectiveData[], file: OpenFile) => {
                 const varNames = String(input.value).match(/\${.*?}/g);
                 varNames?.forEach((varName) => {
                     varName = varName.substring(2, varName.length - 1);
+                    //从 ${表达式} 中提取出表达式变量
+
                     const varItem = vars.find((item) => item.name === varName);
                     if (!varItem) {
                         errors.push(`变量${varName}未定义`);

@@ -6,7 +6,7 @@ import { registerAssetsProtocol } from './serve';
 import { WindowManage } from './window/WindowManage';
 import nodeEvbitonment from './nodeEnvironment/NodeEvbitonment';
 import robotUtil from './userApp/robotUtil/robotUtil?modulePath';
-import robotLog from './userApp/robotUtil/log?modulePath';
+import robotLog from './userApp/robotUtil/commonUtil?modulePath';
 import UserApp from './userApp/UserApp';
 import UserAppManage from './userApp/UserAppManage';
 

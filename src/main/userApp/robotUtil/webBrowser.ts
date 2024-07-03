@@ -1,7 +1,7 @@
 import child_process from 'child_process';
-import puppeteer, { Browser, ElementHandle, Page, PuppeteerLaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, ElementHandle, Frame, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import { Block } from '../types';
-import { sendLog } from './log';
+import { sendLog } from './commonUtil';
 
 function regQueryExeCutablePath(regPath: string) {
     return new Promise<string>((resolve, reject) => {
@@ -45,22 +45,22 @@ export async function getExeCutablePath(type: string) {
  * @param page
  * @returns
  */
-// async function getElements(selector: string, page: Page): Promise<Element[]> {
-//     const iframeAll: Frame[] = [];
-//     function dumpFrameTree(frame: Frame) {
-//         iframeAll.push(frame);
-//         for (let child of frame.childFrames()) dumpFrameTree(child);
-//     }
-//     dumpFrameTree(page.mainFrame());
-//     const promises: any[] = [];
-//     iframeAll.forEach((frame) => {
-//         promises.push(frame.$(selector));
-//     });
-//     let res = await Promise.all(promises).then((results) => {
-//         return results.filter((element) => element !== null);
-//     });
-//     return res;
-// }
+async function getElements(selector: string, page: Page): Promise<Element[]> {
+    const iframeAll: Frame[] = [];
+    function dumpFrameTree(frame: Frame) {
+        iframeAll.push(frame);
+        for (let child of frame.childFrames()) dumpFrameTree(child);
+    }
+    dumpFrameTree(page.mainFrame());
+    const promises: any[] = [];
+    iframeAll.forEach((frame) => {
+        promises.push(frame.$(selector));
+    });
+    let res = await Promise.all(promises).then((results) => {
+        return results.filter((element) => element !== null);
+    });
+    return res;
+}
 
 const webBrowser = {
     create2: async function (
@@ -147,7 +147,7 @@ const webBrowser = {
         return element;
     },
 
-    getElementInfoBySelector: async function (
+    cssGetElementInfo: async function (
         page: Page,
         selector: string,
         timeout: number,

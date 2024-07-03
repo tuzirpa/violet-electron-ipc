@@ -47,12 +47,14 @@ const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
         returnVal = paramArr.join('');
     }
     const returnString = `var ${returnVal} = `;
-    jsCode = `${returnVal ? returnString : ''}await robotUtil.${directive.name}(${params},${blockCode});`;
+    const key = directive.key || directive.name;
+    jsCode = `${returnVal ? returnString : ''}await robotUtil.${key}(${params},${blockCode});`;
     return jsCode;
 };
 
 export async function convertDirective(directive: DirectiveTree, index: number, flow: Flow) {
-    const toCode = directiveToCodeMap.get(directive.name);
+    let toCode = directiveToCodeMap.get(directive.name);
+    toCode = toCode || directive.toCode;
     const block: Block = {
         blockLine: index + 1,
         flowName: flow.name,

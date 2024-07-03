@@ -641,6 +641,7 @@ function addBlockTemp() {
         }
 
         //判断如果添加的是控制流程开始需要自动添加控制流程结束
+
         if (addDirective.isControl && addDirective.name === 'flowControl.if') {
             const controlEnd: DirectiveData = {
                 id: uuid(),

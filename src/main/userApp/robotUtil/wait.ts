@@ -1,5 +1,5 @@
 import { Block } from '../types';
-import { sendLog } from './log';
+import { sendLog } from './commonUtil';
 
 export default {
     delay(time: number, block: Block) {

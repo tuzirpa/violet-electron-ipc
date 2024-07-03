@@ -2,60 +2,72 @@ import { DirectiveTree } from 'src/main/userApp/types';
 import UserApp from '../UserApp';
 import { join } from 'path';
 
-const groups: { [key: string]: { default: DirectiveTree } } = import.meta.glob('./*/index.ts', {
-    eager: true
-});
-
 export const directiveToCodeMap = new Map<
     string,
     (directive: DirectiveTree, block: string) => Promise<string>
 >();
 
-export const directives: DirectiveTree[] = [];
+let allDirectives: DirectiveTree[] = [];
 
-function toCode2Map(children: DirectiveTree[]) {
-    if (children.length === 0) {
+let loadSystemDirectiveLoaded = false;
+function loadSystemDirective() {
+    if (loadSystemDirectiveLoaded) {
         return;
     }
-    children.forEach((child) => {
-        if (child.toCode) {
-            directiveToCodeMap.set(child.name, child.toCode);
+    const extendDirective = {
+        name: '',
+        sort: 0,
+        displayName: '系统指令',
+        icon: 'icon-gugeliulanqi',
+        children: [] as DirectiveTree[],
+        inputs: {},
+        outputs: {}
+    };
+
+    loadSystemDirectiveLoaded = true;
+
+    const directiveJsonPath = join(UserApp.userAppLocalDir, 'system', 'directive.json');
+    delete require.cache[directiveJsonPath];
+    const extDirectivesJson = require(directiveJsonPath);
+
+    const loadDirevtive = function (directiveGroup: DirectiveTree, directive: any) {
+        if (directive.children) {
+            const group = {
+                name: directive.name,
+                sort: 0,
+                displayName: directive.name,
+                children: [] as DirectiveTree[],
+                icon: directive.icon
+            } as DirectiveTree;
+            directiveGroup.children?.push(group);
+            directive.children.forEach((child) => {
+                loadDirevtive(group, child);
+            });
         } else {
-            toCode2Map(child.children || []);
+            let directiveModule;
+            try {
+                const modulePath = join(UserApp.userAppLocalDir, 'system', directive.localFile);
+                delete require.cache[modulePath];
+                directiveModule = require(modulePath);
+            } catch (error: any) {
+                throw new Error(`系统指令${directive.localFile}加载失败：${error.message}`);
+            }
+            const directiveTree = directiveModule.config;
+            directiveTree.key = directiveTree.key || directiveTree.name;
+            directiveTree.key = `system.${directiveTree.key}`;
+            if (directiveTree.toCode) {
+                directiveToCodeMap.set(directiveTree.name, directiveTree.toCode);
+                console.log(directiveTree.name + ' 有自己的toCode ' + directiveTree.key);
+            }
+
+            directiveGroup.children?.push(directiveTree);
         }
+    };
+    extDirectivesJson.forEach((directive) => {
+        loadDirevtive(extendDirective, directive);
     });
+    allDirectives.push(extendDirective);
 }
-
-for (const key in groups) {
-    if (Object.prototype.hasOwnProperty.call(groups, key)) {
-        const module = groups[key];
-        directives.push(module.default);
-
-        const groupDirectives = module.default.children;
-        if (!groupDirectives) {
-            continue;
-        }
-        toCode2Map(groupDirectives);
-    }
-}
-
-directives.sort((a, b) => {
-    const asort = a.sort || 0;
-    const bsort = b.sort || 0;
-    return asort - bsort;
-});
-
-const systempDirectives = {
-    name: '',
-    sort: 0,
-    displayName: '系统指令',
-    icon: 'icon-gugeliulanqi',
-    children: directives,
-    inputs: {},
-    outputs: {}
-};
-
-const allDirectives = [systempDirectives];
 
 let loadExtendDirectiveLoaded = false;
 function loadExtendDirective() {
@@ -73,7 +85,9 @@ function loadExtendDirective() {
     };
 
     loadExtendDirectiveLoaded = true;
-    const extDirectivesJson = require(join(UserApp.userAppLocalDir, 'extend', 'directive.json'));
+    const directiveJsonPath = join(UserApp.userAppLocalDir, 'extend', 'directive.json');
+    delete require.cache[directiveJsonPath];
+    const extDirectivesJson = require(directiveJsonPath);
 
     const loadDirevtive = function (directiveGroup: DirectiveTree, directive: any) {
         if (directive.children) {
@@ -89,11 +103,20 @@ function loadExtendDirective() {
                 loadDirevtive(group, child);
             });
         } else {
-            const directiveModule = require(
-                join(UserApp.userAppLocalDir, 'extend', directive.localFile)
-            );
+            let directiveModule;
+            try {
+                const modulePath = join(UserApp.userAppLocalDir, 'extend', directive.localFile);
+                delete require.cache[modulePath];
+                directiveModule = require(modulePath);
+            } catch (error: any) {
+                throw new Error(`扩展指令${directive.name}加载失败：${error.message}`);
+            }
             const directiveTree = directiveModule.config as DirectiveTree;
             directiveTree.name = `extend.${directiveTree.name}`;
+            if (directiveTree.toCode) {
+                directiveToCodeMap.set(directiveTree.name, directiveTree.toCode);
+                console.log(directiveTree.name + ' 有自己的toCode ');
+            }
 
             directiveGroup.children?.push(directiveTree);
         }
@@ -103,12 +126,29 @@ function loadExtendDirective() {
     });
     allDirectives.push(extendDirective);
 }
+
+/**
+ * 获取一个指令列表
+ */
+export function reloadDirective() {
+    //清空指令列表
+    allDirectives = [];
+    loadSystemDirectiveLoaded = false;
+    loadExtendDirectiveLoaded = false;
+
+    //加载系统指令
+    loadSystemDirective();
+
+    //加载扩展指令
+    loadExtendDirective();
+}
+
 /**
  * 获取一个指令列表
  */
 export function useDirective() {
-    //加载扩展指令
-    loadExtendDirective();
-
+    if (allDirectives.length === 0) {
+        reloadDirective();
+    }
     return allDirectives;
 }

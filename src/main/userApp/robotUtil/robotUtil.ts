@@ -1,9 +1,5 @@
 import type { Block } from '../types';
-import dataProcessing from './dataProcessing';
-import web from './webBrowser';
-import flowControl from './flowControl';
-import wait from './wait';
-import { sendLog, sendStepLog } from './log';
+import { sendLog, sendStepLog, olog } from './commonUtil';
 import fs from 'fs';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -11,13 +7,17 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const extendDirective = require('../../extend');
 const extend = extendDirective || {};
 
+const systemDirective = require('../../system');
+const system = systemDirective || {};
+
 export const robotUtil = {
     sendLog,
-    dataProcessing,
-    web,
-    flowControl,
-    wait,
-    extend
+    // dataProcessing,
+    // web,
+    // flowControl,
+    // wait,
+    extend,
+    system
 };
 
 //循环执行指令 给指令套上一层 异常处理
@@ -31,20 +31,17 @@ function forRobotUtil(obj: any) {
                     const blockInfo = args[args.length - 1] as Block;
                     try {
                         sendStepLog(
-                            `robotUtilRunStep-` +
-                                `${encodeURIComponent(
-                                    JSON.stringify({
-                                        level: 'info',
-                                        time: Date.now(),
-                                        message: `执行指令${blockInfo.directiveDisplayName}`,
-                                        data: blockInfo
-                                    })
-                                )}`
+                            JSON.stringify({
+                                level: 'info',
+                                time: Date.now(),
+                                message: `执行指令${blockInfo.directiveDisplayName}`,
+                                data: blockInfo
+                            })
                         );
                         const result = await (value as Function).apply(this, args);
                         return result;
                     } catch (error: any) {
-                        console.log(error);
+                        olog(error);
                         sendLog(
                             'error',
                             `执行指令 ${blockInfo.directiveDisplayName} 异常: ${error.message}`,
@@ -135,6 +132,7 @@ export const fatalError = (error: any, fileName: string) => {
     const curFileContent = fs.readFileSync(fileName, 'utf8');
     const lineContent = curFileContent.split('\n')[lineNumber - 1];
     const generateBlockCode = lineContent.trim().match(/generateBlock\(.*?\)/);
+    olog(error);
     if (generateBlockCode && generateBlockCode[0]) {
         robotUtil.sendLog(
             'fatalError',

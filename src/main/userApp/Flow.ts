@@ -5,7 +5,7 @@ import { convertDirective } from './directiveconvert';
 
 export default class Flow {
     blocks: DirectiveTree[] = [];
-    static headLinkCount = 7;
+    static headLinkCount = 11;
     constructor(
         public appDir: string,
         public filePath: string,
@@ -42,7 +42,7 @@ export default class Flow {
     public async convert() {
         let content = ['//流程自动生成'];
         content.push(`let robotUtilAll = require('tuzirobot');`);
-        content.push(`let log = require("tuzirobot/log");`);
+        content.push(`let log = require("tuzirobot/commonUtil");`);
         content.push(`let fs = require('fs');`);
         content.push(`robotUtil = robotUtilAll.default;`);
         content.push(`let _block = {};`);

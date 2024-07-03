@@ -1,10 +1,10 @@
-<script setup lang="ts" name="应用编辑">
+<script setup lang="tsx">
 import TitleBar from '@renderer/components/TitleBar.vue';
 import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { ElButton, ElMessage, ElMessageBox, ElTable, ElTableColumn } from 'element-plus';
+import { Column, ElAutoResizer, ElButton, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Action } from '@renderer/lib/action';
@@ -12,6 +12,38 @@ import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { errorDirectives } from './components/FlowEditStore';
 import { handleRunLogsContextMenu, runLogs } from './indexvue';
+import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
+
+runLogs.value.push(
+    {
+        level: 'info',
+        message: '1231',
+        time: 0,
+        data: {
+            blockLine: 0,
+            flowName: '',
+            directiveName: '',
+            directiveDisplayName: '',
+            failureStrategy: 'terminate',
+            intervalTime: 0,
+            retryCount: 0
+        }
+    },
+    {
+        level: 'info',
+        message: '1231',
+        time: 0,
+        data: {
+            blockLine: 0,
+            flowName: '',
+            directiveName: '',
+            directiveDisplayName: '',
+            failureStrategy: 'terminate',
+            intervalTime: 0,
+            retryCount: 0
+        }
+    }
+);
 
 const route = useRoute();
 const id = route.query.appId as string;
@@ -60,7 +92,7 @@ const breakpointData = ref<IBreakpoint>({
     url: ''
 });
 
-const breakpointCallback = async (_event, data: IBreakpoint) => {
+const breakpointCallback = async (_event: any, data: IBreakpoint) => {
     console.log(data, 'breakpoint');
     breakpointData.value = data;
     isDev.value = true;
@@ -74,7 +106,7 @@ const breakpointCallback = async (_event, data: IBreakpoint) => {
         const scopeChain = breakpointData.value.scopeChain[0].object.objectId;
         const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
         console.log(res.result);
-        devVariableData.value = res.result.map((item) => {
+        devVariableData.value = res.result.map((item: { name: any; value: { type: any; value: any; }; }) => {
             const name = item.name;
             return {
                 type: item.value.type ?? '未初始化',
@@ -85,7 +117,7 @@ const breakpointCallback = async (_event, data: IBreakpoint) => {
     }
 };
 
-const devRunEndCallback = (_event) => {
+const devRunEndCallback = (_event: any) => {
     isDev.value = false;
     isRun.value = false;
     window.electron.ipcRenderer.removeAllListeners('breakpoint');
@@ -158,10 +190,12 @@ const flowEditRef = ref<InstanceType<typeof FlowEdit>>();
  * 日志行样式
  * @param param0 
  */
-function runLogsRowClassName({
-    row
-}) {
-    return row.level;
+function runLogsRowClassName(row: { rowData: { level: any; }; }) {
+    return row.rowData.level;
+}
+
+function handleRowEvent(..._args: any[]) {
+    console.log(_args, 'handleRowEvent');
 }
 
 async function clickUserAppName() {
@@ -185,6 +219,92 @@ const hideDirectiveTree = (e: boolean) => {
     directiveWidth.value = e ? 60 : 250;
 };
 const directiveWidth = ref(250);
+
+
+const runLogsColumns: Column<any>[] = [
+    {
+        key: 'rowIndex',
+        title: '序号',
+        width: 50,
+        align: 'center',
+        cellRenderer: ({ rowIndex }) => (
+            <>
+                {runLogs.value.length - rowIndex}
+            </>
+        )
+    },
+    {
+        key: 'level',
+        title: '消息类型',
+        dataKey: 'level',
+        width: 80,
+        align: 'center',
+        cellRenderer: ({ cellData: level }) => (
+            <>
+                {level}
+            </>
+        )
+    },
+    {
+        key: 'time',
+        title: '时间',
+        dataKey: 'time',
+        width: 150,
+        align: Alignment.CENTER,
+        cellRenderer: ({ cellData: time }) => (
+            <>
+                {time}
+            </>
+        )
+    },
+    {
+        key: 'message',
+        title: '内容',
+        dataKey: 'message',
+        class: 'log-message',
+        headerClass: 'log-message',
+        width: 150,
+        align: Alignment.CENTER,
+        cellRenderer: ({ cellData: message, rowData }) => (
+            <div class="flex justify-center items-center h-full w-full" onContextmenu={(e: MouseEvent) => { handleRunLogsContextMenu(rowData, 4, e) }}>
+                <span class="truncate flex-1 w-0">{message}</span>
+            </div>
+        )
+    },
+    {
+        key: 'data',
+        title: '流程名',
+        dataKey: 'data',
+        width: 150,
+        maxWidth: 500,
+        align: Alignment.CENTER,
+        cellRenderer: ({ cellData: data }) => {
+            /**
+             * <el-auto-resizer>
+                                        <template #default="{ height, width }">
+             */
+            // const slotsDefault = ({ height, width }) => {
+
+            // }
+            return (<>
+                {data?.flowName}
+            </>)
+        }
+    },
+    {
+        key: 'line',
+        title: '行号',
+        dataKey: 'data',
+        width: 50,
+        align: Alignment.CENTER,
+        cellRenderer: ({ cellData: data }) => (
+            <>
+                {data?.blockLine}
+            </>
+        )
+    },
+];
+
 
 // 添加逻辑
 </script>
@@ -286,26 +406,23 @@ const directiveWidth = ref(250);
                     <BoxDraggable class="viewbox left-sidebar border-t" :height="270" :resize-top="true">
                         <el-tabs v-model="bottomTabsActiveName" :size="'small'" class="viewbox flex-1">
                             <el-tab-pane label="运行日志" name="run-logs">
-                                <el-table @row-contextmenu="handleRunLogsContextMenu" :data="runLogs" :border="true"
-                                    :row-class-name="runLogsRowClassName" style="width: 100%;
-                                        height: calc(var(--draggable-height) - 60px);
-                                    ">
-                                    <el-table-column prop="level" label="消息类型" width="100" />
-                                    <el-table-column prop="time" label="时间" width="180" />
-                                    <el-table-column prop="message" label="内容" />
-                                    <el-table-column label="流程名" width="100">
-                                        <template #default="scope">
-                                            {{ scope.row.data?.flowName }}
+                                <div style="width: 100%;
+                                                height: calc(var(--draggable-height) - 60px);
+                                            ">
+                                    <el-auto-resizer>
+                                        <template #default="{ height, width }">
+                                            <ElTableV2 :columns="runLogsColumns" :row-class="runLogsRowClassName"
+                                                @row-event-handlers="handleRowEvent" :data="runLogs" :width="width"
+                                                :height="height">
+                                                <template #empty>
+                                                    <div class="flex justify-center items-center pt-3 text-gray-400">暂无数据
+                                                    </div>
+                                                </template>
+
+                                            </ElTableV2>
                                         </template>
-                                    </el-table-column>
-                                    <el-table-column label="行号" width="60">
-                                        <template #default="scope">
-                                            <a class="cursor-pointer underline decoration-1 text-blue-500"
-                                                @click="flowEditRef?.scrollIntoRow(scope.row.data?.blockLine)">{{
-                                                    scope.row.data?.blockLine }}</a>
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
+                                    </el-auto-resizer>
+                                </div>
                             </el-tab-pane>
                             <el-tab-pane label="调试变量" name="dev-variable">
                                 <el-table :data="devVariableData" style="
@@ -405,15 +522,19 @@ const directiveWidth = ref(250);
     }
 }
 
-::v-deep(.el-table .error) {
+::v-deep(.log-message) {
+    flex: 1 !important;
+}
+
+::v-deep(.el-table-v2 .error) {
     color: red;
 }
 
-::v-deep(.el-table .info) {
+::v-deep(.el-table-v2 .info) {
     color: blue;
 }
 
-::v-deep(.el-table .fatalError) {
+::v-deep(.el-table-v2 .fatalError) {
     //动画闪烁
     color: red;
 }
