@@ -1,4 +1,4 @@
-import { clipboard, shell } from 'electron';
+import { clipboard, dialog, shell } from 'electron';
 import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
@@ -58,6 +58,17 @@ class Action {
 
     static async openFolder(path: string) {
         return shell.showItemInFolder(`file://${path}`);
+    }
+
+    /**
+     * 选择一个文件或文件夹
+     */
+    static async selectFileOrFolder(openDirectory: boolean = false) {
+        const properties = ['openFile'];
+        openDirectory && properties.push('openDirectory');
+        //@ts-ignore
+        const res = await dialog.showOpenDialog({ properties: properties });
+        return res.filePaths;
     }
 
     /**

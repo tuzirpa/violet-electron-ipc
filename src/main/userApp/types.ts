@@ -59,6 +59,11 @@ export interface AddConfig<T> {
     type: T;
 
     /**
+     * type 为 filePath 时 打开文件选择器是否选择目录
+     */
+    openDirectory?: boolean;
+
+    /**
      * 类型过滤 警告用户输入的类型不符合要求 不做强制
      */
     filtersType?: string;

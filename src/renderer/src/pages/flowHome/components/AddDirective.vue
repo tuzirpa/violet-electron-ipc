@@ -5,6 +5,7 @@ import OutputValueVar from './OutputValueVar.vue';
 import InputValueVarVariable from './InputValueVarVariable.vue';
 import { getCurrentInstance, nextTick, onMounted, ref } from 'vue';
 import { ElSelect, ElTooltip } from 'element-plus';
+import { Action } from '@renderer/lib/action';
 
 // 添加逻辑
 const props = defineProps<{
@@ -120,20 +121,13 @@ function handleFailureStrategy(e: string) {
     }
 }
 
-function filePathSelect(_e: any, inputItem: DirectiveInput) {
+async function filePathSelect(_e: any, inputItem: DirectiveInput) {
     console.log('选择文件');
-    const input = document.createElement('input');
-    input.webkitdirectory = true;
-    input.type = 'file';
-    //全部文件
-    input.accept = '*';
-    input.onchange = (e: any) => {
-        const file = e.target.files[0];
-        console.log(file);
-        inputItem.value = file.path.replace(/\\/g, '/');
-    };
+    const files = await Action.selectFileOrFolder(inputItem.addConfig.openDirectory ?? false);
+    const file = files[0];
+    console.log(file);
+    inputItem.value = file.replace(/\\/g, '/');
 
-    input.click();
 }
 
 function inputItemFilters(directive: DirectiveTree, inputItem: DirectiveInput) {
