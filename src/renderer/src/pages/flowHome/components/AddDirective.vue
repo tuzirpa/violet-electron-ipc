@@ -124,12 +124,12 @@ function filePathSelect(_e: any, inputItem: DirectiveInput) {
     console.log('选择文件');
     const input = document.createElement('input');
     input.type = 'file';
-    //exe 文件类型
-    input.accept = '.exe';
+    //全部文件
+    input.accept = '*';
     input.onchange = (e: any) => {
         const file = e.target.files[0];
         console.log(file);
-        inputItem.value = file.path;
+        inputItem.value = file.path.replace(/\\/g, '/');
     };
 
     input.click();
