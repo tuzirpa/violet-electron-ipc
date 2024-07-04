@@ -6,7 +6,7 @@ export type LogMessage = {
     error?: Error;
 };
 
-export type DataType = 'string' | 'number' | 'boolean' | 'variable';
+export type DataType = 'string' | 'number' | 'boolean' | 'textarea' | 'variable';
 
 export interface FlowVariable {
     /**

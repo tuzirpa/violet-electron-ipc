@@ -40,7 +40,7 @@ nextTick(() => {
             if (Object.prototype.hasOwnProperty.call(_directive.value.inputs, key)) {
                 const input = _directive.value.inputs[key];
                 //自动补全处理
-                if (input.addConfig.autoComplete) {
+                if (!input.value && input.addConfig.autoComplete) {
                     const variable = _variables.value.find((item) => item.type === input.addConfig.filtersType);
                     input.value = variable?.name;
                 } else {
@@ -90,8 +90,8 @@ function optionChange(e: string, inputItem: DirectiveInput) {
             const item = _directive.value.inputs[key];
             if (inputItem !== item) {
                 if (item.addConfig.filters) {
-                    item.value = '';
-                    item.display = '';
+                    // item.value = '';
+                    // item.display = '';
                 }
             }
         }

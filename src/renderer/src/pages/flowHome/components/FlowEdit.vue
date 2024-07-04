@@ -878,7 +878,7 @@ defineExpose({
                                                             : ''
                                                     ]"></div>
                                             </div>
-                                            <div class="py-2 felx flex-col w-0 flex-1 pl-3">
+                                            <div class="py-2 flex flex-col w-0 flex-1 pl-3">
                                                 <div class="operation flex items-center gap-1">
                                                     <i class="iconfont" :class="element.icon"></i>
                                                     <div class="font-bold">
@@ -965,6 +965,9 @@ defineExpose({
 <style>
 .color,
 .variable {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: #0c89ff;
 }
 
