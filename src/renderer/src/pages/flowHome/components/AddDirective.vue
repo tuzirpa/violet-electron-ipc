@@ -123,6 +123,7 @@ function handleFailureStrategy(e: string) {
 function filePathSelect(_e: any, inputItem: DirectiveInput) {
     console.log('选择文件');
     const input = document.createElement('input');
+    input.webkitdirectory = true;
     input.type = 'file';
     //全部文件
     input.accept = '*';
