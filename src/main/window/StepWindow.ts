@@ -5,12 +5,12 @@ export default class StepWindow extends BrowserWindow {
     constructor(public userAppId: string) {
         //获取屏幕尺寸 然后减去窗口大小 得到窗口的位置
         const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-        const x = width - 400;
-        const y = height - 300;
+        const x = width - 350 - 20;
+        const y = height - 150 - 20;
 
         super({
-            width: 400,
-            height: 300,
+            width: 350,
+            height: 150,
             autoHideMenuBar: import.meta.env.DEV ? false : true,
             webPreferences: {
                 preload: join(__dirname, '../preload/index.js'),

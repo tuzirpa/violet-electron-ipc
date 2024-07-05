@@ -27,6 +27,10 @@ async function getUserApps() {
 }
 getUserApps();
 
+function runUserApp(id: string) {
+    Action.userAppRun(id);
+}
+
 
 </script>
 
@@ -58,7 +62,7 @@ getUserApps();
                                 {{ app.name }}
                             </div>
                             <div class="operation flex justify-center items-center">
-                                <el-button class="text-blue-400" link @click="() => { }">运行</el-button>
+                                <el-button class="text-blue-400" link @click="runUserApp(app.id)">运行</el-button>
                                 <el-button class="text-blue-400" link
                                     @click="$router.push('/flowHome/index?appId=' + app.id)">编辑</el-button>
                                 <el-button class="text-blue-400" link @click="() => { }">删除</el-button>

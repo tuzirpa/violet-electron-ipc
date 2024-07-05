@@ -124,6 +124,9 @@ class Action {
     static async devStop(appId: string) {
         return UserAppManage.devStop(appId);
     }
+    static async closeUserAppStepTip(appId: string) {
+        return UserAppManage.closeUserAppStepTip(appId);
+    }
     static async devGetProperties(appId: string, objectId: string) {
         return UserAppManage.devGetProperties(appId, objectId);
     }

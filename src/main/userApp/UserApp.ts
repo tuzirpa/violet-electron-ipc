@@ -35,6 +35,11 @@ import { unzip } from '../utils/zipUtils';
  * 应用类
  */
 export default class UserApp {
+    closeUserAppStepTip() {
+        if (this.#stepWindow) {
+            this.#stepWindow.hide();
+        }
+    }
     static init() {
         //解压基础包到userApp目录
         if (fs.existsSync(join(this.userAppLocalDir, 'package.json'))) {
@@ -300,17 +305,16 @@ export default class UserApp {
         }
     }
 
-    sendRunStep(data: LogMessage) {
+    sendRunStep(data: LogMessage | LogMessage[]) {
         this.#stepWindow?.webContents.send('run-step', data);
     }
 
-    start(breakpoints: IBreakpoint[] = []) {
+    async start(breakpoints: IBreakpoint[] = []) {
         this.#stepWindow = this.#stepWindow || new StepWindow(this.id);
-        this.#stepWindow.once('show', async () => {
-            await sleep(1000);
-            this.startRun(breakpoints);
-        });
+        // this.#stepWindow.once('show', async () => {});
         if (!this.#stepWindow?.isVisible()) this.#stepWindow?.show();
+        await sleep(1000);
+        this.startRun(breakpoints);
     }
     startRun(breakpoints: IBreakpoint[] = []) {
         const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
@@ -321,6 +325,15 @@ export default class UserApp {
             level: 'info',
             time: Date.now(),
             message: `流程正在启动...`
+        });
+        this.sendRunStep({
+            level: 'info',
+            message: '启动流程',
+            time: Date.now(),
+            data: {
+                directiveName: 'startRun',
+                flowName: '启动流程'
+            } as any
         });
 
         const cmds = [nodeExeCmd];
@@ -380,6 +393,7 @@ export default class UserApp {
                 }, 1000);
             } else {
                 const logs: LogMessage[] = [];
+                const stepLogs: LogMessage[] = [];
                 data.split('\n').forEach((line) => {
                     if (line.startsWith('robotUtilLog-')) {
                         const logData = JSON.parse(
@@ -387,10 +401,9 @@ export default class UserApp {
                         );
                         logs.push(logData);
                     } else if (line.startsWith('robotUtilRunStep')) {
-                        // const stepData = decodeURIComponent(line.replace('robotUtilRunStep-', ''));
-                        // const logData = JSON.parse(stepData) as LogMessage;
-                        // this.sendRunStep(logData);
-                        // this.sendRunLogs(logData);
+                        const stepData = decodeURIComponent(line.replace('robotUtilRunStep-', ''));
+                        const logData = JSON.parse(stepData) as LogMessage;
+                        stepLogs.push(logData);
                     } else if (line.startsWith('Error: Cannot find module')) {
                         logs.push({
                             level: 'fatalError',
@@ -401,6 +414,7 @@ export default class UserApp {
                     }
                 });
                 this.sendRunLogs(logs);
+                this.sendRunStep(stepLogs);
             }
         });
         this.#devPrecess.on('exit', (code) => {
@@ -413,6 +427,15 @@ export default class UserApp {
                 level: 'info',
                 time: Date.now(),
                 message: `流程结束`
+            });
+
+            this.sendRunStep({
+                level: 'info',
+                message: '结束流程',
+                time: Date.now(),
+                data: {
+                    directiveName: 'endRun'
+                } as any
             });
             WindowManage.mainWindow.webContents.send('devRunEnd');
             this.#devPrecess = null;
