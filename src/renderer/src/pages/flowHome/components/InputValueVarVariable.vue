@@ -31,6 +31,9 @@ function varSelectValChange(variable: FlowVariable) {
     model.value = variable.name;
     emit('inputValueChange', variable, props.inputItem);
 }
+
+
+
 </script>
 
 <template>

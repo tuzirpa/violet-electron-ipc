@@ -131,16 +131,7 @@ function handleFailureStrategy(e: string) {
     }
 }
 
-async function filePathSelect(_e: any, inputItem: DirectiveInput) {
-    console.log('选择文件');
-    const files = await Action.selectFileOrFolder(inputItem.addConfig.openDirectory ?? false, inputItem.addConfig.extensions ?? ["*"]);
-    if (files.length === 0) {
-        return;
-    }
-    const file = files[0];
-    inputItem.value = file.replace(/\\/g, '/');
 
-}
 
 function inputItemFilters(directive: DirectiveTree, inputItem: DirectiveInput) {
     if (inputItem.addConfig?.filters) {
@@ -224,15 +215,11 @@ onMounted(() => {
                                         :placeholder="inputItem.addConfig.placeholder"></el-checkbox>
                                     <el-input-number v-if="inputItem.addConfig.type === 'number'" v-model="inputItem.value"
                                         :placeholder="inputItem.addConfig.placeholder"></el-input-number>
-                                    <el-input v-if="inputItem.addConfig.type === 'filePath'" v-model="inputItem.value"
-                                        :placeholder="inputItem.addConfig.placeholder">
-                                        <template #append>
-                                            <div class="text-gray-500 text-sm cursor-pointer"
-                                                @click="filePathSelect($event, inputItem)">
-                                                选择文件
-                                            </div>
-                                        </template>
-                                    </el-input>
+                                    <div class="relative" v-if="inputItem.addConfig.type === 'filePath'">
+                                        <InputValueVar @inputValueChange="inputValueChange" v-model="inputItem.value"
+                                            :variables="_variables" :inputItem="inputItem">
+                                        </InputValueVar>
+                                    </div>
                                 </div>
                                 <div class="param-desc text-gray-500 text-sm" v-if="inputItem.addConfig.tip">
                                     <ElTooltip :content="inputItem.addConfig.tip">

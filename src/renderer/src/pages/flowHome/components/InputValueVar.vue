@@ -2,6 +2,7 @@
 import type { DirectiveInput, FlowVariable } from 'src/main/userApp/types';
 import { ElInput } from 'element-plus';
 import { ref } from 'vue';
+import { Action } from '@renderer/lib/action'
 // import { typeDisplay } from '../directiveConfig';
 
 // 添加逻辑
@@ -31,6 +32,17 @@ function varSelectValChange(val: string) {
     model.value = (model.value ?? '') + `\${${val}}`;
     emit('inputValueChange', model.value, props.inputItem);
 }
+
+async function filePathSelect(_e: any, inputItem: DirectiveInput) {
+    console.log('选择文件');
+    const files = await Action.selectFileOrFolder(inputItem.addConfig.openDirectory ?? false, inputItem.addConfig.extensions ?? ["*"]);
+    if (files.length === 0) {
+        return;
+    }
+    const file = files[0];
+    model.value = file.replace(/\\/g, '/');
+}
+
 </script>
 
 <template>
@@ -42,7 +54,11 @@ function varSelectValChange(val: string) {
         </div>
         <el-input v-else v-model="model" :placeholder="inputItem.addConfig?.placeholder">
             <template #append>
-                <div class="text-gray-500 text-sm cursor-pointer" @click="varClick">使用变量</div>
+                <div class="flex items-center gap-2">
+                    <div class="text-gray-500 text-sm cursor-pointer hover:text-blue-500"
+                        v-if="inputItem.addConfig.type === 'filePath'" @click="filePathSelect($event, inputItem)">选择文件</div>
+                    <div class="text-gray-500 text-sm cursor-pointer hover:text-blue-500" @click="varClick">使用变量</div>
+                </div>
             </template>
         </el-input>
         <div ref="variableSelect" v-if="varShow" filterable tabindex="-1" @blur="varShow = false"
