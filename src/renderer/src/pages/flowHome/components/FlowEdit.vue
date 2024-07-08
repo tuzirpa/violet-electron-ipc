@@ -656,7 +656,7 @@ function addBlockTemp() {
             };
             curOpenFile.value.blocks.splice(addTempIndex.value + 1, 0, controlEnd);
         }
-        if (addDirective.isControl && (addDirective.name === 'flowControl.for' || addDirective.name === 'flowControl.while')) {
+        if (addDirective.isControl && addDirective.isLoop) {
             const controlEnd: DirectiveData = {
                 id: uuid(),
                 pdLvn: 0,

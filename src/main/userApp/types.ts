@@ -64,6 +64,11 @@ export interface AddConfig<T> {
     openDirectory?: boolean;
 
     /**
+     * type 为 filePath 时 打开文件选择器的默认路径
+     */
+    extensions?: string[];
+
+    /**
      * 类型过滤 警告用户输入的类型不符合要求 不做强制
      */
     filtersType?: string;
@@ -190,6 +195,11 @@ export interface DirectiveTree {
      * 是否流程控制指令 （if, for, while, switch）
      */
     isControl?: boolean;
+
+    /**
+     * 是否循环指令 （for, while ,...)
+     */
+    isLoop?: boolean;
 
     /**
      * 是否流程控制指令 （else）

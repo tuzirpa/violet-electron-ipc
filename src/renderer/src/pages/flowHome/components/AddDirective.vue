@@ -73,7 +73,18 @@ nextTick(() => {
     }, 300);
 });
 
-
+/**
+ * 选择变量后触发的值变化
+ * @param value 
+ * @param inputItem 
+ */
+function inputValueChange(value: any, inputItem: DirectiveInput) {
+    // 获取数组项 需要特殊处理 将变量描述带到 输出变量中
+    if (_directive.value.name === 'dataProcessing.getArrayItem') {
+        console.log(value, inputItem);
+        _directive.value.outputs.item.display = value.comment + ' 的项';
+    }
+}
 
 function optionChange(e: string, inputItem: DirectiveInput) {
     console.log(inputItem.value, '选择的值');
@@ -101,7 +112,7 @@ function optionChange(e: string, inputItem: DirectiveInput) {
     inputItem.display = inputItem.addConfig.options?.find((item) => item.value === e)?.label;
 
     //特殊处理 设置变量指令
-    if (_directive.value.name === 'setVariable') {
+    if (_directive.value.name === 'dataProcessing.setVariable') {
         _directive.value.outputs.varName.display = _directive.value.inputs.varType.display;
         if (_directive.value.inputs.varType.value === 'any') {
             _directive.value.inputs.varValue.addConfig.type = 'variable';
@@ -110,7 +121,6 @@ function optionChange(e: string, inputItem: DirectiveInput) {
             _directive.value.inputs.varValue.addConfig.type = _directive.value.inputs.varType.value;
         }
     }
-
     console.log(inputItem.display);
 }
 
@@ -123,9 +133,11 @@ function handleFailureStrategy(e: string) {
 
 async function filePathSelect(_e: any, inputItem: DirectiveInput) {
     console.log('选择文件');
-    const files = await Action.selectFileOrFolder(inputItem.addConfig.openDirectory ?? false);
+    const files = await Action.selectFileOrFolder(inputItem.addConfig.openDirectory ?? false, inputItem.addConfig.extensions ?? ["*"]);
+    if (files.length === 0) {
+        return;
+    }
     const file = files[0];
-    console.log(file);
     inputItem.value = file.replace(/\\/g, '/');
 
 }
@@ -145,7 +157,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="add-directive-container flex flex-col overflow-auto gap-3">
+    <div class="add-directive-container flex flex-col gap-3">
         <div class="directive-header flex justify-between items-center">
             <div class="left flex gap-3">
                 <div class="directive-icon">
@@ -189,18 +201,18 @@ onMounted(() => {
                                 </div>
                                 <div class="param-value flex-1">
                                     <div class="relative" v-if="inputItem.addConfig.type === 'string'">
-                                        <InputValueVar v-model="inputItem.value" :variables="_variables"
-                                            :inputItem="inputItem">
+                                        <InputValueVar @inputValueChange="inputValueChange" v-model="inputItem.value"
+                                            :variables="_variables" :inputItem="inputItem">
                                         </InputValueVar>
                                     </div>
                                     <div class="relative" v-if="inputItem.addConfig.type === 'variable'">
-                                        <InputValueVarVariable v-model="inputItem.value" :variables="_variables"
-                                            :inputItem="inputItem">
+                                        <InputValueVarVariable @inputValueChange="inputValueChange"
+                                            v-model="inputItem.value" :variables="_variables" :inputItem="inputItem">
                                         </InputValueVarVariable>
                                     </div>
                                     <div class="relative" v-else-if="inputItem.addConfig.type === 'textarea'">
-                                        <InputValueVar v-model="inputItem.value" :inputItem="inputItem"
-                                            :variables="_variables">
+                                        <InputValueVar @inputValueChange="inputValueChange" v-model="inputItem.value"
+                                            :inputItem="inputItem" :variables="_variables">
                                         </InputValueVar>
                                     </div>
                                     <el-select v-else-if="inputItem.addConfig.type === 'select'" v-model="inputItem.value"

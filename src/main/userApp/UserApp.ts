@@ -54,6 +54,9 @@ export default class UserApp {
     static robotUtilInit() {
         // 写入robotUtil文件
         const robotUtilContent = fs.readFileSync(UserApp.rebotUtilPath, 'utf-8');
+        fs.mkdirSync(path.join(this.userAppLocalDir, 'node_modules/tuzirobot'), {
+            recursive: true
+        });
         fs.writeFileSync(
             path.join(this.userAppLocalDir, 'node_modules/tuzirobot/index.js'),
             robotUtilContent
@@ -107,6 +110,15 @@ export default class UserApp {
         this.appRobotUtilDir = path.join(this.appDir, '../node_modules/tuzirobot');
 
         this.init();
+    }
+
+    /**
+     * 销毁
+     */
+    destroy() {
+        // 销毁，这边回收app资源
+        this.#stepWindow?.destroy();
+        this.#stepWindow = null;
     }
 
     save() {

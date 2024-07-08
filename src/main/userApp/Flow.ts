@@ -77,8 +77,8 @@ export default class Flow {
                     }
                 }
             }
-            //记录是否在for或while中
-            if (block.name === 'flowControl.for' || block.name === 'flowControl.while') {
+            //记录是否在for或while中 循环中
+            if (block.isLoop) {
                 flowControlBlock++;
             } else if (block.name === 'flowControl.for.end') {
                 flowControlBlock--;

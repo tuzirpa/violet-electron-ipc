@@ -63,11 +63,17 @@ class Action {
     /**
      * 选择一个文件或文件夹
      */
-    static async selectFileOrFolder(openDirectory: boolean = false) {
+    static async selectFileOrFolder(openDirectory: boolean = false, extensions: string[] = ['*']) {
         const properties = ['openFile'];
         openDirectory && properties.push('openDirectory');
-        //@ts-ignore
-        const res = await dialog.showOpenDialog({ properties: properties });
+
+        const res = await dialog.showOpenDialog({
+            //@ts-ignore
+            properties: properties,
+            message: `${openDirectory ? '选择文件夹' : '选择文件'}`,
+            buttonLabel: '选择',
+            filters: [{ name: '所有文件', extensions }]
+        });
         return res.filePaths;
     }
 

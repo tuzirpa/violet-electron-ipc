@@ -5,9 +5,13 @@ import { ref } from 'vue';
 // import { typeDisplay } from '../directiveConfig';
 
 // 添加逻辑
-defineProps<{
+const props = defineProps<{
     inputItem: DirectiveInput;
     variables: FlowVariable[];
+}>();
+
+const emit = defineEmits<{
+    (e: 'inputValueChange', value: any, inputItem: DirectiveInput): void;
 }>();
 
 const model = defineModel<string>({ required: true });
@@ -25,6 +29,7 @@ function varSelectValChange(val: string) {
     console.log(val);
     varShow.value = false;
     model.value = (model.value ?? '') + `\${${val}}`;
+    emit('inputValueChange', model.value, props.inputItem);
 }
 </script>
 

@@ -4,10 +4,16 @@ import { ElInput } from 'element-plus';
 import { ref } from 'vue';
 
 // 添加逻辑
-defineProps<{
+const props = defineProps<{
     inputItem: DirectiveInput;
     variables: FlowVariable[];
 }>();
+
+
+const emit = defineEmits<{
+    (e: 'inputValueChange', value: any, inputItem: DirectiveInput): void;
+}>();
+
 
 const model = defineModel<string>({ required: true });
 
@@ -20,10 +26,10 @@ function varClick() {
     varShow.value = !varShow.value;
 }
 
-function varSelectValChange(val: string) {
-    console.log(val);
+function varSelectValChange(variable: FlowVariable) {
     varShow.value = false;
-    model.value = val;
+    model.value = variable.name;
+    emit('inputValueChange', variable, props.inputItem);
 }
 </script>
 
@@ -44,7 +50,7 @@ function varSelectValChange(val: string) {
                     <template v-for="variable in variables">
                         <div class="hover:bg-gray-100 p-1 cursor-pointer rounded" v-show="varSelectVal.length === 0 || variable.name.includes(varSelectVal)
                             ">
-                            <div class="item" @click="varSelectValChange(variable.name)" v-if="variable.before">
+                            <div class="item" @click="varSelectValChange(variable)" v-if="variable.before">
                                 {{ variable.name }}
                                 ({{ variable.comment }})
                             </div>
