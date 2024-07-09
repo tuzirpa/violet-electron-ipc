@@ -174,13 +174,26 @@ export default class UserApp {
             JSON.stringify(this.packageJson, null, 2)
         );
         // 写入index.js文件
-        const indexJs = `const http = require('http');`;
-        fs.writeFileSync(path.join(this.appDir, 'main.js'), indexJs);
+        const mainJsContent: string[] = [];
+        mainJsContent.push(`const mainFlow = require('./main.flow');`);
+        mainJsContent.push(`let log = require("tuzirobot/commonUtil");`);
+        mainJsContent.push(`globalThis._block = {};`);
+        mainJsContent.push(
+            `globalThis.curApp = {APP_ID: "${this.id}", APP_NAME: "${this.name}", APP_VERSION: "${this.version}", APP_DIR: "${this.appDir.replace(/\\/g, '/')}"};`
+        );
+        mainJsContent.push(`console.log = function (...args) {`);
+        mainJsContent.push(`  log.sendLog("info", args.join(" "), globalThis._block);`);
+        mainJsContent.push(`};`);
+        mainJsContent.push(`setTimeout(()=>{`);
+        mainJsContent.push(`  mainFlow();`);
+        mainJsContent.push(`}, 1000);`);
+        fs.writeFileSync(path.join(this.appDir, 'main.js'), mainJsContent.join('\n'));
 
         // 写入dev目录
         fs.mkdirSync(this.appDevDir, { recursive: true });
         // 写入dev/main.flow文件
-        fs.writeFileSync(path.join(this.appDevDir, 'main.flow'), '');
+        new Flow(this.appDir, path.join(this.appDevDir, 'main.flow'), 'main.flow', '主流程');
+        // fs.writeFileSync(path.join(this.appDevDir, 'main.flow'), '');
     }
 
     /**
@@ -193,6 +206,16 @@ export default class UserApp {
         }
         this.#_initFlow = true;
         this.getFlows();
+    }
+
+    newSubFlow() {
+        // 新建子流程
+        const flowName = `subFlow${this.flows.length + 1}`;
+        const aliasName = `子流程${this.flows.length + 1}`;
+        const file = `${flowName}.flow`;
+        // fs.writeFileSync(path.join(this.appDevDir, file), '');
+        this.flows.push(new Flow(this.appDir, path.join(this.appDevDir, file), file, aliasName));
+        return this.findFlow(file);
     }
 
     getFlows() {
@@ -225,7 +248,14 @@ export default class UserApp {
         const cmd = cmds[0];
         const args = cmds.slice(1);
         console.log('执行命令', cmd, args);
-        const child = spawn(cmd, args, { cwd: this.appDir, env: {} });
+        const child = spawn(cmd, args, {
+            cwd: this.appDir,
+            env: {
+                APP_ID: this.id,
+                APP_NAME: this.name,
+                APP_VERSION: this.version
+            }
+        });
         child.stdout.on('data', (data) => {
             // console.log(`stdout: ${data}`);
             data = data.toString();
@@ -330,7 +360,7 @@ export default class UserApp {
     }
     startRun(breakpoints: IBreakpoint[] = []) {
         const nodeExeCmd = path.join(NodeEvbitonment.nodeExeDir, 'node.exe');
-        const mainFlowJs = path.join(this.appDir, 'main.flow.js');
+        const mainFlowJs = path.join(this.appDir, 'main.js');
         // let breakpoints: IBreakpoint[] = [];
         // breakpoints = this.breakpoints;
         this.sendRunLogs({

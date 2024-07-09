@@ -36,6 +36,7 @@ body {
 /* 滚动条整体样式 */
 ::-webkit-scrollbar {
     width: 4px;
+    height: 4px;
     background-color: transparent;
 }
 

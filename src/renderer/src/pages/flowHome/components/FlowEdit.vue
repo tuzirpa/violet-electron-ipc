@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { ElMessage } from 'element-plus';
@@ -32,6 +32,9 @@ const emit = defineEmits<{
             isUndo: boolean;
         }
     ): void;
+    (
+        e: 'newSubFlow'
+    ): void;
 }>();
 
 
@@ -61,6 +64,7 @@ const flows = props.flows.map((item) => {
     });
     return {
         name: item.name,
+        aliasName: item.aliasName ?? item.name,
         filePath: item.filePath,
         historys: [{ saveName: '初始加载', data: blocks }],
         curHistoryIndex: 0,
@@ -784,7 +788,13 @@ const redo = () => {
     emitHistoryChange();
 };
 
-function scrollIntoRow(rowNum: number) {
+async function scrollIntoRow(flowName: string, rowNum: number) {
+    openFiles.value.forEach((file) => {
+        if (file.name === flowName) {
+            curOpenFile.value = file;
+        }
+    });
+    await nextTick();
     document.getElementById(`row-${rowNum}`)?.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
@@ -792,6 +802,59 @@ function scrollIntoRow(rowNum: number) {
     });
     curBlocks.value = [curOpenFile.value.blocks[rowNum - 1]];
 }
+
+/**
+ * 新建子流程
+ */
+async function newSubFlow() {
+    const newSubFlow = await Action.newSubFlow(props.appInfo.id);
+    if (newSubFlow) {
+        const blocks = newSubFlow.blocks.map((block) => {
+            return {
+                ...block,
+                open: false,
+                hide: false,
+                pdLvn: 0,
+                isFold: false,
+                id: uuid(),
+                foldDesc: '',
+                commentShow: ''
+            };
+        });
+        const flow = {
+            name: newSubFlow.name,
+            aliasName: newSubFlow.aliasName || newSubFlow.name,
+            filePath: newSubFlow.filePath,
+            historys: [{ saveName: '初始加载', data: blocks }],
+            curHistoryIndex: 0,
+            blocks: blocks
+        }
+        openFiles.value.push(flow);
+        curOpenFile.value = flow;
+
+    }
+    emit('newSubFlow');
+}
+
+function initHandleWheel() {
+    const scrollContainer = document.getElementById('files');
+    if (!scrollContainer) {
+        return;
+    }
+    scrollContainer.addEventListener('wheel', (event) => {
+        // 横向滚动距离
+        const scrollDistance = event.deltaY;
+
+        // 根据滚动方向调整横向滚动位置
+        scrollContainer.scrollLeft += scrollDistance;
+
+        // 阻止默认滚动事件
+        event.preventDefault();
+    });
+}
+onMounted(() => {
+    initHandleWheel();
+});
 
 checkError(curOpenFile.value.blocks, curOpenFile.value);
 
@@ -805,18 +868,25 @@ defineExpose({
 
 <template>
     <div class="viewbox rounded bg-white flex-1">
-        <div class="header bg-gray-100">
-            <div class="files flex items-center" @contextmenu="showContextFlowMenu($event, curOpenFile)">
-                <div class="file flex py-2 px-4 cursor-pointer hover:bg-white/60" v-for="file in openFiles" :key="file.name"
-                    :class="{ 'bg-white': file.name === curOpenFile.name }" @click="curOpenFile = file">
-                    <div class="flow-name text-sm">
-                        {{ file.name }}
+        <div class="flow-header flex items-center gap-2 bg-gray-100">
+            <el-scrollbar>
+                <div class="files flex items-center shrink-0 overflow-auto"
+                    @contextmenu="showContextFlowMenu($event, curOpenFile)" id="files">
+                    <div class="file w-30 flex py-2 px-4 cursor-pointer shrink-0 hover:bg-white/60"
+                        v-for="file in openFiles" :key="file.name" :class="{ 'bg-white': file.name === curOpenFile.name }"
+                        @click="curOpenFile = file">
+                        <div class="flow-name text-sm">
+                            {{ file.aliasName }}
+                        </div>
+                        <div class="flow-edit ml-1" v-show="file.edit">
+                            *
+                        </div>
                     </div>
-                    <div class="flow-edit ml-1" v-show="file.edit">
-                        *
+                    <div class="file w-30 flex py-2 px-4 cursor-pointer shrink-0 hover:bg-white/60" @click="newSubFlow">
+                        +
                     </div>
                 </div>
-            </div>
+            </el-scrollbar>
         </div>
         <div class="viewbox relative">
             <div class="flex flex-row overflow-auto flex-1">
@@ -858,7 +928,7 @@ defineExpose({
                                 <div class="flex flex-1 h-16" v-show="!element.hide">
                                     <div class="h-full row-content group relative hover:bg-gray-100/50 flex-1 has-[.add:hover]:border-b-2 has-[.add:hover]:border-blue-500"
                                         :class="[
-                                            curBlocks.some((item) => item.id === element.id)
+                                            curBlocks.some((item) => item && item.id === element.id)
                                                 ? 'bg-gray-200/60 hover:bg-gray-200/60 '
                                                 : '',
                                             dragenterBlock && dragenterBlock.id === element.id

@@ -106,6 +106,12 @@ class Action {
     }
 
     /**
+     * 新建子流程
+     */
+    static async newSubFlow(appId: string) {
+        return UserAppManage.newSubFlow(appId);
+    }
+    /**
      * 保存流程
      */
     static async saveFlow(appId: string, flow: Flow) {

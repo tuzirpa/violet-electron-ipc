@@ -64,6 +64,10 @@ async function getAppDetail() {
     }
 }
 
+function newSubFlow() {
+    getAppDetail();
+}
+
 const curActiveFlowIndex = ref(-1);
 
 getAppDetail();
@@ -295,12 +299,14 @@ const runLogsColumns: Column<any>[] = [
         key: 'line',
         title: '行号',
         dataKey: 'data',
-        width: 50,
+        width: 80,
         align: Alignment.CENTER,
         cellRenderer: ({ cellData: data }) => (
-            <>
+            <div class="cursor-pointer underline decoration-1" onclick={() => {
+                flowEditRef.value?.scrollIntoRow(data?.flowName, data?.blockLine)
+            }}>
                 {data?.blockLine}
-            </>
+            </div>
         )
     },
 ];
@@ -395,7 +401,7 @@ const runLogsColumns: Column<any>[] = [
                 <div class="main-content viewbox flex-1 bg-gray-100">
                     <div class="flow-edit flex-1 viewbox p-2">
                         <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"
-                            @history-change="(e) => {
+                            @new-sub-flow="newSubFlow" @history-change="(e) => {
                                 console.log(e);
                                 historys = e;
                             }
@@ -461,7 +467,7 @@ const runLogsColumns: Column<any>[] = [
                                     <el-table-column prop="line" label="行号" width="180">
                                         <template #default="scope">
                                             <a class="cursor-pointer underline decoration-1 text-blue-500"
-                                                @click="flowEditRef?.scrollIntoRow(scope.row.line)">
+                                                @click="flowEditRef?.scrollIntoRow(scope.row.file.name, scope.row.line)">
                                                 {{ scope.row.line }}
                                             </a>
                                         </template>
@@ -477,7 +483,7 @@ const runLogsColumns: Column<any>[] = [
                         <div class="flow-list flex flex-1" v-for="(flow, index) in userAppDetail?.flows" :key="index">
                             <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
                                 :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
-                                {{ flow.name }}
+                                {{ flow.aliasName }}
                             </div>
                         </div>
                     </div>

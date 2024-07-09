@@ -1,3 +1,4 @@
+import path from 'path';
 import { Block, DirectiveInput, LogLevel } from '../types';
 
 export const olog = console.log;
@@ -21,4 +22,23 @@ export function typeToCode(inputItem: DirectiveInput) {
         return `String(\`${inputItem.value}\`).toLowerCase() == 'true'`;
     }
     return '';
+}
+
+/**
+ * 获取当前运行的应用信息
+ */
+export function getCurApp(): { id: string; name: string; version: string } {
+    return globalThis.curApp;
+}
+
+/**
+ * 导入子流程
+ * @param appDir 应用目录
+ * @param moduleName 模块名
+ * @returns
+ */
+export function flowModuleImport(appDir: string, moduleName: string) {
+    const module = path.join(appDir, moduleName);
+    // delete require.cache[module];
+    return require(module);
 }

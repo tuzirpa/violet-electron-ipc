@@ -4,6 +4,10 @@ import { uuid } from '@shared/Utils';
 import Flow from './Flow';
 
 export class UserAppManage {
+    newSubFlow(appId: string) {
+        const userApp = this.findUserApp(appId);
+        return userApp.newSubFlow();
+    }
     closeUserAppStepTip(appId: string) {
         const userApp = this.findUserApp(appId);
         userApp.closeUserAppStepTip();
