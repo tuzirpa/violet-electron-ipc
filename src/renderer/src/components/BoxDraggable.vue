@@ -102,6 +102,8 @@ function initDrag(side: string, event: MouseEvent) {
             styleWidth.value = width.value + 'px';
         } else if (side === "bottom" && props.resizeBottom) {
             // 向下拖动时，增加高度
+
+
             const dHeight = startHeight + dy;
             if (dHeight <= minHeight.value) {
                 height.value = minHeight.value;

@@ -478,16 +478,19 @@ const runLogsColumns: Column<any>[] = [
                     </BoxDraggable>
                 </div>
                 <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true">
-                    <div class="property-edit flex-1 p-2">
+                    <div class="property-edit flex-1 p-2 flex flex-col overflow-hidden">
                         <div>流程</div>
-                        <div class="flow-list flex flex-1" v-for="(flow, index) in userAppDetail?.flows" :key="index">
-                            <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
-                                :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
-                                {{ flow.aliasName }}
+                        <div class="flow-list-container flex-1 overflow-auto">
+                            <div class="flow-list flex flex-1" v-for="(flow, index) in userAppDetail?.flows" :key="index">
+                                <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
+                                    :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
+                                    {{ flow.aliasName }}
+                                </div>
                             </div>
                         </div>
+
                     </div>
-                    <BoxDraggable class="left-sidebar border-t" :height="400" :resize-top="true">
+                    <BoxDraggable class="left-sidebar border-t" :height="400" :min-height="100" :resize-top="true">
                         <div class="viewbox">
                             <div class="flex flex-row justify-between p-2">
                                 <div>全局变量</div>

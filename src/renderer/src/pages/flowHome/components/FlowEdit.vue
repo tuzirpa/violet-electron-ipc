@@ -4,7 +4,7 @@ import { sleep, uuid } from '@shared/Utils';
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElScrollbar } from 'element-plus';
 import { useDirective } from '../directive';
 import { Shortcut } from './ShortcutRegister';
 import AddDirective from './AddDirective.vue';
@@ -836,7 +836,12 @@ async function newSubFlow() {
     emit('newSubFlow');
 }
 
+const filesScrollbarRef = ref<InstanceType<typeof ElScrollbar>>();
+const scrollLeftValue = ref(0);
+
 function initHandleWheel() {
+    // const maxWidth = filesScrollbarRef!.value!.wrapRef?.scrollLeft ?? 0;
+
     const scrollContainer = document.getElementById('files');
     if (!scrollContainer) {
         return;
@@ -844,9 +849,16 @@ function initHandleWheel() {
     scrollContainer.addEventListener('wheel', (event) => {
         // 横向滚动距离
         const scrollDistance = event.deltaY;
-
         // 根据滚动方向调整横向滚动位置
-        scrollContainer.scrollLeft += scrollDistance;
+        scrollLeftValue.value += scrollDistance;
+
+        // if (scrollLeftValue.value >= maxWidth) {
+        //     scrollLeftValue.value = maxWidth;
+        // } else if (scrollLeftValue.value <= 0) {
+        //     scrollLeftValue.value = 0;
+        // }
+        filesScrollbarRef.value!.setScrollLeft(scrollLeftValue.value);
+        scrollLeftValue.value = filesScrollbarRef!.value!.wrapRef!.scrollLeft;
 
         // 阻止默认滚动事件
         event.preventDefault();
@@ -869,9 +881,8 @@ defineExpose({
 <template>
     <div class="viewbox rounded bg-white flex-1">
         <div class="flow-header flex items-center gap-2 bg-gray-100">
-            <el-scrollbar>
-                <div class="files flex items-center shrink-0 overflow-auto"
-                    @contextmenu="showContextFlowMenu($event, curOpenFile)" id="files">
+            <el-scrollbar :noresize="true" ref="filesScrollbarRef" id="files">
+                <div class="files flex items-center shrink-0" @contextmenu="showContextFlowMenu($event, curOpenFile)">
                     <div class="file w-30 flex py-2 px-4 cursor-pointer shrink-0 hover:bg-white/60"
                         v-for="file in openFiles" :key="file.name" :class="{ 'bg-white': file.name === curOpenFile.name }"
                         @click="curOpenFile = file">
