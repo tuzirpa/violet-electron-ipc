@@ -13,7 +13,7 @@ import basePackagePath from '../../../resources/node_modules.zip?asset&asarUnpac
 import commonUtilContent from './robotUtil/commonUtil.ts?raw';
 import typesContent from './types.ts?raw';
 
-import { sleep } from '@shared/Utils';
+import { sleep, uuid } from '@shared/Utils';
 import { unzip } from '../utils/zipUtils';
 import startApiServer from './apiserver';
 
@@ -90,6 +90,7 @@ export default class UserApp {
     appDevDir: string = '';
     appRobotUtilDir: string = '';
     packageJson: any = {};
+    lastRunLogId!: string;
 
     flows: Flow[] = [];
     #devNodeJs: DevNodeJs | null = null;
@@ -180,11 +181,20 @@ export default class UserApp {
         const mainJsContent: string[] = [];
         mainJsContent.push(`const mainFlow = require('./main.flow');`);
         mainJsContent.push(`let log = require("tuzirobot/commonUtil");`);
+        mainJsContent.push(`let fs = require("fs");`);
+        mainJsContent.push(`let { join } = require("path");`);
         mainJsContent.push(`globalThis._block = {};`);
         mainJsContent.push(
             `globalThis.curApp = {APP_ID: "${this.id}", APP_NAME: "${this.name}", APP_VERSION: "${this.version}", APP_DIR: "${this.appDir.replace(/\\/g, '/')}"};`
         );
+        mainJsContent.push(
+            `const logsDir = join(__dirname,'logs');if(!fs.existsSync(logsDir)){fs.mkdirSync(logsDir)}`
+        );
+        mainJsContent.push(
+            `const logFileWriteStream = fs.createWriteStream(join(logsDir,process.env.RUN_LOG_ID + '.log'));`
+        );
         mainJsContent.push(`console.log = function (...args) {`);
+        mainJsContent.push(`  logFileWriteStream.write(args.join(" "));`);
         mainJsContent.push(`  log.sendLog("info", args.join(" "), globalThis._block);`);
         mainJsContent.push(`};`);
         mainJsContent.push(`setTimeout(()=>{`);
@@ -251,12 +261,11 @@ export default class UserApp {
         const cmd = cmds[0];
         const args = cmds.slice(1);
         console.log('执行命令', cmd, args);
+        this.lastRunLogId = Date.now() + '_' + uuid();
         const child = spawn(cmd, args, {
             cwd: this.appDir,
             env: {
-                APP_ID: this.id,
-                APP_NAME: this.name,
-                APP_VERSION: this.version
+                RUN_LOG_ID: this.lastRunLogId
             }
         });
         child.stdout.on('data', (data) => {
