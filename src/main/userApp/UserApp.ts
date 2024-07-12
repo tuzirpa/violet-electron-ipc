@@ -1,21 +1,3 @@
-/**
- * {
-  "name": "aaaa",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "express": "^4.19.2"
-  }
-}
-
- */
-
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { app } from 'electron';
 import fs from 'fs';
@@ -26,12 +8,10 @@ import { WindowManage } from '../window/WindowManage';
 import Flow from './Flow';
 import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs';
 import { LogMessage } from './types';
-import basePackagePath from '../../../resources/node_modules.zip?asset';
+import basePackagePath from '../../../resources/node_modules.zip?asset&asarUnpack';
 
 import commonUtilContent from './robotUtil/commonUtil.ts?raw';
 import typesContent from './types.ts?raw';
-
-// import typesTsSourcePath from '../../../resources/types.ts.source?raw';
 
 import { sleep } from '@shared/Utils';
 import { unzip } from '../utils/zipUtils';
@@ -55,8 +35,12 @@ export default class UserApp {
             console.log('安装基础包完成');
         }
         this.robotUtilInit();
-        app.whenReady().then(() => {
-            startApiServer();
+        app.whenReady().then(async () => {
+            startApiServer().then((server) => {
+                app.on('quit', () => {
+                    server.stop();
+                });
+            });
         });
     }
 
@@ -506,6 +490,8 @@ export default class UserApp {
             const data = this.#logsData.splice(this.#lastLogsOutIndex, this.#logsData.length);
             this.#lastLogsOutIndex = this.#logsData.length;
             this._sendRunLogs(data);
+
+            this.destroy();
         });
     }
 }

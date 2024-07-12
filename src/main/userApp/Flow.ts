@@ -5,7 +5,7 @@ import { convertDirective } from './directiveconvert';
 
 export default class Flow {
     blocks: DirectiveTree[] = [];
-    static headLinkCount = 6;
+    static headLinkCount = 8;
 
     constructor(
         public appDir: string,
@@ -66,8 +66,8 @@ export default class Flow {
         let flowControlBlock = 0;
         for (let index = 0; index < this.blocks.length; index++) {
             const block = this.blocks[index];
-            const convertCode = await convertDirective(block, index, this);
-            convertCode.replace(/\n/g, '');
+            let convertCode = await convertDirective(block, index, this);
+            convertCode = convertCode.replace(/\n/g, '\\n');
             let indent = '    ';
             if (block.pdLvn) {
                 for (let index = 0; index < block.pdLvn * 2; index++) {

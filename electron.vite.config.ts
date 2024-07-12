@@ -5,7 +5,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 import vueSetupExtend from 'unplugin-vue-setup-extend-plus/vite';
 // import Inspect from 'vite-plugin-inspect';
 import { readdirSync } from 'fs';
-import { Plugin } from 'vite';
+// import { Plugin } from 'vite';
 
 // import { fileURLToPath } from 'url';
 // import { Plugin, PluginOption, build } from 'vite';
@@ -47,29 +47,39 @@ const getEntryPath = () => {
 const rendererInput = getEntryPath();
 console.log('rendererInput', rendererInput);
 
-const userAppVue: Plugin = {
-    name: 'userAppCopy',
-    load(id, options) {
-        if (id.indexOf('steptip') != -1) {
-            console.log('userAppCopyLoad: ', id, options);
-        }
-    },
-    transform(_code, id, _options) {
-        if (id.indexOf('steptip') != -1) {
-            console.log('userAppCopy: ', id, _code);
-        }
-        return _code;
-    }
-};
+// const userAppVue: Plugin = {
+//     name: 'userAppCopy',
+//     load(id, options) {
+//         if (id.indexOf('steptip') != -1) {
+//             console.log('userAppCopyLoad: ', id, options);
+//         }
+//     },
+//     transform(_code, id, _options) {
+//         if (id.indexOf('steptip') != -1) {
+//             console.log('userAppCopy: ', id, _code);
+//         }
+//         return _code;
+//     }
+// };
 
 export default defineConfig({
     main: {
-        plugins: [externalizeDepsPlugin(), bytecodePlugin()],
+        plugins: [externalizeDepsPlugin(), bytecodePlugin({ chunkAlias: 'index' })],
 
         resolve: {
             alias: {
-                '@shared': resolve('src/shared'),
-                '@main': resolve('src/main')
+                '@shared': resolve('src/shared')
+            }
+        },
+        build: {
+            rollupOptions: {
+                output: {
+                    manualChunks(id): string | void {
+                        if (id.includes('index')) {
+                            return 'index';
+                        }
+                    }
+                }
             }
         }
     },

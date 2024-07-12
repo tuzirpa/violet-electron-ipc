@@ -75,7 +75,7 @@ export function invokeApi(method: string, params: { [key: string]: any }) {
             });
         });
 
-        ws.on('error', (error) => {
+        ws.on('error', (error: any) => {
             reject(error);
         });
     });

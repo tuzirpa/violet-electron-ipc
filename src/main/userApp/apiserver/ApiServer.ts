@@ -1,7 +1,7 @@
 import { uuid } from '@shared/Utils';
 import { dialog, ipcMain } from 'electron';
 import http from 'http';
-import { PromptWindow } from '@main/window/PromptWindow';
+import { PromptWindow } from '../../window/PromptWindow';
 import WebSocket from 'ws';
 
 export class ApiServer {
@@ -32,6 +32,13 @@ export class ApiServer {
             ws.on('close', function close() {
                 console.log('客户端已断开连接');
             });
+        });
+    }
+
+    stop() {
+        // 关闭 HTTP 服务器
+        this.httpServer.close(() => {
+            console.log('HTTP 服务器已关闭');
         });
     }
 

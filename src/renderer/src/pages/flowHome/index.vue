@@ -98,6 +98,11 @@ const breakpointData = ref<IBreakpoint>({
 
 const breakpointCallback = async (_event: any, data: IBreakpoint) => {
     console.log(data, 'breakpoint');
+    if (breakpointData.value.line === data.line && breakpointData.value.url === data.url) {
+        devStepOver();
+        return;
+    }
+
     breakpointData.value = data;
     isDev.value = true;
 
@@ -107,6 +112,9 @@ const breakpointCallback = async (_event: any, data: IBreakpoint) => {
         breakpointData.value.scopeChain &&
         breakpointData.value.scopeChain.length > 0
     ) {
+        console.log(breakpointData.value);
+
+
         const scopeChain = breakpointData.value.scopeChain[0].object.objectId;
         const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
         console.log(res.result);

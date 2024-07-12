@@ -3,13 +3,14 @@
   "include": [
     "src/renderer/src/env.d.ts",
     "src/renderer/**/*",
-    "src/main/src/**/*",
     "src/shared/**/*",
-    "src/renderer/src/**/*.vue",
-    "src/renderer/src/**/*.ts",
     "src/preload/*.d.ts"
   ],
+  "exclude": [
+    "src/main/action/Action.d.ts"
+  ],
   "compilerOptions": {
+    "types": ["electron-vite/node","vite/client"],
     "composite": true,
     "baseUrl": ".",
     "paths": {

@@ -1,4 +1,4 @@
-import { DirectiveTree } from '@main/userApp/types';
+import { DirectiveTree } from '../types';
 import UserApp from '../UserApp';
 import { join } from 'path';
 
