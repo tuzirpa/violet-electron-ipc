@@ -30,6 +30,7 @@ import basePackagePath from '../../../resources/node_modules.zip?asset';
 
 import { sleep } from '@shared/Utils';
 import { unzip } from '../utils/zipUtils';
+import startApiServer from './apiserver';
 
 /**
  * 应用类
@@ -49,6 +50,9 @@ export default class UserApp {
             console.log('安装基础包完成');
         }
         this.robotUtilInit();
+        app.whenReady().then(() => {
+            startApiServer();
+        });
     }
 
     static robotUtilInit() {

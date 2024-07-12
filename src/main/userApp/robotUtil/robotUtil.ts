@@ -61,7 +61,7 @@ function forRobotUtil(obj: any) {
                                 `执行指令 ${blockInfo.directiveDisplayName} 异常 ,忽略错误`,
                                 blockInfo
                             );
-                            return null;
+                            return {};
                         } else {
                             retryCountNum++;
 

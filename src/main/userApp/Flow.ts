@@ -67,6 +67,7 @@ export default class Flow {
         for (let index = 0; index < this.blocks.length; index++) {
             const block = this.blocks[index];
             const convertCode = await convertDirective(block, index, this);
+            convertCode.replace(/\n/g, '');
             let indent = '    ';
             if (block.pdLvn) {
                 for (let index = 0; index < block.pdLvn * 2; index++) {

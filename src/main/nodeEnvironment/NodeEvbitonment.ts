@@ -4,7 +4,6 @@ import fs from 'fs';
 import { downloadFileWithResume } from '../utils/download';
 import { unzip } from '../utils/zipUtils';
 import { sleep } from '@shared/Utils';
-import UserApp from '../userApp/UserApp';
 
 export class NodeEvbitonment {
     nodePath: string;

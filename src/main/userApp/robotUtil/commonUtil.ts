@@ -1,5 +1,6 @@
 import path from 'path';
 import { Block, DirectiveInput, LogLevel } from '../types';
+import { WebSocket } from 'ws';
 
 export const olog = console.log;
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
@@ -24,11 +25,18 @@ export function typeToCode(inputItem: DirectiveInput) {
     return '';
 }
 
+declare const curApp: {
+    APP_ID: string;
+    APP_NAME: string;
+    APP_VERSION: string;
+    APP_DIR: string;
+};
+
 /**
  * 获取当前运行的应用信息
  */
-export function getCurApp(): { id: string; name: string; version: string } {
-    return globalThis.curApp;
+export function getCurApp() {
+    return curApp;
 }
 
 /**
@@ -41,4 +49,34 @@ export function flowModuleImport(appDir: string, moduleName: string) {
     const module = path.join(appDir, moduleName);
     // delete require.cache[module];
     return require(module);
+}
+
+let messageId = 0;
+
+/**
+ * 导入子流程
+ * @returns
+ */
+export function invokeApi(method: string, params: { [key: string]: any }) {
+    return new Promise((resolve, reject) => {
+        const id = ++messageId;
+        const ws = new WebSocket(`ws://localhost:4046`);
+        ws.on('open', () => {
+            ws.send(JSON.stringify({ id, appId: curApp.APP_ID, method, params }));
+
+            ws.once('message', (data: any) => {
+                const res = JSON.parse(data.toString());
+                if (res.code === 1) {
+                    resolve(res.result);
+                } else {
+                    reject(new Error(res.result));
+                }
+                ws.close();
+            });
+        });
+
+        ws.on('error', (error) => {
+            reject(error);
+        });
+    });
 }
