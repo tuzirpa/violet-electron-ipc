@@ -5,7 +5,6 @@ import OutputValueVar from './OutputValueVar.vue';
 import InputValueVarVariable from './InputValueVarVariable.vue';
 import { getCurrentInstance, nextTick, onMounted, ref } from 'vue';
 import { ElSelect, ElTooltip } from 'element-plus';
-import { Action } from '@renderer/lib/action';
 
 // 添加逻辑
 const props = defineProps<{

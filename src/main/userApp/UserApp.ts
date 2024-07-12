@@ -28,6 +28,11 @@ import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs
 import { LogMessage } from './types';
 import basePackagePath from '../../../resources/node_modules.zip?asset';
 
+import commonUtilContent from './robotUtil/commonUtil.ts?raw';
+import typesContent from './types.ts?raw';
+
+// import typesTsSourcePath from '../../../resources/types.ts.source?raw';
+
 import { sleep } from '@shared/Utils';
 import { unzip } from '../utils/zipUtils';
 import startApiServer from './apiserver';
@@ -74,6 +79,16 @@ export default class UserApp {
         fs.writeFileSync(
             path.join(this.userAppLocalDir, `node_modules/tuzirobot/commonUtil.js`),
             logContent
+        );
+        // 写入robotUtil.d.ts文件
+
+        fs.writeFileSync(
+            path.join(this.userAppLocalDir, `node_modules/tuzirobot/commonUtil.ts`),
+            (commonUtilContent as string).replace('../types', './types')
+        );
+        fs.writeFileSync(
+            path.join(this.userAppLocalDir, `node_modules/tuzirobot/types.ts`),
+            typesContent
         );
     }
 

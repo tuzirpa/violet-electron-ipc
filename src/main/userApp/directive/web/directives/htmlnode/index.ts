@@ -1,4 +1,4 @@
-import { DirectiveTree } from 'src/main/userApp/types';
+import { DirectiveTree } from '@main/userApp/types';
 
 const modules: { [key: string]: { default: DirectiveTree } } = import.meta.glob(
     './directives/*.ts',
