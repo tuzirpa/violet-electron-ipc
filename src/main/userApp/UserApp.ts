@@ -194,7 +194,7 @@ export default class UserApp {
             `const logFileWriteStream = fs.createWriteStream(join(logsDir,process.env.RUN_LOG_ID + '.log'));`
         );
         mainJsContent.push(`console.log = function (...args) {`);
-        mainJsContent.push(`  logFileWriteStream.write(args.join(" "));`);
+        mainJsContent.push(`  logFileWriteStream.write(args.join(" ") + "\\n");`);
         mainJsContent.push(`  log.sendLog("info", args.join(" "), globalThis._block);`);
         mainJsContent.push(`};`);
         mainJsContent.push(`setTimeout(()=>{`);
