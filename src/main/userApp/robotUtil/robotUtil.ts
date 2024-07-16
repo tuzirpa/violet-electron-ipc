@@ -42,21 +42,21 @@ function forRobotUtil(obj: any) {
                         return result;
                     } catch (error: any) {
                         olog(error);
-                        sendLog(
+                        console.error(
                             'error',
                             `执行指令 ${blockInfo.directiveDisplayName} 异常: ${error.message}`,
                             blockInfo,
                             error
                         );
                         if (blockInfo.failureStrategy === 'terminate') {
-                            sendLog(
+                            console.error(
                                 'error',
                                 `执行指令 ${blockInfo.directiveDisplayName} 异常,终止流程`,
                                 blockInfo
                             );
                             process.exit(1);
                         } else if (blockInfo.failureStrategy === 'ignore') {
-                            sendLog(
+                            console.error(
                                 'error',
                                 `执行指令 ${blockInfo.directiveDisplayName} 异常 ,忽略错误`,
                                 blockInfo
@@ -66,14 +66,14 @@ function forRobotUtil(obj: any) {
                             retryCountNum++;
 
                             if (retryCountNum > blockInfo.retryCount) {
-                                sendLog(
+                                console.error(
                                     'error',
                                     `执行指令 ${blockInfo.directiveDisplayName} 异常 ,重试次数达到上限`,
                                     blockInfo
                                 );
                                 process.exit(1);
                             } else {
-                                sendLog(
+                                console.error(
                                     'error',
                                     `执行指令 ${blockInfo.directiveDisplayName} 异常 ,${blockInfo.intervalTime} 秒后重试第${retryCountNum}次`,
                                     blockInfo
@@ -134,13 +134,9 @@ export const fatalError = (error: any, fileName: string) => {
     const generateBlockCode = lineContent.trim().match(/generateBlock\(.*?\)/);
     olog(error);
     if (generateBlockCode && generateBlockCode[0]) {
-        robotUtil.sendLog(
-            'fatalError',
-            '致命错误,退出流程:' + error.message,
-            eval(generateBlockCode[0])
-        );
+        console['fatalError'](eval(generateBlockCode[0]), '致命错误,退出流程:', error);
     } else {
-        robotUtil.sendLog('fatalError', '致命错误,退出流程:' + error.message, {
+        console['fatalError']('致命错误,退出流程:' + error.message, {
             blockLine: -1,
             flowName: '未知流程',
             directiveName: '',

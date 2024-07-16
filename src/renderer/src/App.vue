@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
+import Update from './components/Update.vue';
 // 添加逻辑
 
 </script>
@@ -12,6 +13,7 @@ import { RouterView } from 'vue-router';
                 <component :is="Component" />
             </transition>
         </router-view>
+        <Update></Update>
     </div>
 </template>
 

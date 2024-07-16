@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import TitleBar from '@renderer/components/TitleBar.vue';
 import BoxDraggable from '@renderer/components/BoxDraggable.vue';
-import { ElButton, ElMessageBox } from 'element-plus';
+import { ElAvatar, ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import type UserApp from 'src/main/userApp/UserApp';
 import { ref } from 'vue';
 import { Action } from '@renderer/lib/action';
+import { clearUserInfo, userInfo } from '@renderer/store/commonStore';
+import BtnTip from '@renderer/components/BtnTip.vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 
-const userApps = ref<UserApp[]>([])
+type UserAppInfo = UserApp & { deleting?: boolean };
+const userApps = ref<UserAppInfo[]>([])
 
 
 
@@ -30,13 +35,56 @@ getUserApps();
 function runUserApp(id: string) {
     Action.userAppRun(id);
 }
+function deleteUserApp(id: string) {
+
+    ElMessageBox.confirm('确认删除该应用吗？').then(async (confirm) => {
+        if (confirm === 'confirm') {
+            userApps.value.find((app) => app.id === id)!.deleting = true;
+            Action.deleteUserApp(id);
+            getUserApps();
+            ElMessage.success('删除成功');
+        }
+    });
+
+}
+
+async function logout() {
+    await Action.logout();
+    clearUserInfo();
+    router.push('/login/index');
+}
 
 
 </script>
 
 <template>
     <div class="viewbox">
-        <TitleBar :title="'首页'"></TitleBar>
+        <TitleBar :title="'首页'">
+            <div class="flex flex-1 justify-between">
+                <div>首页</div>
+                <div class="user-info flex items-center non-draggable">
+                    <el-popover ref="popover" placement="bottom" :width="200" trigger="click">
+                        <template #reference>
+                            <ElButton class="m-2" link>{{ userInfo.userName }}</ElButton>
+                        </template>
+                        <div class="user-info-content flex flex-col gap-2">
+                            <!-- 用户信息 -->
+                            <div class="user-info-item flex items-center gap-1">
+                                <ElAvatar>{{ userInfo.userName }}</ElAvatar>
+                                <div>
+                                    <div>{{ userInfo.userName }}</div>
+                                    <div>{{ userInfo.mobile }}</div>
+                                </div>
+                            </div>
+                            <!-- 退出登录 -->
+                            <BtnTip class="btn-item flex justify-start text-lg" :iconClass="'text-lg'"
+                                :icon="'icon-tuichudenglu'" :text="'退出登录'" @click="logout">退出登录
+                            </BtnTip>
+                        </div>
+                    </el-popover>
+                </div>
+            </div>
+        </TitleBar>
         <div class="home-container flex-1 flex ">
             <BoxDraggable class="menu-box border-r flex flex-col" :width="250" :resize-right="true">
                 <div class="home-left flex justify-center items-center">
@@ -65,7 +113,8 @@ function runUserApp(id: string) {
                                 <el-button class="text-blue-400" link @click="runUserApp(app.id)">运行</el-button>
                                 <el-button class="text-blue-400" link
                                     @click="$router.push('/flowHome/index?appId=' + app.id)">编辑</el-button>
-                                <el-button class="text-blue-400" link @click="() => { }">删除</el-button>
+                                <el-button class="text-blue-400" link @click="deleteUserApp(app.id)"
+                                    :loading="app.deleting">删除</el-button>
                             </div>
                         </div>
                     </div>

@@ -4,7 +4,7 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { Column, ElAutoResizer, ElButton, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
+import { Column, ElAutoResizer, ElButton, ElDialog, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Action } from '@renderer/lib/action';
@@ -13,6 +13,7 @@ import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { errorDirectives } from './components/FlowEditStore';
 import { handleRunLogsContextMenu, runLogs } from './indexvue';
 import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
+import CodeEdit from './components/CodeEdit.vue';
 
 runLogs.value.push(
     {
@@ -232,6 +233,12 @@ const hideDirectiveTree = (e: boolean) => {
 };
 const directiveWidth = ref(250);
 
+const code = ref('');
+const logDetailVisible = ref(false);
+function viewDetailsLogMessage(message: string) {
+    code.value = message;
+    logDetailVisible.value = true;
+}
 
 const runLogsColumns: Column<any>[] = [
     {
@@ -280,6 +287,7 @@ const runLogsColumns: Column<any>[] = [
         cellRenderer: ({ cellData: message, rowData }) => (
             <div class="flex justify-center items-center h-full w-full" onContextmenu={(e: MouseEvent) => { handleRunLogsContextMenu(rowData, 4, e) }}>
                 <span class="truncate flex-1 w-0">{message}</span>
+                <div class="cursor-pointer" onclick={() => { viewDetailsLogMessage(message) }}>查看详情</div>
             </div>
         )
     },
@@ -513,6 +521,9 @@ const runLogsColumns: Column<any>[] = [
                 </BoxDraggable>
             </div>
         </div>
+        <ElDialog v-model="logDetailVisible" :title="'日志详情'">
+            <CodeEdit :code="code"></CodeEdit>
+        </ElDialog>
     </div>
 </template>
 

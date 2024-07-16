@@ -9,6 +9,7 @@ import robotUtil from './userApp/robotUtil/robotUtil?modulePath';
 import robotLog from './userApp/robotUtil/commonUtil?modulePath';
 import UserApp from './userApp/UserApp';
 import UserAppManage from './userApp/UserAppManage';
+import { autoUpdateInit } from './autoUpdater/autoUpdater';
 
 let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
@@ -31,11 +32,15 @@ function start() {
     MethodsUtils.getStaticMethods(Action).forEach((item: any) => {
         const { name, method } = item;
         ipcMain.handle(name, async (_e, ...args) => {
-            const result = await method(...args);
-            if (result) {
-                return JSON.parse(JSON.stringify(result));
+            try {
+                const result = await method(...args);
+                if (result) {
+                    return { error: false, data: JSON.parse(JSON.stringify(result)) };
+                }
+                return { error: false };
+            } catch (e: any) {
+                return { error: true, message: e.message };
             }
-            return result;
         });
     });
 
@@ -53,6 +58,8 @@ function start() {
         UserApp.rebotUtilPath = robotUtil;
         UserApp.rebotUtilLogPath = robotLog;
         UserAppManage.scanLocalApp();
+
+        autoUpdateInit(mainWindow);
     }
 
     // This method will be called when Electron has finished

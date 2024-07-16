@@ -4,6 +4,9 @@ import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
 import { reloadDirective, useDirective } from '../userApp/directive/directive';
 import { WindowManage, WindowNameType } from '../window/WindowManage';
+import { AppConfig } from '../config/appConfig';
+import User from '../api/User';
+import Captcha from '../api/Captcha';
 
 class Action {
     /**
@@ -55,7 +58,6 @@ class Action {
     /**
      * 打开文件夹
      */
-
     static async openFolder(path: string) {
         return shell.showItemInFolder(`file://${path}`);
     }
@@ -146,13 +148,99 @@ class Action {
     static async updateUserAppName(appId: string, name: string) {
         return UserAppManage.updateUserAppName(appId, name);
     }
+    /**
+     * 删除用户应用
+     */
+    static async deleteUserApp(appId: string) {
+        return UserAppManage.deleteUserApp(appId);
+    }
 
+    /**
+     * 获取用户应用指令列表
+     * @returns 用户应用指令列表
+     */
     static async getDirectives() {
         return useDirective();
     }
     static async reloadDirective() {
         reloadDirective();
         return useDirective();
+    }
+
+    /**
+     * 获取用户信息
+     * @returns 用户信息
+     */
+    static async getUserInfo(): Promise<{
+        uid: number;
+        userName: string;
+        mobile: string;
+        avatarUrl: string;
+        vipLevel: number;
+        vipExpireTime: string;
+    }> {
+        let userInfo = { ...AppConfig.LOGIN_USER };
+        try {
+            if (AppConfig.LOGIN_USER && !AppConfig.LOGIN_USER.uid) {
+                await AppConfig.LOGIN_USER.getVipInfo();
+                userInfo = { ...AppConfig.LOGIN_USER };
+            }
+        } catch (e) {
+            return {} as any;
+        }
+        delete userInfo.password;
+        delete userInfo.loginToken;
+        return userInfo as any;
+    }
+
+    /**
+     * 用户注册
+     * @param username 用户名手机号
+     * @param password 用户密码
+     * @returns
+     */
+    static async userRegister(
+        mobile: string,
+        userName: string,
+        password: string,
+        captcha: string,
+        captchaId: string
+    ) {
+        const user = new User(mobile, userName, password);
+        return user.register(captcha, captchaId);
+    }
+
+    /**
+     * 用户登录
+     * @returns
+     */
+    static async userLogin(
+        mobile: string,
+        userName: string,
+        password: string,
+        captcha: string,
+        captchaId: string,
+        remember: boolean
+    ) {
+        const user = new User(mobile, userName, password);
+        return user.login(captcha, captchaId, remember);
+    }
+
+    static async getCaptcha() {
+        return Captcha.getCaptcha();
+    }
+
+    /**
+     * 登出
+     * @returns 是否登出成功
+     */
+    static async logout() {
+        if (AppConfig.LOGIN_USER) {
+            await AppConfig.LOGIN_USER.logout();
+        }
+        AppConfig.LOGIN_USER = null;
+        // app.exit();
+        return true;
     }
 }
 

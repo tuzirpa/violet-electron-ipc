@@ -4,6 +4,10 @@ import path, { join } from 'path';
 import { convertDirective } from './directiveconvert';
 
 export default class Flow {
+    destroy() {
+        this.blocks = [];
+    }
+
     blocks: DirectiveTree[] = [];
     static headLinkCount = 8;
 
@@ -13,7 +17,6 @@ export default class Flow {
         public name: string,
         public aliasName?: string
     ) {
-        console.log('Flow');
         this.init();
     }
 

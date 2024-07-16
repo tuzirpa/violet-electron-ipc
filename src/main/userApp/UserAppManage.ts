@@ -4,6 +4,13 @@ import { uuid } from '@shared/Utils';
 import Flow from './Flow';
 
 export class UserAppManage {
+    deleteUserApp(appId: string) {
+        const userApp = this.findUserApp(appId);
+        this.userApps = this.userApps.filter((app) => app.id !== appId);
+        userApp.delete();
+        return userApp;
+    }
+
     newSubFlow(appId: string) {
         const userApp = this.findUserApp(appId);
         return userApp.newSubFlow();

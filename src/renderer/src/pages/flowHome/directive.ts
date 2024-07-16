@@ -14,13 +14,12 @@ async function loadDirective() {
     console.log(directives.value, 'directives');
 }
 
-loadDirective();
-
 /**
  * 获取一个指令列表
  * @returns {Array}
  */
 export function useDirective() {
+    loadDirective();
     return directives;
 }
 

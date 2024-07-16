@@ -460,7 +460,9 @@ function addBlock(directive: DirectiveTree, index?: number) {
  * 复制选中的块
  */
 async function copyBlocks() {
-    await navigator.clipboard.writeText(JSON.stringify(curBlocks.value));
+    let text = '//tuziRpa\n';
+    text += JSON.stringify(curBlocks.value);
+    await navigator.clipboard.writeText(text);
     ElMessage.success('复制成功');
 }
 
@@ -475,7 +477,16 @@ async function allBlocks() {
  * 粘贴选中的块
  */
 async function pasteBlocks() {
-    const clipboardText = await navigator.clipboard.readText();
+    let clipboardText = await navigator.clipboard.readText();
+    console.log(clipboardText, '粘贴内容');
+
+    if (!clipboardText.startsWith('//tuziRpa')) {
+        ElMessage.error('粘贴内容格式不对');
+        return;
+    }
+    clipboardText = clipboardText.replace('//tuziRpa', '');
+    console.log(clipboardText, '粘贴内容');
+
     const clipboardBlocks = JSON.parse(clipboardText);
     const newBlocks = clipboardBlocks.map((block) => {
         block.id = uuid();

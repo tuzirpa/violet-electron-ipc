@@ -1,8 +1,10 @@
 import path from 'path';
 import { Block, DirectiveInput, LogLevel } from '../types';
 import { WebSocket } from 'ws';
+import fs from 'fs';
 
 export const olog = console.log;
+export const oerror = console.error;
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
     olog(
         `robotUtilLog-` +
@@ -79,4 +81,77 @@ export function invokeApi(method: string, params: { [key: string]: any }) {
             reject(error);
         });
     });
+}
+
+// 格式化时间
+//@ts-ignore
+Date.prototype.Format = function (fmt: string) {
+    //author: meizz
+    fmt = fmt || 'yyyy-MM-dd hh:mm:ss';
+    var o = {
+        'M+': this.getMonth() + 1, //月份
+        'd+': this.getDate(), //日
+        'h+': this.getHours(), //小时
+        'm+': this.getMinutes(), //分
+        's+': this.getSeconds(), //秒
+        'q+': Math.floor((this.getMonth() + 3) / 3), //季度
+        S: this.getMilliseconds() //毫秒
+    };
+    if (/(y+)/.test(fmt))
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + '').substr(4 - RegExp.$1.length));
+    for (var k in o)
+        if (new RegExp('(' + k + ')').test(fmt))
+            fmt = fmt.replace(
+                RegExp.$1,
+                RegExp.$1.length == 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length)
+            );
+    return fmt;
+};
+
+/**
+ * 设置日志文件路径
+ * @param filePath 日志文件路径
+ */
+export function setLogFile(filePath: string) {
+    const logFileWriteStream = fs.createWriteStream(filePath);
+    const levelMap = {
+        debug: '调试',
+        info: '信息',
+        warn: '警告',
+        error: '错误',
+        fatalError: '致命'
+    };
+    function log(level: LogLevel, _block: Block, ...args: any[]) {
+        const message = args.join(' ');
+        const levelStr = levelMap[level];
+        const content =
+            // @ts-ignore
+            `[${levelStr}] [${_block.flowName}:(行: ${_block.blockLine})] [${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}]:` +
+            message;
+        logFileWriteStream.write(content + '\n');
+        sendLog(level, message, _block);
+    }
+    console.log = function () {
+        log.call(this, 'info', globalThis._block, ...arguments);
+    };
+    console.debug = function () {
+        log.call(this, 'debug', globalThis._block, ...arguments);
+    };
+    console.info = function () {
+        log.call(this, 'info', globalThis._block, ...arguments);
+    };
+    console.warn = function () {
+        log.call(this, 'warn', globalThis._block, ...arguments);
+    };
+    console.error = function () {
+        log.call(this, 'error', globalThis._block, ...arguments);
+    };
+    console['fatalError'] = function () {
+        oerror(...arguments);
+        const args = [...arguments];
+        const block = args.shift();
+        const errorMsg = args.shift();
+        const errorObj = args.shift();
+        log.call(this, 'fatalError', block, errorMsg + errorObj.stack);
+    };
 }

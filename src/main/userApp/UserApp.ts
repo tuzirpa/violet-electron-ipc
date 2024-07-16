@@ -21,6 +21,13 @@ import startApiServer from './apiserver';
  * 应用类
  */
 export default class UserApp {
+    delete() {
+        // 销毁，这边回收app资源
+        this.destroy();
+        //删除本地目录
+        fs.rmSync(this.appDir, { recursive: true, force: true });
+    }
+
     closeUserAppStepTip() {
         if (this.#stepWindow) {
             this.#stepWindow.hide();
@@ -123,6 +130,14 @@ export default class UserApp {
         // 销毁，这边回收app资源
         this.#stepWindow?.destroy();
         this.#stepWindow = null;
+        this.flows.forEach((flow) => {
+            flow.destroy();
+        });
+        this.flows = [];
+        this.#devNodeJs?.close();
+        this.#devNodeJs = null;
+        this.#devPrecess?.kill();
+        this.#devPrecess = null;
     }
 
     save() {
@@ -167,10 +182,6 @@ export default class UserApp {
             author: this.author,
             license: this.license,
             description: this.description,
-            scripts: {
-                dev: 'node --inspect-brk=2017 main.flow.js',
-                start: 'node main.flow.js'
-            },
             dependencies: {}
         };
         fs.writeFileSync(
@@ -190,13 +201,8 @@ export default class UserApp {
         mainJsContent.push(
             `const logsDir = join(__dirname,'logs');if(!fs.existsSync(logsDir)){fs.mkdirSync(logsDir)}`
         );
-        mainJsContent.push(
-            `const logFileWriteStream = fs.createWriteStream(join(logsDir,process.env.RUN_LOG_ID + '.log'));`
-        );
-        mainJsContent.push(`console.log = function (...args) {`);
-        mainJsContent.push(`  logFileWriteStream.write(args.join(" ") + "\\n");`);
-        mainJsContent.push(`  log.sendLog("info", args.join(" "), globalThis._block);`);
-        mainJsContent.push(`};`);
+        mainJsContent.push(`log.setLogFile(join(logsDir,process.env.RUN_LOG_ID + '.log'));`);
+
         mainJsContent.push(`setTimeout(()=>{`);
         mainJsContent.push(`  mainFlow();`);
         mainJsContent.push(`}, 1000);`);
@@ -499,8 +505,6 @@ export default class UserApp {
             const data = this.#logsData.splice(this.#lastLogsOutIndex, this.#logsData.length);
             this.#lastLogsOutIndex = this.#logsData.length;
             this._sendRunLogs(data);
-
-            this.destroy();
         });
     }
 }

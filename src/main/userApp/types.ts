@@ -269,4 +269,4 @@ export interface Block {
     retryCount: number;
 }
 
-export type LogLevel = 'info' | 'warn' | 'error' | 'fatalError';
+export type LogLevel = 'info' | 'debug' | 'warn' | 'error' | 'fatalError';

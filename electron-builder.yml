@@ -1,5 +1,5 @@
 appId: com.tuzi_robot.app
-productName: 兔子机器人
+productName: 兔子RPA
 directories:
     buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
     - resources/**
 win:
-    executableName: tuzi_robot
+    executableName: tuzi_rpa
 nsis:
     oneClick: false
     allowToChangeInstallationDirectory: true #是否允许修改安装目录
@@ -44,6 +44,6 @@ appImage:
 npmRebuild: false
 publish:
     provider: generic
-    url: https://example.com/auto-updates
+    url: https://gitee.com/lwd1314_admin/tuzi-robot_releases/releases/download/latest/
 electronDownload:
     mirror: https://npmmirror.com/mirrors/electron/
