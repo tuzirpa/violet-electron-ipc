@@ -11,6 +11,8 @@ import UserApp from './userApp/UserApp';
 import UserAppManage from './userApp/UserAppManage';
 import { autoUpdateInit } from './autoUpdater/autoUpdater';
 
+console.log('index.ts', 99999999);
+
 let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
 
@@ -45,6 +47,8 @@ function start() {
     });
 
     function createWindow() {
+        console.log('createWindow');
+
         //判断是否登录
         const url = import.meta.env.DEV ? process.env['ELECTRON_RENDERER_URL'] : 'assets://app';
         //创建登录窗口
@@ -52,6 +56,9 @@ function start() {
         mainWindow.loadURL(url + '/#/login/index');
         if (import.meta.env.DEV) {
             mainWindow.webContents.openDevTools();
+        } else {
+            console.log('生产环境下，启用自动更新');
+            autoUpdateInit(mainWindow);
         }
 
         //扫码本地app
@@ -59,7 +66,9 @@ function start() {
         UserApp.rebotUtilLogPath = robotLog;
         UserAppManage.scanLocalApp();
 
-        autoUpdateInit(mainWindow);
+        mainWindow.on('closed', () => {
+            app.quit();
+        });
     }
 
     // This method will be called when Electron has finished
@@ -71,7 +80,7 @@ function start() {
         nodeEvbitonment.autoInstallNode();
         UserApp.init();
         // Set app user model id for windows
-        electronApp.setAppUserModelId('com.tuzi_robot.app');
+        electronApp.setAppUserModelId('com.tuzirpa.app');
 
         // Default open or close DevTools by F12 in development
         // and ignore CommandOrControl + R in production.

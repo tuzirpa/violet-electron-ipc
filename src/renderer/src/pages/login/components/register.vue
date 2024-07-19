@@ -57,7 +57,7 @@ const registerForm = ref({
 const registerRules = {
     username: [
         { required: true, message: '请输入用户名', trigger: 'blur' },
-        { min: 1, max: 10, message: '用户名长度在 1 到 20 个字符', trigger: 'blur' }
+        { min: 1, max: 20, message: '用户名长度在 1 到 20 个字符', trigger: 'blur' }
     ],
     mobile: [
         { required: true, message: '请输入手机号', trigger: 'blur' },

@@ -103,9 +103,14 @@ Date.prototype.Format = function (fmt: string) {
         if (new RegExp('(' + k + ')').test(fmt))
             fmt = fmt.replace(
                 RegExp.$1,
+                // @ts-ignore
                 RegExp.$1.length == 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length)
             );
     return fmt;
+};
+
+declare const globalThis: {
+    _block: Block;
 };
 
 /**
@@ -146,6 +151,7 @@ export function setLogFile(filePath: string) {
     console.error = function () {
         log.call(this, 'error', globalThis._block, ...arguments);
     };
+    // @ts-ignore
     console['fatalError'] = function () {
         oerror(...arguments);
         const args = [...arguments];

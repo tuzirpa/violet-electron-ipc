@@ -1,4 +1,4 @@
-import { clipboard, dialog, shell } from 'electron';
+import { app, clipboard, dialog, shell } from 'electron';
 import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
@@ -241,6 +241,14 @@ class Action {
         AppConfig.LOGIN_USER = null;
         // app.exit();
         return true;
+    }
+
+    /**
+     * 重启应用
+     */
+    static async relaunchApp() {
+        app.relaunch();
+        app.quit();
     }
 }
 

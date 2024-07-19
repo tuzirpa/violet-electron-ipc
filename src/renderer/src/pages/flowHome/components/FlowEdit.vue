@@ -544,8 +544,8 @@ function directiveShowContextMenu(event: any, block: DirectiveData) {
             onClick: () => {
                 executeStep();
             },
-            icon: 'icon-fuzhi',
-            shortcut: 'Ctrl+C'
+            icon: 'icon-yunxing',
+            shortcut: ''
         },
         {
             label: '禁用/启用当前指令',
@@ -727,6 +727,8 @@ const saveFlowDebounce = (() => {
                 delete item.foldDesc;
                 return item;
             });
+            console.log(saveObj, '保存流程');
+
             Action.saveFlow(props.appInfo.id, saveObj);
 
             checkError(curOpenFile.value.blocks, curOpenFile.value);

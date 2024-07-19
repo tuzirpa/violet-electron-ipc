@@ -7,6 +7,7 @@ export default class User {
     uid: string = '';
     vipLevel: number = 0;
     vipExpireTime: string = '';
+    #keepAliveTimer: NodeJS.Timeout | null = null;
 
     constructor(
         public mobile: string,
@@ -98,12 +99,19 @@ export default class User {
      * 保持用户心跳
      */
     async keepAlive() {
-        const response = await Request.post('/user/keepAlive');
-        if (response.code === 0) {
-            setTimeout(() => {
-                this.keepAlive();
-            }, 30 * 1000);
+        let response: any;
+        try {
+            response = await Request.post('/user/keepAlive');
+        } catch (error) {
+            console.error(error);
+        } finally {
+            this.#keepAliveTimer = setTimeout(() => {
+                if (AppConfig.LOGIN_USER) {
+                    this.keepAlive();
+                }
+            }, 2 * 1000);
         }
+
         return response;
     }
 
@@ -141,6 +149,9 @@ export default class User {
 
     async logout() {
         const response = await Request.post('/user/logout');
+        if (response.code === 0) {
+            this.#keepAliveTimer && clearTimeout(this.#keepAliveTimer);
+        }
         return response;
     }
 }

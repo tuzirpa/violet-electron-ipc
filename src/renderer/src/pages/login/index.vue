@@ -6,6 +6,7 @@ import { ElButton, ElCheckbox, ElImage, ElInput, ElMessage } from 'element-plus'
 import { Action } from '@renderer/lib/action';
 import { isLogin, userInfo } from '@renderer/store/commonStore';
 import Register from './components/register.vue';
+import qqImageUrl from '@renderer/assets/QQ.png';
 
 // 添加逻辑
 const router = useRouter();
@@ -96,12 +97,54 @@ setTimeout(() => {
 
 <template>
     <div class="login-page viewbox">
-        <TitleBar :title="'兔子RPA'"></TitleBar>
+        <TitleBar :title="'兔子RPA'">
+            <div class="flex flex-1 justify-between">
+                <div>
+                    兔子RPA
+                </div>
+                <div class="user-info flex items-center non-draggable">
+                    <el-popover placement="bottom" :width="300" trigger="hover">
+                        <template #reference>
+                            <ElButton class="m-2" link>QQ</ElButton>
+                        </template>
+                        <div class="user-info-content flex flex-col gap-2">
+                            <ElImage :src="qqImageUrl"></ElImage>
+                        </div>
+                    </el-popover>
+                    <el-popover placement="bottom" :width="200" trigger="hover">
+                        <template #reference>
+                            <ElButton class="m-2" link>微信</ElButton>
+                        </template>
+                        <div class="user-info-content flex flex-col gap-2">
+
+                        </div>
+                    </el-popover>
+                    <el-popover placement="bottom" :width="200" trigger="hover">
+                        <template #reference>
+                            <ElButton class="m-2" link>{{ userInfo.userName }}</ElButton>
+                        </template>
+                        <div class="user-info-content flex flex-col gap-2">
+                            <!-- 用户信息 -->
+                            <div class="user-info-item flex items-center gap-1">
+                                <ElAvatar>{{ userInfo.userName }}</ElAvatar>
+                                <div>
+                                    <div>{{ userInfo.userName }}</div>
+                                    <div>{{ userInfo.mobile }}</div>
+                                </div>
+                            </div>
+                            <!-- 退出登录 -->
+                            <BtnTip class="btn-item flex justify-start text-lg" :iconClass="'text-lg'"
+                                :icon="'icon-tuichudenglu'" :text="'退出登录'" @click="logout">退出登录
+                            </BtnTip>
+                        </div>
+                    </el-popover>
+                </div>
+            </div>
+
+        </TitleBar>
         <div class="content-container flex-1 flex justify-around">
-            <div class="nav-container flex-1 flex justify-center items-center">
-                <div class="nav-item active">首页</div>
-                <div class="nav-item ">关于</div>
-                <div class="nav-item ">联系我们</div>
+            <div class="nav-container flex-1 flex justify-center items-center bg-blue-500 text-white text-xl">
+                重复工作自动化，提升工作效率，释放宝贵时间
             </div>
             <div class="form-container flex-1 flex justify-center items-center">
                 <div class="w-3/4 p-10 flex flex-col gap-5">

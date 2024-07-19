@@ -25,6 +25,10 @@ export class AppConfig {
 
     static async loginUserInit() {
         const loginToken = this.conf.get('loginToken');
-        if (loginToken) this.LOGIN_USER = await User.createLoginUser(loginToken);
+        if (loginToken) {
+            this.LOGIN_USER = await User.createLoginUser(loginToken);
+            await this.LOGIN_USER.getVipInfo();
+            this.LOGIN_USER.keepAlive();
+        }
     }
 }

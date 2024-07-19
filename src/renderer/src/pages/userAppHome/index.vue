@@ -1,52 +1,18 @@
 <script setup lang="ts">
 import TitleBar from '@renderer/components/TitleBar.vue';
 import BoxDraggable from '@renderer/components/BoxDraggable.vue';
-import { ElAvatar, ElButton, ElMessage, ElMessageBox } from 'element-plus';
-import type UserApp from 'src/main/userApp/UserApp';
-import { ref } from 'vue';
+import { ElAvatar, ElButton, ElImage, ElMessageBox } from 'element-plus';
+
 import { Action } from '@renderer/lib/action';
 import { clearUserInfo, userInfo } from '@renderer/store/commonStore';
 import BtnTip from '@renderer/components/BtnTip.vue';
 import { useRouter } from 'vue-router';
+import MyApp from "./components/MyApp.vue";
+import DownLoadApp from "./components/DownLoadApp.vue";
+import qqImageUrl from '@renderer/assets/QQ.png';
+import { ref } from 'vue';
 
 const router = useRouter();
-
-type UserAppInfo = UserApp & { deleting?: boolean };
-const userApps = ref<UserAppInfo[]>([])
-
-
-
-async function newApp() {
-    const res = await ElMessageBox.prompt('请输入应用名称', '新建应用');
-    if (res.action === 'confirm') {
-        const name = res.value;
-        await Action.newUserApp(name);
-        getUserApps();
-    }
-}
-
-
-async function getUserApps() {
-    const apps = await Action.getUserApps();
-    userApps.value = apps;
-}
-getUserApps();
-
-function runUserApp(id: string) {
-    Action.userAppRun(id);
-}
-function deleteUserApp(id: string) {
-
-    ElMessageBox.confirm('确认删除该应用吗？').then(async (confirm) => {
-        if (confirm === 'confirm') {
-            userApps.value.find((app) => app.id === id)!.deleting = true;
-            Action.deleteUserApp(id);
-            getUserApps();
-            ElMessage.success('删除成功');
-        }
-    });
-
-}
 
 async function logout() {
     await Action.logout();
@@ -54,6 +20,18 @@ async function logout() {
     router.push('/login/index');
 }
 
+window.electron.ipcRenderer.on('login-out', async () => {
+    try {
+        await ElMessageBox.alert('您的登录已失效，请重新登录');
+    } finally {
+        clearUserInfo();
+        router.push('/login/index');
+    }
+
+});
+
+const myApp = ref<InstanceType<typeof MyApp>>();
+const curMenu = ref('myApp');
 
 </script>
 
@@ -63,7 +41,23 @@ async function logout() {
             <div class="flex flex-1 justify-between">
                 <div>首页</div>
                 <div class="user-info flex items-center non-draggable">
-                    <el-popover ref="popover" placement="bottom" :width="200" trigger="click">
+                    <el-popover placement="bottom" :width="300" trigger="hover">
+                        <template #reference>
+                            <ElButton class="m-2" link>QQ</ElButton>
+                        </template>
+                        <div class="user-info-content flex flex-col gap-2">
+                            <ElImage :src="qqImageUrl"></ElImage>
+                        </div>
+                    </el-popover>
+                    <el-popover placement="bottom" :width="200" trigger="hover">
+                        <template #reference>
+                            <ElButton class="m-2" link>微信</ElButton>
+                        </template>
+                        <div class="user-info-content flex flex-col gap-2">
+
+                        </div>
+                    </el-popover>
+                    <el-popover placement="bottom" :width="200" trigger="hover">
                         <template #reference>
                             <ElButton class="m-2" link>{{ userInfo.userName }}</ElButton>
                         </template>
@@ -85,39 +79,71 @@ async function logout() {
                 </div>
             </div>
         </TitleBar>
-        <div class="home-container flex-1 flex ">
+        <div class="home-container flex flex-1 overflow-hidden">
             <BoxDraggable class="menu-box border-r flex flex-col" :width="250" :resize-right="true">
                 <div class="home-left flex justify-center items-center">
                     <div class="p-2 flex flex-1 text-center">
-                        <ElButton class="flex-1" type="primary" @click="newApp">新建应用</ElButton>
+                        <ElButton class="flex-1" type="primary" @click="myApp?.newApp">新建应用</ElButton>
                     </div>
+                </div>
+                <div class="home-right home-menu flex justify-center items-center">
+                    <el-menu @select="curMenu = $event" :default-active="curMenu" class="w-full">
+                        <!-- <el-sub-menu index="1">
+                            <template #title>
+                                <el-icon>
+                                    <location />
+                                </el-icon>
+                                <span>Navigator One</span>
+                            </template>
+                            <el-menu-item-group>
+                                <template #title><span>Group One</span></template>
+                                <el-menu-item index="1-1">item one</el-menu-item>
+                                <el-menu-item index="1-2">item two</el-menu-item>
+                            </el-menu-item-group>
+                            <el-menu-item-group title="Group Two">
+                                <el-menu-item index="1-3">item three</el-menu-item>
+                            </el-menu-item-group>
+                            <el-sub-menu index="1-4">
+                                <template #title><span>item four</span></template>
+                                <el-menu-item index="1-4-1">item one</el-menu-item>
+                            </el-sub-menu>
+                        </el-sub-menu> -->
+                        <el-menu-item index="myApp">
+                            <el-icon>
+                                <Menu />
+                            </el-icon>
+                            <template #title>我开发的应用</template>
+                        </el-menu-item>
+                        <!-- <el-menu-item index="3" disabled>
+                            <el-icon>
+                                <document />
+                            </el-icon>
+                            <template #title>Navigator Three</template>
+                        </el-menu-item> -->
+                        <el-menu-item index="downloadApp">
+                            <el-icon>
+                                <Download />
+                            </el-icon>
+                            <template #title>我获取的应用</template>
+                        </el-menu-item>
+                        <el-menu-item index="5">
+                            <el-icon>
+                                <Location />
+                            </el-icon>
+                            <template #title>示例应用广场</template>
+                        </el-menu-item>
+                    </el-menu>
                 </div>
             </BoxDraggable>
             <BoxDraggable class="content-box flex flex-col border-r flex-1 bg-gray-100 p-2">
                 <!-- <div class="top-bar flex justify-between items-center">
                     <div class="title">帮助中心</div>
                 </div> -->
-                <div class="content-container flex flex-1 flex-col rounded bg-white">
+                <div class="content-container flex flex-col rounded bg-white h-full">
                     <!-- 内容区域 -->
                     <!-- 应用列表 -->
-                    <div class="app-list-title flex font-bold text-lg items-center p-2">
-                        我的应用列表
-                    </div>
-                    <div class="app-list flex flex-col p-2">
-                        <div class="app-item flex justify-between items-center border p-2 rounded"
-                            v-for="(app, index) in userApps" :key="index">
-                            <div class="app-name">
-                                {{ app.name }}
-                            </div>
-                            <div class="operation flex justify-center items-center">
-                                <el-button class="text-blue-400" link @click="runUserApp(app.id)">运行</el-button>
-                                <el-button class="text-blue-400" link
-                                    @click="$router.push('/flowHome/index?appId=' + app.id)">编辑</el-button>
-                                <el-button class="text-blue-400" link @click="deleteUserApp(app.id)"
-                                    :loading="app.deleting">删除</el-button>
-                            </div>
-                        </div>
-                    </div>
+                    <MyApp ref="myApp" v-show="curMenu === 'myApp'"></MyApp>
+                    <DownLoadApp ref="myApp" v-show="curMenu === 'downloadApp'"></DownLoadApp>
                 </div>
             </BoxDraggable>
         </div>

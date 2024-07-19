@@ -1,4 +1,4 @@
-import path from 'path';
+import path, { join } from 'path';
 import fs from 'fs/promises';
 import { ProtocolRequest, ProtocolResponse, protocol } from 'electron';
 
@@ -46,6 +46,7 @@ const handleApp = async (
 export const registerAssetsProtocol = () => {
     protocol.registerFileProtocol('assets', (request, callback) => {
         const { host, searchParams } = new URL(request.url);
+        console.log(host, searchParams);
 
         if (host === 'file') {
             const filepath = searchParams.get('path');
@@ -53,6 +54,7 @@ export const registerAssetsProtocol = () => {
                 return callback({ path: filepath });
             }
         }
+
         if (host === 'app') {
             return handleApp(request, callback);
         }

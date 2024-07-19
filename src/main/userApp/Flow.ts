@@ -46,8 +46,9 @@ export default class Flow {
             const contentObj = JSON.parse(content);
             this.blocks = contentObj.blocks || [];
             this.aliasName = contentObj.aliasName || this.name;
+        } else {
+            this.save();
         }
-        this.save();
     }
 
     get isMainFlow() {

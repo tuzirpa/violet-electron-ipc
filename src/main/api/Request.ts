@@ -1,6 +1,9 @@
 import { AppConfig } from '../config/appConfig';
-import fetch from 'node-fetch';
-import { decrypt } from './aes';
+import fetch, { Response } from 'node-fetch';
+import { decrypt, encrypt } from './aes';
+import { WindowManage } from '../window/WindowManage';
+import { app } from 'electron';
+import { uuid } from '@shared/Utils';
 
 export class Request {
     constructor(
@@ -37,16 +40,32 @@ export class Request {
 
         let body: any;
         headers['Content-Type'] = 'application/json';
+        this.data = this.data || {};
+        this.data.version = app.getVersion();
+        this.data.nonce = uuid();
         body = JSON.stringify(this.data);
-        const res = await fetch(`${AppConfig.API_URL}${this.url}`, {
-            method: this.method,
-            headers,
-            body: body
-        });
+        let res: Response;
+        const encrypted = encrypt(body);
+        body = JSON.stringify({ encrypted });
+        try {
+            res = await fetch(`${AppConfig.API_URL}${this.url}`, {
+                method: this.method,
+                headers,
+                body: body
+            });
+        } catch (error) {
+            throw new Error('服务器错误');
+        }
         const resText = await res.json();
         const enText = decrypt(resText.encrypted);
         const data = JSON.parse(enText);
         if (data.code !== 0) {
+            if (data.code === 1) {
+                // token失效
+                AppConfig.LOGIN_USER = null;
+                AppConfig.clearLoginInfo();
+                WindowManage.mainWindow.webContents.send('login-out');
+            }
             throw new Error(data.message);
         }
         return data;
