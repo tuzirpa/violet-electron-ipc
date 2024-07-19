@@ -143,7 +143,7 @@ const curMenu = ref('myApp');
                     <!-- 内容区域 -->
                     <!-- 应用列表 -->
                     <MyApp ref="myApp" v-show="curMenu === 'myApp'"></MyApp>
-                    <DownLoadApp ref="myApp" v-show="curMenu === 'downloadApp'"></DownLoadApp>
+                    <DownLoadApp v-show="curMenu === 'downloadApp'"></DownLoadApp>
                 </div>
             </BoxDraggable>
         </div>
