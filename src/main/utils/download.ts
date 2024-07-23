@@ -31,7 +31,7 @@ type ProgressRes = {
 export async function downloadFileWithResume(
     url: string,
     outputPath: string,
-    progressCallback: ({ downloadedBytes, remainingBytes, totalBytes }: ProgressRes) => void
+    progressCallback?: ({ downloadedBytes, remainingBytes, totalBytes }: ProgressRes) => void
 ) {
     let startByte = 0;
     let downloadedBytes = 0;
@@ -43,24 +43,25 @@ export async function downloadFileWithResume(
     if (!response.ok) {
         throw new Error(`Failed to download file, status ${response.status}`);
     }
+    if (progressCallback) {
+        const totalBytes = parseInt(response.headers.get('content-length') || '0', 10);
+        const remainingBytes = totalBytes - startByte;
 
-    const totalBytes = parseInt(response.headers.get('content-length') || '0', 10);
-    const remainingBytes = totalBytes - startByte;
-
-    response.body.on('data', (chunk: any) => {
-        downloadedBytes += chunk.length;
-        const timeConsuming = Date.now() - startTime;
-        const percentage = (downloadedBytes / totalBytes) * 100;
-        const speed = downloadedBytes / timeConsuming / 1024;
-        progressCallback({
-            downloadedBytes,
-            remainingBytes,
-            totalBytes,
-            speed,
-            percentage,
-            timeConsuming
+        response.body.on('data', (chunk: any) => {
+            downloadedBytes += chunk.length;
+            const timeConsuming = Date.now() - startTime;
+            const percentage = (downloadedBytes / totalBytes) * 100;
+            const speed = downloadedBytes / timeConsuming / 1024;
+            progressCallback({
+                downloadedBytes,
+                remainingBytes,
+                totalBytes,
+                speed,
+                percentage,
+                timeConsuming
+            });
         });
-    });
+    }
 
     const pipelinePromise = new Promise<void>((resolve, reject) => {
         response.body.pipe(fileStream);

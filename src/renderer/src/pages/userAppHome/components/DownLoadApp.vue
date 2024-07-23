@@ -20,7 +20,7 @@ async function newApp() {
 }
 
 async function getUserApps() {
-    const apps = await Action.getUserApps();
+    const apps = await Action.getUserApps('into');
     userApps.value = apps;
 }
 getUserApps();

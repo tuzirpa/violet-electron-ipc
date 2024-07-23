@@ -17,10 +17,13 @@ import { sleep, uuid } from '@shared/Utils';
 import { unzip } from '../utils/zipUtils';
 import startApiServer from './apiserver';
 
+export type AppType = 'myCreate' | 'into' | '';
+
 /**
  * 应用类
  */
 export default class UserApp {
+    type: AppType = 'myCreate';
     delete() {
         // 销毁，这边回收app资源
         this.destroy();
@@ -144,6 +147,7 @@ export default class UserApp {
         // 保存
         // 写入package.json文件
         this.packageJson.name = this.name;
+        this.packageJson.type = this.type;
         fs.writeFileSync(
             path.join(this.appDir, 'package.json'),
             JSON.stringify(this.packageJson, null, 2)
@@ -162,6 +166,7 @@ export default class UserApp {
         const packageJsonStr = fs.readFileSync(packageJsonPath, 'utf-8');
         this.packageJson = JSON.parse(packageJsonStr);
         this.name = this.packageJson.name;
+        this.type = this.packageJson.type;
 
         // this.initFlows();
     }

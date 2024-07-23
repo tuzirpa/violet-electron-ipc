@@ -104,13 +104,13 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     <div class="register-container">
         <ElForm ref="registerFormRef" :model="registerForm" :rules="registerRules" label-width="80px">
             <el-form-item label="昵称" prop="username">
-                <el-input v-model="registerForm.username"></el-input>
+                <el-input v-model="registerForm.username" placeholder="请输入用户名"></el-input>
             </el-form-item>
             <el-form-item label="手机号" prop="mobile">
-                <el-input v-model="registerForm.mobile"></el-input>
+                <el-input v-model="registerForm.mobile" placeholder="请输入手机号"></el-input>
             </el-form-item>
             <el-form-item label="验证码" prop="captcha">
-                <ElInput v-model="registerForm.captcha">
+                <ElInput v-model="registerForm.captcha" placeholder="请输入验证码">
                     <template #suffix>
                         <ElImage style="width: 100px; height: 32px" :src="code.imaData" alt="验证码" @click="getCode">
                         </ElImage>
@@ -119,10 +119,10 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 
             </el-form-item>
             <el-form-item label="密码" prop="password">
-                <el-input type="password" v-model="registerForm.password"></el-input>
+                <el-input type="password" v-model="registerForm.password" placeholder="请输入密码"></el-input>
             </el-form-item>
             <el-form-item label="确认密码" prop="confirmPassword">
-                <el-input type="password" v-model="registerForm.confirmPassword"></el-input>
+                <el-input type="password" v-model="registerForm.confirmPassword" placeholder="请再次输入密码"></el-input>
             </el-form-item>
             <!-- 按钮靠右 -->
             <el-form-item class="flex">

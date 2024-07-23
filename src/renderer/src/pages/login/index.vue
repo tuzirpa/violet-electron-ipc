@@ -6,6 +6,7 @@ import { ElButton, ElCheckbox, ElImage, ElInput, ElMessage } from 'element-plus'
 import { Action } from '@renderer/lib/action';
 import { isLogin, userInfo } from '@renderer/store/commonStore';
 import Register from './components/register.vue';
+import offlogin from './components/offlogin.vue';
 import qqImageUrl from '@renderer/assets/QQ.png';
 
 // 添加逻辑
@@ -34,10 +35,7 @@ const loginRules = {
     ]
 };
 
-const offlineForm = ref({
-    verificationCode: '',
-    verificationImg: ''
-});
+
 
 async function login() {
 
@@ -105,39 +103,20 @@ setTimeout(() => {
                 <div class="user-info flex items-center non-draggable">
                     <el-popover placement="bottom" :width="300" trigger="hover">
                         <template #reference>
-                            <ElButton class="m-2" link>QQ</ElButton>
+                            <ElButton class="m-2" link>QQ交流群</ElButton>
                         </template>
                         <div class="user-info-content flex flex-col gap-2">
                             <ElImage :src="qqImageUrl"></ElImage>
                         </div>
                     </el-popover>
-                    <el-popover placement="bottom" :width="200" trigger="hover">
+                    <!--  <el-popover placement="bottom" :width="200" trigger="hover">
                         <template #reference>
                             <ElButton class="m-2" link>微信</ElButton>
                         </template>
                         <div class="user-info-content flex flex-col gap-2">
 
                         </div>
-                    </el-popover>
-                    <el-popover placement="bottom" :width="200" trigger="hover">
-                        <template #reference>
-                            <ElButton class="m-2" link>{{ userInfo.userName }}</ElButton>
-                        </template>
-                        <div class="user-info-content flex flex-col gap-2">
-                            <!-- 用户信息 -->
-                            <div class="user-info-item flex items-center gap-1">
-                                <ElAvatar>{{ userInfo.userName }}</ElAvatar>
-                                <div>
-                                    <div>{{ userInfo.userName }}</div>
-                                    <div>{{ userInfo.mobile }}</div>
-                                </div>
-                            </div>
-                            <!-- 退出登录 -->
-                            <BtnTip class="btn-item flex justify-start text-lg" :iconClass="'text-lg'"
-                                :icon="'icon-tuichudenglu'" :text="'退出登录'" @click="logout">退出登录
-                            </BtnTip>
-                        </div>
-                    </el-popover>
+                    </el-popover> -->
                 </div>
             </div>
 
@@ -187,27 +166,8 @@ setTimeout(() => {
                                 </el-form-item>
                             </el-form>
                         </div>
-                        <div class="login-form" v-show="activeName === 'offline'">
-                            <el-form :model="offlineForm" label-width="80px">
-
-                                <el-form-item label="验证码" prop="verificationCode">
-                                    <el-input v-model="offlineForm.verificationCode">
-                                        <template #suffix>
-                                            <ElButton link>获取验证码</ElButton>
-                                        </template>
-                                    </el-input>
-                                </el-form-item>
-
-                                <el-form-item class="offlineForm-verificationImg">
-                                    <el-image
-                                        style="display: flex; justify-content: center; align-items: center; width: 300px; height: 300px"
-                                        :src="offlineForm.verificationImg" fit="fill" />
-                                </el-form-item>
-
-                                <el-form-item>
-                                    <el-button type="primary" @click="login">登录</el-button>
-                                </el-form-item>
-                            </el-form>
+                        <div class="login-form" v-if="activeName === 'offline'">
+                            <offlogin></offlogin>
                         </div>
                         <div class="register-form" v-if="activeName === 'register'">
                             <register @register-success="activeName = 'login'"></register>

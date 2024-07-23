@@ -9,9 +9,7 @@ import robotUtil from './userApp/robotUtil/robotUtil?modulePath';
 import robotLog from './userApp/robotUtil/commonUtil?modulePath';
 import UserApp from './userApp/UserApp';
 import UserAppManage from './userApp/UserAppManage';
-import { autoUpdateInit } from './autoUpdater/autoUpdater';
-
-console.log('index.ts', 99999999);
+// import { autoUpdateInit } from './autoUpdater/autoUpdater';
 
 let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
@@ -41,6 +39,7 @@ function start() {
                 }
                 return { error: false };
             } catch (e: any) {
+                console.error(e);
                 return { error: true, message: e.message };
             }
         });
@@ -55,10 +54,12 @@ function start() {
         mainWindow = WindowManage.createWindow('login');
         mainWindow.loadURL(url + '/#/login/index');
         if (import.meta.env.DEV) {
-            mainWindow.webContents.openDevTools();
+            setTimeout(() => {
+                mainWindow.webContents.openDevTools();
+            }, 3000);
         } else {
             console.log('生产环境下，启用自动更新');
-            autoUpdateInit(mainWindow);
+            // autoUpdateInit(mainWindow);
         }
 
         //扫码本地app

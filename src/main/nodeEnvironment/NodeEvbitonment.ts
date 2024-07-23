@@ -44,12 +44,14 @@ export class NodeEvbitonment {
     }
 
     async installNode() {
+        await sleep(5000);
         // 下载node环境
         await this.downloadNode();
         await sleep(1000);
         // 解压node环境
         this.unzipNode();
-
+        console.log('安装nodejs成功');
+        await sleep(1000);
         //重命名目录
         fs.renameSync(path.join(this.nodePath, `node-v${this.version}-win-x64`), this.nodeExeDir);
     }

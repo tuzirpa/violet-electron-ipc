@@ -8,6 +8,28 @@ import AdmZip from 'adm-zip';
  * @param {string} zipFilePath - 压缩文件的路径
  * @param {string} targetFolder - 目标文件夹路径
  */
+export function zip(
+    zipFilePath: string,
+    targetFolder: string,
+    filter?: (filename: string) => boolean
+): void {
+    // 创建一个新的 AdmZip 实例
+    const zip = new AdmZip();
+
+    // 解压缩 ZIP 文件到指定目录
+    zip.addLocalFolder(targetFolder, '', (filename) => {
+        return filter ? filter(filename) : true;
+    });
+
+    zip.writeZip(zipFilePath);
+    console.log('ZIP 文件压缩完成。', zipFilePath);
+}
+
+/**
+ * 解压.zip文件到目标文件夹
+ * @param {string} zipFilePath - 压缩文件的路径
+ * @param {string} targetFolder - 目标文件夹路径
+ */
 export function unzip(zipFilePath: string, targetFolder: string): void {
     try {
         // 创建一个新的 AdmZip 实例

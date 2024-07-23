@@ -3,10 +3,12 @@ import { ref } from "vue";
 import { Action } from '@renderer/lib/action';
 import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { sharedApp, UserAppInfo } from './MyApp';
-import { Share } from '@element-plus/icons-vue';
+import { shareUserAppToPlaza, UserAppInfo } from './MyApp';
+import { Upload } from '@element-plus/icons-vue';
 
-// 添加逻辑
+const emit = defineEmits<{
+    (e: 'toAppPlazas'): void
+}>();
 
 const userApps = ref<UserAppInfo[]>([])
 
@@ -57,15 +59,30 @@ function showContextMenuByApp(event: MouseEvent, app: UserAppInfo) {
             shortcut: ''
         },
         {
-            label: '分享',
+            label: '发布到示例广场',
             onClick: () => {
-                sharedApp(app);
+                shareUserAppToPlaza(app);
             },
-            icon: <el-icon><Share /></el-icon>,
+            icon: <el-icon><Upload /></el-icon>,
             shortcut: ''
-        }
+        },
+        // {
+        //     label: '分享',
+        //     onClick: () => {
+
+        //         sharedAppDialog.value.show = true;
+        //         sharedAppDialog.value.userApp = app;
+        //     },
+        //     icon: <el-icon><Share /></el-icon>,
+        //     shortcut: ''
+        // }
     ]);
 }
+
+const sharedAppDialog = ref({
+    show: false,
+    userApp: {}
+});
 
 defineExpose({
     newApp
@@ -92,9 +109,25 @@ defineExpose({
                         :loading="app.deleting">删除</el-button>
                 </div>
             </div>
-
+            <div class="flex justify-center items-center flex-1" v-show="userApps.length === 0">
+                <div class="app-item flex justify-center items-center p-2 text-xl">
+                    可以<span class="text-blue-400 cursor-pointer" @click="newApp">开始创建</span>你的第一个应用，
+                    或去<span class="text-blue-400 cursor-pointer" @click="emit('toAppPlazas')">示例广场</span>下载应用
+                </div>
+            </div>
 
         </div>
+        <Teleport to="body">
+            <el-dialog v-model="sharedAppDialog.show" :title="`分享应用`" draggable>
+                <div>
+                    <div>是否加密</div>
+                </div>
+                <div>
+                    <ElButton type="primary">保存到文件</ElButton>
+                    <ElButton type="primary">发布生成应用页</ElButton>
+                </div>
+            </el-dialog>
+        </Teleport>
     </div>
 </template>
 

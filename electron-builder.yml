@@ -1,4 +1,4 @@
-appId: com.tuzi_robot.app
+appId: com.tuzi_rpa.app
 productName: 兔子RPA
 directories:
     buildResources: build

@@ -4,6 +4,7 @@ import { Request } from './Request';
 
 export default class User {
     loginToken: string = '';
+    offline: boolean = false;
     uid: string = '';
     vipLevel: number = 0;
     vipExpireTime: string = '';
@@ -109,7 +110,7 @@ export default class User {
                 if (AppConfig.LOGIN_USER) {
                     this.keepAlive();
                 }
-            }, 2 * 1000);
+            }, 30 * 1000);
         }
 
         return response;

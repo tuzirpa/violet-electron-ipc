@@ -1,6 +1,6 @@
 {
-    "name": "tuzu_robot",
-    "version": "1.1.2",
+    "name": "tuzu_rpa",
+    "version": "1.2.1",
     "description": "一个可以搭积木方式编程的自动化Rpa软件",
     "main": "./out/main/index.js",
     "author": "tuzirpa.vtool.vip",
@@ -35,11 +35,13 @@
         "node-fetch": "^2.7.0",
         "node-machine-id": "^1.1.12",
         "puppeteer": "^22.11.1",
+        "qiniu": "^7.12.0",
         "unplugin-vue-setup-extend-plus": "^1.0.1",
         "uuid": "^9.0.1",
         "ws": "^8.17.0"
     },
     "devDependencies": {
+        "@codemirror/lang-javascript": "^6.2.2",
         "@electron-toolkit/eslint-config": "^1.0.2",
         "@electron-toolkit/eslint-config-ts": "^1.0.1",
         "@electron-toolkit/tsconfig": "^1.0.1",
@@ -70,11 +72,10 @@
         "typescript": "^5.3.3",
         "vite": "^5.0.12",
         "vue": "^3.4.15",
+        "vue-codemirror": "^6.1.1",
         "vue-qrcode": "^2.2.2",
         "vue-router": "^4.3.0",
         "vue-tsc": "^1.8.27",
-        "vuedraggable": "^4.1.0",
-        "vue-codemirror": "^6.1.1",
-        "@codemirror/lang-javascript": "^6.2.2"
+        "vuedraggable": "^4.1.0"
     }
 }

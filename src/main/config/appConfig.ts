@@ -11,9 +11,10 @@ export class AppConfig {
         name: 'LOGIN_USER'
     });
     static API_URL: string = import.meta.env.DEV
-        ? 'http://localhost:3232'
+        ? 'http://192.168.0.132:3232'
         : 'https://tuzirpa.vtool.vip';
     static LOGIN_USER: User | null = null;
+    static OFFLINE_CODE: string = '';
 
     static saveLoginInfo(user: User) {
         this.conf.set('loginToken', user.loginToken);

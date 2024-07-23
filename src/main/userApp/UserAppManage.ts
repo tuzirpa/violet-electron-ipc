@@ -1,9 +1,92 @@
 import fs from 'fs';
-import UserApp from './UserApp';
+import UserApp, { AppType } from './UserApp';
 import { uuid } from '@shared/Utils';
 import Flow from './Flow';
+import { unzip, zip } from '../utils/zipUtils';
+import { join } from 'path';
+import { uploadFileToQiniu } from '../utils/qiniuUtils';
+import { appPlazaAdd, getDownloadUrl } from '../api/appplaza';
+import { downloadFileWithResume } from '../utils/download';
+
+/**
+ * 广场的应用
+ */
+export type AppPlaza = {
+    id: string;
+    name: string;
+    description: string;
+    version: string;
+    fileUrl: string;
+    createdAt: string;
+    updatedAt: string;
+};
 
 export class UserAppManage {
+    /**
+     * 导入广场应用到本地
+     */
+    async appPlazasToLocal(app: AppPlaza) {
+        //创建本地应用 并设置成导入的应用
+        const userApp = this.newUserApp(app.name);
+        // userApp.type = 'into';
+        // userApp.intoId = app.id;
+        userApp.name = app.name;
+        userApp.description = app.description;
+        userApp.version = app.version;
+        //下载流程文件
+        //获取下载地址
+        const fileUrl = await getDownloadUrl(app.id);
+        console.log(fileUrl, 'fileUrl');
+
+        const zipPath = join(userApp.appDir, `dev.zip`);
+        await downloadFileWithResume(fileUrl, zipPath);
+        //解压流程文件
+        unzip(zipPath, userApp.appDir);
+        //删除压缩文件
+        fs.unlinkSync(zipPath);
+        //保存应用
+        userApp.save();
+        return userApp;
+    }
+    async shareUserAppToPlaza(appId: string) {
+        const userApp = this.findUserApp(appId);
+        if (userApp.type !== 'into') {
+            //分享到广场
+            /**
+             * 1. 创建分享应用文件
+             * 2. 添加文件到压缩文件夹
+             * 3. 上传文件到服务器
+             * 4. 添加应用到应用广场
+             * 5. 分享成功返回分享地址
+             */
+            const zipPath = join(userApp.appDir, `${userApp.id}.zip`);
+            zip(zipPath, userApp.appDir, (filename) => {
+                if (filename.startsWith('logs')) {
+                    return false;
+                }
+                if (filename.startsWith('package.json')) {
+                    return false;
+                }
+                return true;
+            });
+            // TODO: 上传文件到服务器
+            const fileUrl = await uploadFileToQiniu(zipPath);
+            // TODO: 添加应用到应用广场
+            const appPlaza = await appPlazaAdd({
+                fileUrl,
+                appInfo: {
+                    name: userApp.name,
+                    description: userApp.description,
+                    version: userApp.version
+                }
+            });
+            console.log(appPlaza);
+
+            return appPlaza;
+        } else {
+            throw new Error('分享类型错误');
+        }
+    }
     deleteUserApp(appId: string) {
         const userApp = this.findUserApp(appId);
         this.userApps = this.userApps.filter((app) => app.id !== appId);
@@ -87,14 +170,18 @@ export class UserAppManage {
         return userApp;
     }
 
-    getUserApps(): UserApp[] {
-        return this.userApps;
+    getUserApps(type: AppType): UserApp[] {
+        if (type === 'into') {
+            return this.userApps.filter((app) => app.type === type);
+        }
+        return this.userApps.filter((app) => app.type === type || !app.type);
     }
 
     newUserApp(name: string) {
         const id = uuid();
         const userApp = new UserApp(`app_${Date.now()}_${id}`);
         userApp.name = name;
+        userApp.type = 'myCreate';
         userApp.save();
         this.userApps.push(userApp);
         return userApp;

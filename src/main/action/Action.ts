@@ -7,6 +7,12 @@ import { WindowManage, WindowNameType } from '../window/WindowManage';
 import { AppConfig } from '../config/appConfig';
 import User from '../api/User';
 import Captcha from '../api/Captcha';
+import { AppType } from '../userApp/UserApp';
+import { getPlazas } from '../api/appplaza';
+import { encrypt } from '../api/aes';
+import { getRandom } from '../utils/RandomUtils';
+import { getDeviceID } from '../utils/divice';
+import { submitFeedback } from '../api/feedback';
 
 class Action {
     /**
@@ -91,8 +97,8 @@ class Action {
      * 获取用户应用列表
      * @returns 用户应用列表
      */
-    static async getUserApps() {
-        return UserAppManage.getUserApps();
+    static async getUserApps(type: AppType = 'myCreate') {
+        return UserAppManage.getUserApps(type);
     }
 
     static async getUserApp(id: string) {
@@ -105,6 +111,22 @@ class Action {
      */
     static async newUserApp(name: string) {
         return UserAppManage.newUserApp(name);
+    }
+
+    /**
+     * 分享用户应用
+     */
+
+    static async shareUserAppToPlaza(appId: string) {
+        return UserAppManage.shareUserAppToPlaza(appId);
+    }
+
+    static async appPlazasToLocal(app: any) {
+        return UserAppManage.appPlazasToLocal(app);
+    }
+
+    static async getAppPlazas() {
+        return getPlazas();
     }
 
     /**
@@ -180,16 +202,20 @@ class Action {
         vipExpireTime: string;
     }> {
         let userInfo = { ...AppConfig.LOGIN_USER };
-        try {
-            if (AppConfig.LOGIN_USER && !AppConfig.LOGIN_USER.uid) {
-                await AppConfig.LOGIN_USER.getVipInfo();
-                userInfo = { ...AppConfig.LOGIN_USER };
+        if (!AppConfig.LOGIN_USER?.offline) {
+            try {
+                if (AppConfig.LOGIN_USER && !AppConfig.LOGIN_USER.uid) {
+                    await AppConfig.LOGIN_USER.getVipInfo();
+                    userInfo = { ...AppConfig.LOGIN_USER };
+                }
+            } catch (e) {
+                return {} as any;
             }
-        } catch (e) {
-            return {} as any;
         }
         delete userInfo.password;
         delete userInfo.loginToken;
+        console.log(userInfo);
+
         return userInfo as any;
     }
 
@@ -236,7 +262,9 @@ class Action {
      */
     static async logout() {
         if (AppConfig.LOGIN_USER) {
-            await AppConfig.LOGIN_USER.logout();
+            if (!AppConfig.LOGIN_USER.offline) {
+                await AppConfig.LOGIN_USER.logout();
+            }
         }
         AppConfig.LOGIN_USER = null;
         // app.exit();
@@ -249,6 +277,39 @@ class Action {
     static async relaunchApp() {
         app.relaunch();
         app.quit();
+    }
+
+    /**
+     * 获取离线验证图片
+     */
+    static async getOffLineVerificationImg() {
+        //通过设备码生成验证码
+        const machineCode = await getDeviceID();
+        //生成验证码 6位随机数+设备码
+        const loginCode = getRandom(100000, 1000000) + '';
+        const code = `${loginCode}-${machineCode}-${Date.now()}`;
+        AppConfig.OFFLINE_CODE = loginCode;
+        const encryptedCode = encrypt(code);
+        const imgUrl = `${AppConfig.API_URL}/offlinelogin?code=${encryptedCode}`;
+        return imgUrl;
+    }
+    /**
+     * 离线登录
+     */
+    static async offLineLogin(code: string) {
+        if (AppConfig.OFFLINE_CODE === code) {
+            AppConfig.LOGIN_USER = new User('1**********', '离线登录', '123456');
+            AppConfig.LOGIN_USER.offline = true;
+            return true;
+        }
+        throw new Error('验证码错误');
+    }
+
+    /**
+     * 提交反馈
+     */
+    static async submitFeekback(content: string) {
+        return submitFeedback({ content });
     }
 }
 

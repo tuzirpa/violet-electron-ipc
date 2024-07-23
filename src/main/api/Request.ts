@@ -33,6 +33,9 @@ export class Request {
     }
 
     async send() {
+        if (AppConfig.LOGIN_USER?.offline) {
+            throw new Error('当前处于离线模式，无法发送请求');
+        }
         const headers = this.headers || {};
         if (AppConfig.LOGIN_USER && AppConfig.LOGIN_USER.loginToken) {
             headers['token'] = `${AppConfig.LOGIN_USER.loginToken}`;
@@ -60,12 +63,15 @@ export class Request {
         const enText = decrypt(resText.encrypted);
         const data = JSON.parse(enText);
         if (data.code !== 0) {
-            if (data.code === 1) {
-                // token失效
-                AppConfig.LOGIN_USER = null;
-                AppConfig.clearLoginInfo();
-                WindowManage.mainWindow.webContents.send('login-out');
+            if (!AppConfig.LOGIN_USER?.offline) {
+                if (data.code === 901) {
+                    // token失效
+                    AppConfig.LOGIN_USER = null;
+                    AppConfig.clearLoginInfo();
+                    WindowManage.mainWindow.webContents.send('login-out');
+                }
             }
+
             throw new Error(data.message);
         }
         return data;
