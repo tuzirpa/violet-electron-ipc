@@ -22,15 +22,22 @@ const varSelectVal = ref('');
 
 const variableSelect = ref();
 const varShow = ref(false);
+const cursorPos = ref(0);
 
 function varClick() {
+    const input = valInputRef?.value?.ref;
+    if (input) {
+        cursorPos.value = input.selectionStart ?? 0;
+    }
     unref(popoverRef).popperRef?.delayHide?.()
 }
 
 function varSelectValChange(val: string) {
-    console.log(val);
+    console.log(val, cursorPos.value);
     varShow.value = false;
-    model.value = (model.value ?? '') + `\${${val}}`;
+    const tValue = (model.value ?? '');
+    model.value = tValue.substring(0, cursorPos.value) + `\${${val}}` + tValue.substring(cursorPos.value);
+    // model.value = (model.value ?? '') + `\${${val}}`;
     emit('inputValueChange', model.value, props.inputItem);
 }
 
@@ -48,19 +55,24 @@ const buttonRef = ref();
 const popoverRef = ref();
 
 const inputRef = ref();
+const valInputRef = ref<any>();
 const { width: varWidth } = useElementSize(inputRef);
 
+onMounted(() => {
+    console.log(valInputRef.value);
+
+});
 </script>
 
 <template>
     <div class="relative">
         <div ref="inputRef">
             <div class="flex items-center gap-2" v-if="inputItem.addConfig.type === 'textarea'">
-                <el-input type="textarea" v-model="model" :placeholder="inputItem.addConfig?.placeholder">
+                <el-input ref="valInputRef" type="textarea" v-model="model" :placeholder="inputItem.addConfig?.placeholder">
                 </el-input>
                 <div class="text-blue-500 text-sm cursor-pointer w-20" ref="buttonRef" @click="varClick">使用变量</div>
             </div>
-            <el-input v-else v-model="model" :placeholder="inputItem.addConfig?.placeholder">
+            <el-input ref="valInputRef" v-else v-model="model" :placeholder="inputItem.addConfig?.placeholder">
                 <template #append>
                     <div class="flex items-center gap-2">
                         <div class="text-gray-500 text-sm cursor-pointer hover:text-blue-500"
