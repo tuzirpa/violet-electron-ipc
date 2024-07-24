@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DirectiveInput, FlowVariable } from 'src/main/userApp/types';
 import { ElInput } from 'element-plus';
-import { onMounted, ref, unref } from 'vue';
+import { ref, unref } from 'vue';
 import { Action } from '@renderer/lib/action'
 import { useElementSize } from '@vueuse/core'
 // import { typeDisplay } from '../directiveConfig';
@@ -58,10 +58,7 @@ const inputRef = ref();
 const valInputRef = ref<any>();
 const { width: varWidth } = useElementSize(inputRef);
 
-onMounted(() => {
-    console.log(valInputRef.value);
 
-});
 </script>
 
 <template>

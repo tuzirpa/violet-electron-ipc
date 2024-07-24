@@ -3,6 +3,7 @@ export default class MenuItem {
         public label: string,
         public icon: string | Object,
         public shortcut: string,
-        public onClick: () => void
+        public onClick: () => void,
+        public disabled?: boolean
     ) {}
 }

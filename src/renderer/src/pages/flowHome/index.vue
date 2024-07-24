@@ -145,6 +145,7 @@ async function devRun() {
             ElMessage.info('正在运行中...');
             return;
         }
+        isDev.value = true;
         await Action.userAppDevRun(userAppDetail.value?.id);
         bottomTabsActiveName.value = 'dev-variable';
         window.electron.ipcRenderer.on('breakpoint', breakpointCallback);
@@ -417,7 +418,7 @@ const runLogsColumns: Column<any>[] = [
                 <div class="main-content viewbox flex-1 bg-gray-100">
                     <div class="flow-edit flex-1 viewbox p-2">
                         <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"
-                            @new-sub-flow="newSubFlow" @history-change="(e) => {
+                            :isDev="isDev" @new-sub-flow="newSubFlow" @history-change="(e) => {
                                 console.log(e);
                                 historys = e;
                             }

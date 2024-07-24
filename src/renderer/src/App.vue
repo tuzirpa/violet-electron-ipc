@@ -10,7 +10,7 @@ import Update from './components/Update.vue';
     <div class="app viewbox">
         <router-view v-slot="{ Component }">
             <!-- 使用任何自定义过渡和回退到 `fade` -->
-            <transition name="custom-classes">
+            <transition name="fade" mode="out-in">
                 <component :is="Component" />
             </transition>
         </router-view>
@@ -18,4 +18,17 @@ import Update from './components/Update.vue';
     </div>
 </template>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.fade-enter-active {
+    transition: opacity 0.3s;
+}
+
+.fade-leave-active {
+    transition: opacity 0.2s;
+}
+
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>

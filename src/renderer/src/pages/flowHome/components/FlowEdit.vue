@@ -20,6 +20,7 @@ const props = defineProps<{
     flows: Flow[];
     breakpointData: IBreakpoint;
     appInfo: UserApp;
+    isDev: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -538,14 +539,17 @@ function deleteBlocks() {
 function directiveShowContextMenu(event: any, block: DirectiveData) {
     event.preventDefault();
     toggleCheckBlock(block);
+    console.log(props.isDev, '是否开发模式');
+
     showContextMenu(event, [
         {
-            label: '执行当前步骤',
+            label: '执行此步骤(调试可用)',
             onClick: () => {
                 executeStep();
             },
             icon: 'icon-yunxing',
-            shortcut: ''
+            shortcut: '',
+            disabled: !props.isDev
         },
         {
             label: '禁用/启用当前指令',
@@ -898,7 +902,7 @@ defineExpose({
                 <div class="files flex items-center shrink-0" @contextmenu="showContextFlowMenu($event, curOpenFile)">
                     <div class="file w-30 flex py-2 px-4 cursor-pointer shrink-0 hover:bg-white/60"
                         v-for="file in openFiles" :key="file.name" :class="{ 'bg-white': file.name === curOpenFile.name }"
-                        @click="curOpenFile = file">
+                        @click="curOpenFile = file; emitHistoryChange()">
                         <div class="flow-name text-sm">
                             {{ file.aliasName }}
                         </div>

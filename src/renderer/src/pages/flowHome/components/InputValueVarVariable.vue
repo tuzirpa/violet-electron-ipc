@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DirectiveInput, FlowVariable } from 'src/main/userApp/types';
 import { ElInput } from 'element-plus';
-import { ref, unref, onMounted } from 'vue';
+import { ref, unref } from 'vue';
 import { useElementSize } from '@vueuse/core';
 
 // 添加逻辑

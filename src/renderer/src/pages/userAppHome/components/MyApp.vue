@@ -102,7 +102,8 @@ defineExpose({
         </div>
         <div class="app-list h-0 flex-1 flex flex-col p-2 gap-1 wrapbox">
             <div class="app-item flex justify-between items-center border p-2 rounded" v-for="(app, index) in userApps"
-                :key="index" @contextmenu="showContextMenuByApp($event, app)">
+                :key="index" @contextmenu="showContextMenuByApp($event, app)"
+                @dblclick="$router.push('/flowHome/index?appId=' + app.id)">
                 <div class="app-name">
                     {{ app.name }}
                 </div>
@@ -112,6 +113,10 @@ defineExpose({
                         @click="$router.push('/flowHome/index?appId=' + app.id)">编辑</el-button>
                     <el-button class="text-blue-400" link @click="deleteUserApp(app.id)"
                         :loading="app.deleting">删除</el-button>
+                    <el-button class="text-blue-400" link @click="showContextMenuByApp($event, app)"
+                        :loading="app.deleting"><el-icon>
+                            <MoreFilled />
+                        </el-icon></el-button>
                 </div>
             </div>
             <div class="flex justify-center items-center flex-1" v-show="userApps.length === 0">

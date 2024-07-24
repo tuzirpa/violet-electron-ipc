@@ -5,15 +5,15 @@
         <div v-show="showMenu" ref="menu" class="context-menu rounded w-56 shadow-xl border-gray-200 border"
             :style="{ top: `${menuY}px`, left: `${menuX}px` }">
 
-            <div class="group w-full h-10 flex flex-row justify-between items-center p-1 hover:bg-gray-100 hover:cursor-pointer rounded gap-2"
-                @click.stop="handleItemClick(item)" v-for="(item, index) in menuItems" :key="index">
-                <i v-if="typeof item.icon === 'string'" class=" w-5 h-5 iconfont group-hover:text-black text-gray-400 mr-3"
-                    :class="item.icon"></i>
-                <div v-else class="iconfont w-5 h-5 group-hover:text-black text-gray-400 mr-3" :class="item.icon">
+            <div class="group w-full h-10 flex flex-row justify-between items-center p-1
+             hover:bg-gray-100  rounded gap-2" :class="{ disabled: item.disabled }" @click.stop="handleItemClick(item)"
+                v-for="(item, index) in menuItems" :key="index">
+                <i v-if="typeof item.icon === 'string'" class=" w-5 h-5 iconfont  mr-3" :class="item.icon"></i>
+                <div v-else class="iconfont w-5 h-5   mr-3" :class="item.icon">
                     <component :is="item.icon"></component>
                 </div>
-                <span class="flex-1 text-gray-600 text-sm group-hover:text-gray-900">{{ item.label }}</span>
-                <span class="text-gray-400/60 text-xs pr-2">{{ item.shortcut }}</span>
+                <span class="flex-1  text-sm">{{ item.label }}</span>
+                <span class="shortcut text-xs pr-2">{{ item.shortcut }}</span>
             </div>
         </div>
     </div>
@@ -63,7 +63,9 @@ export default {
 
         },
         handleItemClick(item: MenuItem) {
-            console.log(`Clicked on ${item}`);
+            if (item.disabled) {
+                return;
+            }
             // 这里可以根据点击的菜单项执行相应的逻辑
             this.showMenu = false; // 点击后隐藏菜单
             item.onClick();
@@ -80,6 +82,29 @@ export default {
     padding: 5px;
     list-style: none;
     z-index: 2;
+    cursor: pointer;
+
+    .iconfont,
+    .shortcut {
+        color: #ccc;
+    }
+
+
+    :hover {
+        .iconfont {
+            color: #000000;
+        }
+    }
+
+    .disabled {
+        cursor: not-allowed;
+        color: #e9e9e9;
+
+        .iconfont {
+            color: #e9e9e9;
+        }
+    }
+
 }
 
 .context-menu-mask {
