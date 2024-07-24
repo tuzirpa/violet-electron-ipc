@@ -5,6 +5,7 @@ import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { shareUserAppToPlaza, UserAppInfo } from './MyApp';
 import { Upload } from '@element-plus/icons-vue';
+import { loginUserInfo } from "@renderer/store/commonStore";
 
 const emit = defineEmits<{
     (e: 'toAppPlazas'): void
@@ -61,6 +62,10 @@ function showContextMenuByApp(event: MouseEvent, app: UserAppInfo) {
         {
             label: '发布到示例广场',
             onClick: () => {
+                if (!loginUserInfo.value.isAdmin) {
+                    ElMessage.error('只有管理员才能分享应用');
+                    return;
+                }
                 shareUserAppToPlaza(app);
             },
             icon: <el-icon><Upload /></el-icon>,

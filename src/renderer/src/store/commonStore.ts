@@ -2,10 +2,11 @@ import { computed, ref } from 'vue';
 import { UserInfo } from './UserInfo';
 import { Action } from '@renderer/lib/action';
 
-export const userInfo = ref<UserInfo>({
+export const loginUserInfo = ref<UserInfo>({
     uid: -1,
     userName: '',
     mobile: '',
+    isAdmin: true,
     avatarUrl: '',
     vipLevel: 0,
     vipExpireTime: ''
@@ -13,7 +14,7 @@ export const userInfo = ref<UserInfo>({
 
 //清空用户信息
 export const clearUserInfo = () => {
-    userInfo.value = {
+    loginUserInfo.value = {
         uid: -1,
         userName: '',
         mobile: '',
@@ -24,9 +25,9 @@ export const clearUserInfo = () => {
 };
 
 export const setUserInfo = async () => {
-    userInfo.value = await Action.getUserInfo();
-    console.log('用户信息', userInfo.value);
+    loginUserInfo.value = await Action.getUserInfo();
+    console.log('用户信息', loginUserInfo.value);
 };
 setUserInfo();
 
-export const isLogin = computed(() => userInfo.value.uid > 0);
+export const isLogin = computed(() => loginUserInfo.value.uid > 0);

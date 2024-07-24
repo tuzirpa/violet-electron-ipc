@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { Action } from '@renderer/lib/action';
 import VueQrcode from 'vue-qrcode';
 import { useRouter } from 'vue-router';
-import { userInfo } from '@renderer/store/commonStore';
+import { loginUserInfo } from '@renderer/store/commonStore';
 
 
 const offlineForm = ref({
@@ -24,7 +24,7 @@ getOffLineVerificationImg();
 const router = useRouter();
 async function offLineLogin() {
     await Action.offLineLogin(offlineForm.value.verificationCode);
-    userInfo.value = await Action.getUserInfo();
+    loginUserInfo.value = await Action.getUserInfo();
     router.push('/userAppHome/index');
 }
 const rules = {

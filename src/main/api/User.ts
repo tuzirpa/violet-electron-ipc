@@ -7,6 +7,7 @@ export default class User {
     offline: boolean = false;
     uid: string = '';
     vipLevel: number = 0;
+    isAdmin: boolean = false;
     vipExpireTime: string = '';
     #keepAliveTimer: NodeJS.Timeout | null = null;
 
@@ -33,6 +34,7 @@ export default class User {
         this.uid = response.data.id;
         this.mobile = response.data.mobile;
         this.userName = response.data.userName;
+        this.isAdmin = response.data.isAdmin;
         return response;
     }
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { javascript } from '@codemirror/lang-javascript'
-import { Codemirror } from 'vue-codemirror'
+import { javascript } from '@codemirror/lang-javascript';
+import { Codemirror } from 'vue-codemirror';
 import { ref, shallowRef, watchEffect } from "vue";
+import { ElMessage } from 'element-plus';
 
 const props = defineProps<{
   code?: string;
@@ -19,19 +20,7 @@ watchEffect(() => {
     code.value = props.code
   } else {
     code.value =
-      `/**
- * 数据处理逻辑
- * @param nodeElements {NodeElements[]}
- */
-
-function run(nodeElements){
-
-  //编写你的数据处理逻辑
-
-  return nodeElements;
-}
-return run(nodeElements)
-`
+      ``
   }
 })
 
@@ -42,6 +31,22 @@ const view = shallowRef()
 
 const handleReady = (payload) => {
   view.value = payload.view
+}
+
+function jsonFomat() {
+  if (code.value.trim() === '') {
+    return
+  }
+  //判断是否是json格式
+
+  try {
+    const json = JSON.parse(code.value)
+    const jsonStr = JSON.stringify(json, null, 2)
+    code.value = jsonStr
+  } catch (e) {
+    ElMessage.error('不是json格式');
+  }
+
 }
 
 // Status is available at all times via Codemirror EditorView
@@ -81,10 +86,9 @@ const handleReady = (payload) => {
 
 <template>
   <view>
-    <!-- <view class="save-test">
-      <el-button @click="fullscreen(view.dom)">全屏</el-button>
-      <el-button @click="saveCode">保存</el-button>
-    </view> -->
+    <view class="save-test">
+      <el-button @click="jsonFomat">json格式化</el-button>
+    </view>
     <codemirror v-model="code" placeholder="这边输入代码" :style="{ width: '100%', height: '500px' }" :autofocus="true"
       :indent-with-tab="true" :tab-size="2" :options="{ lineNumbers: true, lineWrapping: true }" :extensions="extensions"
       @ready="handleReady" />

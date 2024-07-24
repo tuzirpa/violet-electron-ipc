@@ -4,7 +4,7 @@ import TitleBar from '../../components/TitleBar.vue';
 import { ref } from 'vue';
 import { ElButton, ElCheckbox, ElImage, ElInput, ElMessage } from 'element-plus';
 import { Action } from '@renderer/lib/action';
-import { isLogin, userInfo } from '@renderer/store/commonStore';
+import { isLogin, loginUserInfo } from '@renderer/store/commonStore';
 import Register from './components/register.vue';
 import offlogin from './components/offlogin.vue';
 import qqImageUrl from '@renderer/assets/QQ.png';
@@ -60,7 +60,7 @@ async function login() {
         // 保存登录状态
         // 跳转到主页
         //@ts-ignore
-        userInfo.value = await Action.getUserInfo();
+        loginUserInfo.value = await Action.getUserInfo();
         router.push('/userAppHome/index');
     }
 }
@@ -79,7 +79,7 @@ async function getCode() {
 async function init() {
     //获取是否记住登录
     // userInfo.value = await Action.getUserInfo();
-    console.log('userInfo', userInfo.value);
+    console.log('userInfo', loginUserInfo.value);
     // 判断是否登录
     if (!isLogin.value) {
         getCode();

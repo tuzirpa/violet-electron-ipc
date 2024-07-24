@@ -1,4 +1,5 @@
 import { Action } from '@renderer/lib/action';
+import { ElMessage } from 'element-plus';
 import type UserApp from 'src/main/userApp/UserApp';
 
 export type UserAppInfo = Readonly<UserApp> & { deleting?: boolean };
@@ -7,9 +8,10 @@ export type UserAppInfo = Readonly<UserApp> & { deleting?: boolean };
  * 发布到应用示例广场
  * @param appId 应用id
  */
-export function shareUserAppToPlaza(app: UserAppInfo) {
+export async function shareUserAppToPlaza(app: UserAppInfo) {
     console.log('shareUserAppToPlaza', app);
-    Action.shareUserAppToPlaza(app.id);
+    await Action.shareUserAppToPlaza(app.id);
+    ElMessage.success('发布成功');
 }
 
 /**

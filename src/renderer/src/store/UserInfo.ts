@@ -5,6 +5,7 @@ export class UserInfo {
         public mobile: string,
         public avatarUrl: string,
         public vipLevel: number,
-        public vipExpireTime: string
+        public vipExpireTime: string,
+        public isAdmin?: boolean
     ) {}
 }

@@ -77,7 +77,8 @@ export class UserAppManage {
                 appInfo: {
                     name: userApp.name,
                     description: userApp.description,
-                    version: userApp.version
+                    version: userApp.version,
+                    id: userApp.id
                 }
             });
             console.log(appPlaza);

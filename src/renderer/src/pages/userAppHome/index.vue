@@ -4,7 +4,7 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import { ElAvatar, ElButton, ElImage, ElMessageBox } from 'element-plus';
 
 import { Action } from '@renderer/lib/action';
-import { clearUserInfo, userInfo } from '@renderer/store/commonStore';
+import { clearUserInfo, loginUserInfo } from '@renderer/store/commonStore';
 import BtnTip from '@renderer/components/BtnTip.vue';
 import { useRouter } from 'vue-router';
 import MyApp from "./components/MyApp.vue";
@@ -80,15 +80,15 @@ const curMenu = ref('myApp');
                     </el-popover> -->
                     <el-popover placement="bottom" :width="200" trigger="hover">
                         <template #reference>
-                            <ElButton class="m-2" link>{{ userInfo.userName }}</ElButton>
+                            <ElButton class="m-2" link>{{ loginUserInfo.userName }}</ElButton>
                         </template>
                         <div class="user-info-content flex flex-col gap-2">
                             <!-- 用户信息 -->
                             <div class="user-info-item flex items-center gap-1">
-                                <ElAvatar>{{ userInfo.userName }}</ElAvatar>
+                                <ElAvatar>{{ loginUserInfo.userName }}</ElAvatar>
                                 <div>
-                                    <div>{{ userInfo.userName }}</div>
-                                    <div>{{ userInfo.mobile }}</div>
+                                    <div>{{ loginUserInfo.userName }}</div>
+                                    <div>{{ loginUserInfo.mobile }}</div>
                                 </div>
                             </div>
                             <!-- 退出登录 -->
