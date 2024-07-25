@@ -4,7 +4,7 @@ import { ElInput, ElTree } from 'element-plus';
 import { ref, watch } from 'vue';
 import type { DirectiveTree } from 'src/main/userApp/types';
 import { dragData } from '../dragVar';
-import { useDirective, reloadDirective } from '../directive';
+import { useDirective, reloadDirective, directiveLoading } from '../directive';
 import { FilterValue, TreeNodeData } from 'element-plus/es/components/tree/src/tree.type';
 import Node from 'element-plus/es/components/tree/src/model/node';
 import { useElementSize } from '@vueuse/core';
@@ -77,7 +77,8 @@ function handleDragStart(_event: DragEvent, data: DirectiveTree) {
 </script>
 
 <template>
-    <div class="tree-container viewbox text-xs font-sans" ref="el">
+    <div class="tree-container viewbox text-xs font-sans" ref="el" v-loading="directiveLoading"
+        element-loading-text="指令加载中...">
         <div class="px-2 py-1 viewbox gap-4">
             <div class="header flex justify-between items-center mt-2 gap-1">
                 <template v-if="!hideDirectiveTree">

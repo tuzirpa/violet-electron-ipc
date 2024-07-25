@@ -4,47 +4,20 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { Column, ElAutoResizer, ElButton, ElDialog, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
+import { Column, ElAutoResizer, ElButton, ElDialog, ElLoading, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { errorDirectives } from './components/FlowEditStore';
-import { handleRunLogsContextMenu, runLogs } from './indexvue';
+import { closeFile, curWorkStatus, handleRunLogsContextMenu, runLogs } from './indexvue';
 import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
 import CodeEdit from './components/CodeEdit.vue';
+import type Flow from 'src/main/userApp/Flow';
+import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
+import { DeleteFilled } from '@element-plus/icons-vue'
 
-runLogs.value.push(
-    {
-        level: 'info',
-        message: '1231',
-        time: 0,
-        data: {
-            blockLine: 0,
-            flowName: '',
-            directiveName: '',
-            directiveDisplayName: '',
-            failureStrategy: 'terminate',
-            intervalTime: 0,
-            retryCount: 0
-        }
-    },
-    {
-        level: 'info',
-        message: '1231',
-        time: 0,
-        data: {
-            blockLine: 0,
-            flowName: '',
-            directiveName: '',
-            directiveDisplayName: '',
-            failureStrategy: 'terminate',
-            intervalTime: 0,
-            retryCount: 0
-        }
-    }
-);
 
 const route = useRoute();
 const id = route.query.appId as string;
@@ -63,15 +36,40 @@ async function getAppDetail() {
     if (userAppDetail.value?.flows && userAppDetail.value.flows.length > 0) {
         curActiveFlowIndex.value = 0;
     }
+
 }
 
-function newSubFlow() {
-    getAppDetail();
+async function newSubFlow(subFlow: any) {
+    await getAppDetail();
+    curWorkStatus.value.openedFlows.push(subFlow.name);
+    curWorkStatus.value.activeFlow = subFlow.name;
+}
+
+async function deleteSubFlow(subFlow: Flow) {
+
+    // 这里应该调用后端接口删除子流程
+    await Action.deleteSubFlow(userAppDetail?.value?.id ?? '', subFlow.name);
+    //如果删除的流程在已打开中需要关闭文件
+    if (curWorkStatus.value.openedFlows.includes(subFlow.name)) {
+        closeFile(subFlow.name);
+    }
+
+    await getAppDetail();
+
+
 }
 
 const curActiveFlowIndex = ref(-1);
+const loading = ref(true);
 
-getAppDetail();
+async function init() {
+    curWorkStatus.value = await Action.openUserApp(id);
+    console.log(curWorkStatus.value, 'workStatus');
+
+    await getAppDetail();
+    loading.value = false;
+}
+init();
 
 async function installPackage() {
     if (userAppDetail.value?.id) {
@@ -328,6 +326,54 @@ const runLogsColumns: Column<any>[] = [
     },
 ];
 
+/**
+ * 打开流程
+ */
+function openFlowByName(flowName: string) {
+    console.log(flowName, 'openFlowByName');
+    const opened = curWorkStatus.value.openedFlows.includes(flowName);
+    if (!opened) {
+        curWorkStatus.value.openedFlows.push(flowName);
+    }
+    curWorkStatus.value.activeFlow = flowName;
+}
+const router = useRouter();
+/**
+ * 返回首页
+ */
+async function onBackHome() {
+    const loading = ElLoading.service({
+        lock: true,
+        text: '正在退出项目...',
+        background: 'rgba(0, 0, 0, 0.1)'
+    });
+    await Action.saveWorkStatus(userAppDetail.value?.id ?? '', curWorkStatus.value);
+    loading.close();
+    router.back();
+}
+
+/**
+ * 流程右键菜单
+ */
+async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) {
+    showContextMenu(e, [
+        {
+            icon: <el-icon><DeleteFilled /></el-icon>,
+            label: '删除流程',
+            shortcut: 'Del',
+            disabled: flow.name === 'main.flow',
+            onClick: async () => {
+                console.log('删除流程', flow.name);
+                const res = await ElMessageBox.confirm('确认删除该流程吗？');
+                console.log(res);
+
+                if (res === 'confirm') {
+                    deleteSubFlow(flow);
+                }
+            }
+        }
+    ])
+}
 
 // 添加逻辑
 </script>
@@ -339,7 +385,7 @@ const runLogsColumns: Column<any>[] = [
                 <div class="viewbox flex flex-row justify-end items-center gap-2">
                     <div class="btn-group flex justify-end items-center p-1 gap-2 text-gray-900">
                         <el-tooltip class="box-item" effect="dark" content="返回" placement="bottom">
-                            <div @click="$router.go(-1)"
+                            <div @click="onBackHome"
                                 class="btn-item non-draggable flex justify-center items-center rounded py-1 px-2 cursor-pointer hover:bg-slate-400/30">
                                 <i class="iconfont icon-fanhui"></i>
                             </div>
@@ -414,112 +460,117 @@ const runLogsColumns: Column<any>[] = [
                         @add-directive="flowEditRef?.addBlock($event)">
                     </DirectiveTree>
                 </BoxDraggable>
-
-                <div class="main-content viewbox flex-1 bg-gray-100">
-                    <div class="flow-edit flex-1 viewbox p-2">
-                        <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail?.flows"
-                            :isDev="isDev" @new-sub-flow="newSubFlow" @history-change="(e) => {
-                                console.log(e);
-                                historys = e;
-                            }
-                                " ref="flowEditRef" :breakpointData="breakpointData"
-                            :curActiveFlowIndex="curActiveFlowIndex">
-                        </FlowEdit>
-                    </div>
-                    <BoxDraggable class="viewbox left-sidebar border-t" :height="270" :resize-top="true">
-                        <el-tabs v-model="bottomTabsActiveName" :size="'small'" class="viewbox flex-1">
-                            <el-tab-pane label="运行日志" name="run-logs">
-                                <div style="width: 100%;
+                <div class="flex flex-1 flex-row viewbox" v-loading="loading" element-loading-text="应用数据加载中...">
+                    <div class="main-content viewbox flex-1 bg-gray-100">
+                        <div class="flow-edit flex-1 viewbox p-2">
+                            <FlowEdit v-if="userAppDetail" :app-info="userAppDetail" :flows="userAppDetail.flows"
+                                :isDev="isDev" @new-sub-flow="newSubFlow" @history-change="(e) => {
+                                    console.log(e);
+                                    historys = e;
+                                }
+                                    " ref="flowEditRef" :breakpointData="breakpointData"
+                                :curActiveFlowIndex="curActiveFlowIndex">
+                            </FlowEdit>
+                        </div>
+                        <BoxDraggable class="viewbox left-sidebar border-t" :height="270" :resize-top="true">
+                            <el-tabs v-model="bottomTabsActiveName" :size="'small'" class="viewbox flex-1">
+                                <el-tab-pane label="运行日志" name="run-logs">
+                                    <div style="width: 100%;
                                                 height: calc(var(--draggable-height) - 60px);
                                             ">
-                                    <el-auto-resizer>
-                                        <template #default="{ height, width }">
-                                            <ElTableV2 :columns="runLogsColumns" :row-class="runLogsRowClassName"
-                                                @row-event-handlers="handleRowEvent" :data="runLogs" :width="width"
-                                                :height="height">
-                                                <template #empty>
-                                                    <div class="flex justify-center items-center pt-3 text-gray-400">暂无数据
-                                                    </div>
-                                                </template>
+                                        <el-auto-resizer>
+                                            <template #default="{ height, width }">
+                                                <ElTableV2 :columns="runLogsColumns" :row-class="runLogsRowClassName"
+                                                    @row-event-handlers="handleRowEvent" :data="runLogs" :width="width"
+                                                    :height="height">
+                                                    <template #empty>
+                                                        <div class="flex justify-center items-center pt-3 text-gray-400">
+                                                            暂无数据
+                                                        </div>
+                                                    </template>
 
-                                            </ElTableV2>
-                                        </template>
-                                    </el-auto-resizer>
-                                </div>
-                            </el-tab-pane>
-                            <el-tab-pane label="调试变量" name="dev-variable">
-                                <el-table :data="devVariableData" style="
-                                        width: 100%;
-                                        height: calc(var(--draggable-height) - 60px);
-                                    ">
-                                    <el-table-column prop="name" label="变量名" width="180" />
-                                    <el-table-column prop="val" label="变量值" width="180" />
-                                    <el-table-column prop="type" label="变量类型" />
-                                </el-table>
-                            </el-tab-pane>
-                            <el-tab-pane class="error-list" label="错误列表" name="error-list">
-                                <template #label>
-                                    <div class="error-list-title" :class="{ 'cornerMark': errorDirectives.length }">错误列表
+                                                </ElTableV2>
+                                            </template>
+                                        </el-auto-resizer>
                                     </div>
-                                </template>
-                                <ElTable :data="errorDirectives" style="
+                                </el-tab-pane>
+                                <el-tab-pane label="调试变量" name="dev-variable">
+                                    <el-table :data="devVariableData" style="
                                         width: 100%;
                                         height: calc(var(--draggable-height) - 60px);
                                     ">
-                                    <ElTableColumn label="流程名" width="180">
-                                        <template #default="scope">
-                                            {{ scope.row.file.name }}
-                                        </template>
-                                    </ElTableColumn>
-                                    <el-table-column label="错误指令" width="180">
-                                        <template #default="scope">
-                                            {{ scope.row.directive.displayName }}
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="错误描述">
-                                        <template #default="scope">
-                                            {{ scope.row.directive.error }}
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="line" label="行号" width="180">
-                                        <template #default="scope">
-                                            <a class="cursor-pointer underline decoration-1 text-blue-500"
-                                                @click="flowEditRef?.scrollIntoRow(scope.row.file.name, scope.row.line)">
-                                                {{ scope.row.line }}
-                                            </a>
-                                        </template>
-                                    </el-table-column>
-                                </ElTable>
-                            </el-tab-pane>
-                        </el-tabs>
+                                        <el-table-column prop="name" label="变量名" width="180" />
+                                        <el-table-column prop="val" label="变量值" width="180" />
+                                        <el-table-column prop="type" label="变量类型" />
+                                    </el-table>
+                                </el-tab-pane>
+                                <el-tab-pane class="error-list" label="错误列表" name="error-list">
+                                    <template #label>
+                                        <div class="error-list-title" :class="{ 'cornerMark': errorDirectives.length }">错误列表
+                                        </div>
+                                    </template>
+                                    <ElTable :data="errorDirectives" style="
+                                        width: 100%;
+                                        height: calc(var(--draggable-height) - 60px);
+                                    ">
+                                        <ElTableColumn label="流程名" width="180">
+                                            <template #default="scope">
+                                                {{ scope.row.file.name }}
+                                            </template>
+                                        </ElTableColumn>
+                                        <el-table-column label="错误指令" width="180">
+                                            <template #default="scope">
+                                                {{ scope.row.directive.displayName }}
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column label="错误描述">
+                                            <template #default="scope">
+                                                {{ scope.row.directive.error }}
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="line" label="行号" width="180">
+                                            <template #default="scope">
+                                                <a class="cursor-pointer underline decoration-1 text-blue-500"
+                                                    @click="flowEditRef?.scrollIntoRow(scope.row.file.name, scope.row.line)">
+                                                    {{ scope.row.line }}
+                                                </a>
+                                            </template>
+                                        </el-table-column>
+                                    </ElTable>
+                                </el-tab-pane>
+                            </el-tabs>
+                        </BoxDraggable>
+                    </div>
+                    <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true">
+                        <div class="property-edit flex-1 p-2 gap-1 flex flex-col overflow-hidden">
+                            <div>流程</div>
+                            <div class="flow-list-container flex flex-col gap-1  overflow-auto">
+                                <div class="flow-list flex flex-1 cursor-pointer"
+                                    v-for="(flow, index) in userAppDetail?.flows" @click="curActiveFlowIndex = index"
+                                    @dblclick="openFlowByName(flow.name)"
+                                    @contextmenu="handleFlowContextMenu($event, flow, index)" :key="index">
+                                    <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
+                                        :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
+                                        {{ flow.aliasName }}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <BoxDraggable class="left-sidebar border-t" :height="400" :min-height="100" :resize-top="true">
+                            <div class="viewbox">
+                                <div class="flex flex-row justify-between p-2">
+                                    <div>全局变量</div>
+                                    <div class="global-variable-list">
+                                        <div class="hover:bg-slate-100" link>搜索</div>
+                                        <ElButton link>新增</ElButton>
+                                        <ElButton link>菜单</ElButton>
+                                    </div>
+                                </div>
+                            </div>
+                        </BoxDraggable>
                     </BoxDraggable>
                 </div>
-                <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true">
-                    <div class="property-edit flex-1 p-2 flex flex-col overflow-hidden">
-                        <div>流程</div>
-                        <div class="flow-list-container flex-1 overflow-auto">
-                            <div class="flow-list flex flex-1" v-for="(flow, index) in userAppDetail?.flows" :key="index">
-                                <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
-                                    :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
-                                    {{ flow.aliasName }}
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                    <BoxDraggable class="left-sidebar border-t" :height="400" :min-height="100" :resize-top="true">
-                        <div class="viewbox">
-                            <div class="flex flex-row justify-between p-2">
-                                <div>全局变量</div>
-                                <div class="global-variable-list">
-                                    <div class="hover:bg-slate-100" link>搜索</div>
-                                    <ElButton link>新增</ElButton>
-                                    <ElButton link>菜单</ElButton>
-                                </div>
-                            </div>
-                        </div>
-                    </BoxDraggable>
-                </BoxDraggable>
             </div>
         </div>
         <ElDialog v-model="logDetailVisible" :title="'日志详情'">

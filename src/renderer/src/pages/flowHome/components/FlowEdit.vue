@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DirectiveTree, FlowVariable } from 'src/main/userApp/types';
 import { sleep, uuid } from '@shared/Utils';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { watch, computed, nextTick, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { ElMessage, ElScrollbar } from 'element-plus';
@@ -14,7 +14,7 @@ import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { Action } from '@renderer/lib/action';
 import { showContextFlowMenu, checkError } from './FlowEditOps';
 import { DirectiveData, OpenFile } from './types'
-
+import { curWorkStatus } from '../indexvue'
 
 const props = defineProps<{
     flows: Flow[];
@@ -34,7 +34,8 @@ const emit = defineEmits<{
         }
     ): void;
     (
-        e: 'newSubFlow'
+        e: 'newSubFlow',
+        newSubFlow: Flow
     ): void;
 }>();
 
@@ -50,35 +51,59 @@ async function disableCurDirective() {
     saveCurFlow('禁用当前指令');
 }
 
-const flows = props.flows.map((item) => {
-    const blocks = item.blocks.map((block) => {
+
+const files = computed<OpenFile[]>(() => {
+    return props.flows.map((item) => {
+        const blocks = item.blocks.map((block) => {
+            return {
+                ...block,
+                open: false,
+                hide: false,
+                pdLvn: 0,
+                isFold: false,
+                id: uuid(),
+                foldDesc: '',
+                commentShow: ''
+            };
+        });
         return {
-            ...block,
-            open: false,
-            hide: false,
-            pdLvn: 0,
-            isFold: false,
-            id: uuid(),
-            foldDesc: '',
-            commentShow: ''
+            name: item.name,
+            aliasName: item.aliasName ?? item.name,
+            filePath: item.filePath,
+            historys: [{ saveName: '初始加载', data: blocks }],
+            curHistoryIndex: 0,
+            blocks: blocks
         };
     });
-    return {
-        name: item.name,
-        aliasName: item.aliasName ?? item.name,
-        filePath: item.filePath,
-        historys: [{ saveName: '初始加载', data: blocks }],
-        curHistoryIndex: 0,
-        blocks: blocks
-    };
 });
 
 
-const openFiles = ref<
-    OpenFile[]
->(flows);
+const openFiles = computed<OpenFile[]>(() => {
+    const opFiles: OpenFile[] = [];
+    curWorkStatus.value.openedFlows.forEach((item) => {
+        const curFile = files.value.find((file) => file.name === item);
+        if (curFile) {
+            opFiles.push(curFile);
+        }
+    });
+    return opFiles;
+});
 
-const curOpenFile = ref(openFiles.value[0]);
+
+const curOpenFile = ref<OpenFile>(files.value[0]);
+const curBlocks = ref([curOpenFile.value.blocks[0]]);
+
+watch(() => curWorkStatus.value.activeFlow, () => {
+    const curFile = openFiles.value.find((item) => curWorkStatus.value.activeFlow === item.name);
+    if (!curFile) {
+        curOpenFile.value = openFiles.value[0];
+    } else {
+        curOpenFile.value = curFile;
+    }
+    curBlocks.value = [curOpenFile.value.blocks[0]];
+}, {
+    immediate: true
+})
 
 /**
  * 指令描述
@@ -121,6 +146,9 @@ function commentCompute(block: DirectiveData) {
  * 流程块列表
  */
 const blocks = computed(() => {
+    if (!curOpenFile.value) {
+        return [];
+    }
     let pdLvn = 0;
     curOpenFile.value.blocks.forEach((block, index) => {
         block.commentShow = commentCompute(block);
@@ -149,7 +177,7 @@ const blocks = computed(() => {
     return curOpenFile.value.blocks;
 });
 
-const curBlocks = ref([curOpenFile.value.blocks[0]]);
+
 const dragenterBlock = ref<DirectiveData | null>(null);
 
 const directives = useDirective();
@@ -447,7 +475,7 @@ function addBlock(directive: DirectiveTree, index?: number) {
                 ) + 1;
         }
     }
-
+    index = index ?? 0;
     directiveAddTemp.value = JSON.parse(JSON.stringify(directive));
     addTempIndex.value = index;
 
@@ -808,7 +836,8 @@ const redo = () => {
 async function scrollIntoRow(flowName: string, rowNum: number) {
     openFiles.value.forEach((file) => {
         if (file.name === flowName) {
-            curOpenFile.value = file;
+            // curOpenFile.value = file;
+            curWorkStatus.value.activeFlow = file.name;
         }
     });
     await nextTick();
@@ -825,32 +854,14 @@ async function scrollIntoRow(flowName: string, rowNum: number) {
  */
 async function newSubFlow() {
     const newSubFlow = await Action.newSubFlow(props.appInfo.id);
-    if (newSubFlow) {
-        const blocks = newSubFlow.blocks.map((block) => {
-            return {
-                ...block,
-                open: false,
-                hide: false,
-                pdLvn: 0,
-                isFold: false,
-                id: uuid(),
-                foldDesc: '',
-                commentShow: ''
-            };
-        });
-        const flow = {
-            name: newSubFlow.name,
-            aliasName: newSubFlow.aliasName || newSubFlow.name,
-            filePath: newSubFlow.filePath,
-            historys: [{ saveName: '初始加载', data: blocks }],
-            curHistoryIndex: 0,
-            blocks: blocks
-        }
-        openFiles.value.push(flow);
-        curOpenFile.value = flow;
+    console.log(newSubFlow, '新建子流程');
 
+    if (!newSubFlow) {
+        ElMessage.error('新建子流程失败');
+        return;
     }
-    emit('newSubFlow');
+
+    emit('newSubFlow', newSubFlow);
 }
 
 const filesScrollbarRef = ref<InstanceType<typeof ElScrollbar>>();
@@ -899,10 +910,11 @@ defineExpose({
     <div class="viewbox rounded bg-white flex-1">
         <div class="flow-header flex items-center gap-2 bg-gray-100">
             <el-scrollbar :noresize="true" ref="filesScrollbarRef" id="files">
-                <div class="files flex items-center shrink-0" @contextmenu="showContextFlowMenu($event, curOpenFile)">
+                <div class="files flex items-center shrink-0">
                     <div class="file w-30 flex py-2 px-4 cursor-pointer shrink-0 hover:bg-white/60"
                         v-for="file in openFiles" :key="file.name" :class="{ 'bg-white': file.name === curOpenFile.name }"
-                        @click="curOpenFile = file; emitHistoryChange()">
+                        @click="curWorkStatus.activeFlow = file.name; emitHistoryChange()"
+                        @contextmenu="showContextFlowMenu($event, file)">
                         <div class="flow-name text-sm">
                             {{ file.aliasName }}
                         </div>

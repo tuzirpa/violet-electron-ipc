@@ -53,6 +53,7 @@ export default {
             height = height + 20;
             if (this.menuX + width > window.innerWidth) {
                 this.menuX = window.innerWidth - width;
+                this.menuY = this.menuY + 20;
             }
             if (this.menuY + height > window.innerHeight) {
                 this.menuY = window.innerHeight - height;

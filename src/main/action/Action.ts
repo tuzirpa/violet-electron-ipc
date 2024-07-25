@@ -13,6 +13,7 @@ import { encrypt } from '../api/aes';
 import { getRandom } from '../utils/RandomUtils';
 import { getDeviceID } from '../utils/divice';
 import { submitFeedback } from '../api/feedback';
+import { WorkStatus } from '../userApp/WorkStatusConf';
 
 class Action {
     /**
@@ -106,6 +107,20 @@ class Action {
     }
 
     /**
+     * 打开用户应用
+     */
+    static async openUserApp(id: string) {
+        return UserAppManage.openUserApp(id);
+    }
+    /**
+     * 保存工作状态
+     */
+
+    static async saveWorkStatus(appId: string, status: WorkStatus) {
+        return UserAppManage.saveWorkStatus(appId, status);
+    }
+
+    /**
      * 新建用户应用
      * @returns 用户应用
      */
@@ -135,6 +150,13 @@ class Action {
     static async newSubFlow(appId: string) {
         return UserAppManage.newSubFlow(appId);
     }
+    /**
+     * 删除子流程
+     */
+    static async deleteSubFlow(appId: string, flowName: string) {
+        return UserAppManage.deleteSubFlow(appId, flowName);
+    }
+
     /**
      * 保存流程
      */

@@ -4,6 +4,10 @@ import path, { join } from 'path';
 import { convertDirective } from './directiveconvert';
 
 export default class Flow {
+    delete() {
+        fs.unlinkSync(this.filePath);
+        fs.unlinkSync(this.jsFilePath);
+    }
     destroy() {
         this.blocks = [];
     }
@@ -29,6 +33,9 @@ export default class Flow {
             }
         });
         return breakpoints;
+    }
+    get jsFilePath() {
+        return join(this.appDir, `${this.name}.js`);
     }
 
     init() {
@@ -116,7 +123,7 @@ export default class Flow {
         //转换成js代码
         const content = await this.convert();
         //保存js代码
-        fs.writeFileSync(join(this.appDir, `${this.name}.js`), content, {
+        fs.writeFileSync(this.jsFilePath, content, {
             encoding: 'utf-8'
         });
     }

@@ -16,6 +16,9 @@ import typesContent from './types.ts?raw';
 import { sleep, uuid } from '@shared/Utils';
 import { unzip } from '../utils/zipUtils';
 import startApiServer from './apiserver';
+import { Conf } from 'electron-conf/main';
+import { WorkStatus } from './WorkStatusConf';
+import { getFlowNum, readdirChronoSorted } from '../utils/fileUtils';
 
 export type AppType = 'myCreate' | 'into' | '';
 
@@ -23,6 +26,14 @@ export type AppType = 'myCreate' | 'into' | '';
  * 应用类
  */
 export default class UserApp {
+    deleteSubFlow(flowName: string) {
+        const flow = this.flows.find((flow) => flow.name === flowName);
+        if (flow) {
+            flow.delete();
+        }
+        this.flows = this.flows.filter((flow) => flow.name !== flowName);
+        return flow;
+    }
     type: AppType = 'myCreate';
     delete() {
         // 销毁，这边回收app资源
@@ -107,6 +118,10 @@ export default class UserApp {
     #devPrecess: ChildProcessWithoutNullStreams | null = null;
     #_initFlow: boolean = false;
     #stepWindow: StepWindow | null = null;
+    /**
+     * 工作状态配置
+     */
+    #workStatusConf!: Conf<WorkStatus>;
 
     static get userAppLocalDir() {
         const userAppLocalDir = path.join(app.getPath('userData'), 'userApp');
@@ -220,30 +235,64 @@ export default class UserApp {
         // fs.writeFileSync(path.join(this.appDevDir, 'main.flow'), '');
     }
 
+    get workStatus() {
+        return this.#workStatusConf.store;
+    }
+
+    open() {
+        // 打开 创建工作状态文件
+        const workStatusDir = path.join(this.appDir, '.tuzi');
+        if (!fs.existsSync(workStatusDir)) {
+            fs.mkdirSync(workStatusDir, { recursive: true });
+        }
+        this.#workStatusConf = new Conf<WorkStatus>({
+            dir: workStatusDir,
+            name: 'workStatus',
+            defaults: {
+                openedFlows: ['main.flow'],
+                activeFlow: 'main.flow'
+            }
+        });
+        return this.workStatus;
+    }
+
+    setWorkStatus(status: WorkStatus) {
+        this.#workStatusConf.store = status;
+    }
+
     /**
      * 加载 flows
      */
-    initFlows() {
+    async initFlows() {
         // 初始化flows
         if (this.#_initFlow) {
             return;
         }
         this.#_initFlow = true;
-        this.getFlows();
+        await this.getFlows();
     }
 
     newSubFlow() {
         // 新建子流程
-        const flowName = `subFlow${this.flows.length + 1}`;
-        const aliasName = `子流程${this.flows.length + 1}`;
+        const lastFlow = this.flows[this.flows.length - 1];
+        const lastFlowName = lastFlow?.name ?? '';
+        //提取名字数字
+        const index = getFlowNum(lastFlowName);
+        const flowName = `subFlow${index + 1}`;
+        const aliasName = `子流程${index + 1}`;
         const file = `${flowName}.flow`;
         // fs.writeFileSync(path.join(this.appDevDir, file), '');
         this.flows.push(new Flow(this.appDir, path.join(this.appDevDir, file), file, aliasName));
         return this.findFlow(file);
     }
 
-    getFlows() {
+    async getFlows() {
         const files = fs.readdirSync(this.appDevDir);
+        files.sort((a, b) => {
+            const numA = getFlowNum(a);
+            const numB = getFlowNum(b);
+            return numA - numB;
+        });
         files.forEach((file) => {
             if (file.endsWith('.flow')) {
                 this.flows.push(new Flow(this.appDir, path.join(this.appDevDir, file), file));

@@ -7,6 +7,7 @@ import { join } from 'path';
 import { uploadFileToQiniu } from '../utils/qiniuUtils';
 import { appPlazaAdd, getDownloadUrl } from '../api/appplaza';
 import { downloadFileWithResume } from '../utils/download';
+import { WorkStatus } from './WorkStatusConf';
 
 /**
  * 广场的应用
@@ -22,6 +23,21 @@ export type AppPlaza = {
 };
 
 export class UserAppManage {
+    deleteSubFlow(appId: string, flowName: string) {
+        if (flowName === 'main.flow') {
+            throw new Error('不能删除主流程');
+        }
+        const userApp = this.findUserApp(appId);
+        return userApp.deleteSubFlow(flowName);
+    }
+    saveWorkStatus(appId: string, status: WorkStatus) {
+        const userApp = this.findUserApp(appId);
+        return userApp.setWorkStatus(status);
+    }
+    openUserApp(appId: string) {
+        const userApp = this.findUserApp(appId);
+        return userApp.open();
+    }
     /**
      * 导入广场应用到本地
      */
@@ -157,9 +173,9 @@ export class UserAppManage {
         });
     }
 
-    getUserApp(id: string): UserApp | undefined {
+    async getUserApp(id: string) {
         const userApp = this.findUserApp(id);
-        userApp.initFlows();
+        await userApp.initFlows();
         return userApp;
     }
 

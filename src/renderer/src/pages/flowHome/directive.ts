@@ -1,5 +1,4 @@
 import { Action } from '@renderer/lib/action';
-import { ElLoading } from 'element-plus';
 import type { DirectiveTree } from 'src/main/userApp/types';
 import { ref } from 'vue';
 
@@ -8,16 +7,17 @@ const directives = ref<Partial<DirectiveTree>[]>([]);
 directives.value = [];
 
 /**
+ * 加载指令列表的loading状态
+ */
+export const directiveLoading = ref(false);
+
+/**
  * 服务器加载的指令列表
  */
 async function loadDirective() {
-    const loading = ElLoading.service({
-        lock: true,
-        text: '指令加载中',
-        background: 'rgba(0, 0, 0, 0.7)'
-    });
+    directiveLoading.value = true;
     directives.value = await Action.getDirectives();
-    loading.close();
+    directiveLoading.value = false;
     console.log(directives.value, 'directives');
 }
 
@@ -35,5 +35,5 @@ export function useDirective() {
  */
 export async function reloadDirective() {
     await Action.reloadDirective();
-    loadDirective();
+    await loadDirective();
 }

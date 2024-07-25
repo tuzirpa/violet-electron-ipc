@@ -2,7 +2,58 @@ import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlu
 import { Action } from '@renderer/lib/action';
 import { ElMessage } from 'element-plus';
 import type { Block, LogLevel } from 'src/main/userApp/types';
+import type { WorkStatus } from 'src/main/userApp/WorkStatusConf';
 import { ref } from 'vue';
+
+/**
+ * 当前打开应用工作状态
+ */
+export const curWorkStatus = ref<WorkStatus>({
+    openedFlows: [],
+    activeFlow: ''
+});
+
+/**
+ * 关闭已打开的流程
+ */
+export function closeFile(fileName: string) {
+    const index = curWorkStatus.value.openedFlows.findIndex((item) => item === fileName);
+    curWorkStatus.value.openedFlows = curWorkStatus.value.openedFlows.filter(
+        (item) => item !== fileName
+    );
+    curWorkStatus.value.activeFlow =
+        curWorkStatus.value.openedFlows[
+            Math.min(curWorkStatus.value.openedFlows.length - 1, index)
+        ];
+}
+
+/**
+ * 关闭其他文件
+ */
+export function closeOtherFiles(fileName: string) {
+    const index = curWorkStatus.value.openedFlows.findIndex((item) => item === fileName);
+    curWorkStatus.value.openedFlows = curWorkStatus.value.openedFlows.filter(
+        (item) => item === fileName || item === 'main.flow'
+    );
+    curWorkStatus.value.activeFlow =
+        curWorkStatus.value.openedFlows[
+            Math.min(curWorkStatus.value.openedFlows.length - 1, index)
+        ];
+}
+
+/**
+ * 关闭右侧文件
+ */
+export function closeRightFiles(fileName: string) {
+    const curIndex = curWorkStatus.value.openedFlows.findIndex((item) => item === fileName);
+    curWorkStatus.value.openedFlows = curWorkStatus.value.openedFlows.filter(
+        (_item, index) => index <= curIndex
+    );
+    curWorkStatus.value.activeFlow =
+        curWorkStatus.value.openedFlows[
+            Math.min(curWorkStatus.value.openedFlows.length - 1, curIndex)
+        ];
+}
 
 /**
  * 运行日志
