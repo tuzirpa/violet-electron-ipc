@@ -18,8 +18,11 @@ const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
         inputKeys.forEach((key) => {
             const input = directive.inputs[key];
             let codeValue = '';
+
             if (input.type === 'variable') {
                 codeValue = input.value;
+            } else if (input.type === 'array') {
+                codeValue = `[${input.value.join(',')}]`;
             } else {
                 codeValue = typeToCode(input);
             }

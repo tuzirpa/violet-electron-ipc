@@ -17,6 +17,7 @@ const varShow = ref(true);
 function varSelectValChange(val: string) {
     console.log(val);
     props.outputItem.name = val;
+    popoverRef.value.hide();
     // emit('inputValueChange', model.value, props.inputItem);
 }
 

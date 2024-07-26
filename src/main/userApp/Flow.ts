@@ -72,7 +72,9 @@ export default class Flow {
         content.push(`robotUtil = robotUtilAll.default;`);
         content.push(`const generateBlock = robotUtilAll.generateBlock;`);
         content.push(`const fatalError = robotUtilAll.fatalError;`);
-        content.push(`module.exports = async function () {`);
+        content.push(
+            `module.exports = async function (${this.isMainFlow ? '' : '{ callParams }'}) {`
+        );
         content.push(`  try { let returnVal = [];//流程返回值`);
         let flowControlBlock = 0;
         for (let index = 0; index < this.blocks.length; index++) {

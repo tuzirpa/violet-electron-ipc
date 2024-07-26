@@ -9,7 +9,7 @@ import robotUtil from './userApp/robotUtil/robotUtil?modulePath';
 import robotLog from './userApp/robotUtil/commonUtil?modulePath';
 import UserApp from './userApp/UserApp';
 import UserAppManage from './userApp/UserAppManage';
-// import { autoUpdateInit } from './autoUpdater/autoUpdater';
+import { autoUpdateInit } from './autoUpdater/autoUpdater';
 
 let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
@@ -59,7 +59,7 @@ function start() {
             }, 3000);
         } else {
             console.log('生产环境下，启用自动更新');
-            // autoUpdateInit(mainWindow);
+            autoUpdateInit(mainWindow);
         }
 
         //扫码本地app

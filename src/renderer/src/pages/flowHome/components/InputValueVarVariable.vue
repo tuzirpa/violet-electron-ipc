@@ -30,6 +30,7 @@ function varClick() {
 function varSelectValChange(variable: FlowVariable) {
     varShow.value = false;
     model.value = variable.name;
+    popoverRef.value.hide();
     emit('inputValueChange', variable, props.inputItem);
 }
 

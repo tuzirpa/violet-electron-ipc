@@ -18,7 +18,7 @@ import { unzip } from '../utils/zipUtils';
 import startApiServer from './apiserver';
 import { Conf } from 'electron-conf/main';
 import { WorkStatus } from './WorkStatusConf';
-import { getFlowNum, readdirChronoSorted } from '../utils/fileUtils';
+import { getFlowNum } from '../utils/fileUtils';
 
 export type AppType = 'myCreate' | 'into' | '';
 

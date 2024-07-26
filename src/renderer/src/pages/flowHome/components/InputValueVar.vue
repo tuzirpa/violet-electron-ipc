@@ -37,6 +37,7 @@ function varSelectValChange(val: string) {
     varShow.value = false;
     const tValue = (model.value ?? '');
     model.value = tValue.substring(0, cursorPos.value) + `\${${val}}` + tValue.substring(cursorPos.value);
+    popoverRef.value.hide();
     // model.value = (model.value ?? '') + `\${${val}}`;
     emit('inputValueChange', model.value, props.inputItem);
 }

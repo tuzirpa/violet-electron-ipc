@@ -6,7 +6,14 @@ export type LogMessage = {
     error?: Error;
 };
 
-export type DataType = 'string' | 'number' | 'boolean' | 'textarea' | 'variable';
+export type DataType =
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'textarea'
+    | 'array'
+    | 'variable'
+    | 'object';
 
 export interface FlowVariable {
     /**
@@ -33,6 +40,7 @@ export type AddConfigInputType =
     | 'number'
     | 'boolean'
     | 'select'
+    | 'checkbox'
     | 'textarea'
     | 'filePath'
     | 'variable';
@@ -64,7 +72,7 @@ export interface AddConfig<T> {
     openDirectory?: boolean;
 
     /**
-     * type 为 filePath 时 打开文件选择器的默认路径
+     * type 为 filePath 时 打开文件选择器时可选的文件后缀名
      */
     extensions?: string[];
 
@@ -86,6 +94,11 @@ export interface AddConfig<T> {
         value: string;
     }[];
     /**
+     * 是否多选
+     * type为select时生效
+     */
+    multiple?: boolean;
+    /**
      * 输入提示
      */
     placeholder?: string;
@@ -96,6 +109,7 @@ export interface AddConfig<T> {
 
     /**
      * 输入默认值
+     * 多选时此字段无效
      */
     defaultValue?: any;
 
@@ -269,4 +283,4 @@ export interface Block {
     retryCount: number;
 }
 
-export type LogLevel = 'info' | 'debug' | 'warn' | 'error' | 'fatalError';
+export type LogLevel = 'info' | 'warn' | 'debug' | 'error' | 'fatalError';
