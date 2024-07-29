@@ -4,7 +4,7 @@ import { sleep, uuid } from '@shared/Utils';
 import { watch, computed, nextTick, onMounted, ref } from 'vue';
 import { dragData } from '../dragVar';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { ElMessage, ElScrollbar } from 'element-plus';
+import { ElCascader, ElMessage, ElScrollbar } from 'element-plus';
 import { useDirective } from '../directive';
 import { Shortcut } from './ShortcutRegister';
 import AddDirective from './AddDirective.vue';
@@ -185,7 +185,7 @@ const directivesData = computed(() => {
     function toOpsData(directive: DirectiveTree) {
         return {
             value: directive,
-            label: directive.name,
+            label: directive.displayName,
             children: directive?.children?.map((item) => {
                 return toOpsData(item);
             })
@@ -645,7 +645,7 @@ onMounted(() => {
 });
 
 const addBlockDialogVisible = ref(false);
-const addBlockDirective = ref<DirectiveTree[]>([]);
+const addBlockDirective = ref<any[]>([]);
 function addBlockComfig() {
     if (!addBlockDirective.value) {
         return;
@@ -1028,7 +1028,8 @@ defineExpose({
         <!-- 添加指令弹框 -->
         <el-dialog v-model="addBlockDialogVisible" title="添加指令" width="500" align-center draggable>
             <div class="flex flex-col">
-                <el-cascader v-model="addBlockDirective" placeholder="选择要添加的指令" :options="directivesData" filterable />
+                <ElCascader v-model="addBlockDirective" placeholder="选择要添加的指令" @change="addBlockComfig"
+                    :options="directivesData" filterable />
             </div>
             <template #footer>
                 <div class="dialog-footer">
