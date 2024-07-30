@@ -191,6 +191,11 @@ export interface DirectiveTree {
     description?: string;
 
     /**
+     * 备注 可以给指令添加备注
+     */
+    remark?: string;
+
+    /**
      * name 指令名称 需要全局唯一
      */
     name: string;

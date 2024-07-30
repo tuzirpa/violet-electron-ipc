@@ -998,6 +998,9 @@ defineExpose({
                                                             <span class="ml-2 text-xs text-gray-400">{{ element.foldDesc
                                                             }}</span>
                                                         </span>
+                                                        <span class="ml-2 text-xs text-red-600">
+                                                            {{ element.remark }}
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <div class="description flex-1 ml-6 text-xs text-gray-400 truncate"

@@ -4,7 +4,7 @@ import InputValueVar from './InputValueVar.vue';
 import OutputValueVar from './OutputValueVar.vue';
 import InputValueVarVariable from './InputValueVarVariable.vue';
 import { getCurrentInstance, nextTick, onMounted, ref } from 'vue';
-import { ElSelect, ElTooltip } from 'element-plus';
+import { ElInput, ElSelect, ElTooltip } from 'element-plus';
 
 // 添加逻辑
 const props = defineProps<{
@@ -334,6 +334,12 @@ onMounted(() => {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="directive-footer flex justify-between">
+            <div class="remark-title text-gray-950 font-bold">流程备注：</div>
+            <div class="remark-input flex-1">
+                <ElInput type="textarea" v-model="_directive.remark" placeholder="这边可以写一些备注"></ElInput>
             </div>
         </div>
     </div>

@@ -215,6 +215,7 @@ export default class UserApp {
         mainJsContent.push(`let fs = require("fs");`);
         mainJsContent.push(`let { join } = require("path");`);
         mainJsContent.push(`globalThis._block = {};`);
+        mainJsContent.push(`globalThis._UserGlobal_ = {};//全局变量挂载对象`);
         mainJsContent.push(
             `globalThis.curApp = {APP_ID: "${this.id}", APP_NAME: "${this.name}", APP_VERSION: "${this.version}", APP_DIR: "${this.appDir.replace(/\\/g, '/')}"};`
         );

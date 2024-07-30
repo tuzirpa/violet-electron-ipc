@@ -95,6 +95,46 @@ const breakpointData = ref<IBreakpoint>({
     url: ''
 });
 
+async function getLoaclVariable() {
+    const localScopeChain = breakpointData.value.scopeChain?.find(item => item.type === 'local');
+    if (!localScopeChain || !userAppDetail.value?.id) {
+        return;
+    }
+    const scopeChain = localScopeChain.object.objectId;
+    const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
+    console.log(res.result);
+    devVariableData.value = res.result.map((item: { name: any; value: { type: any; value: any; }; }) => {
+        const name = item.name;
+        return {
+            type: item.value.type ?? '未初始化',
+            name,
+            val: item.value.value
+        };
+    });
+}
+async function getGlobalVariable() {
+    const localScopeChain = breakpointData.value.scopeChain?.find(item => item.type === 'global');
+    if (!localScopeChain || !userAppDetail.value?.id) {
+        return;
+    }
+    const scopeChain = localScopeChain.object.objectId;
+    const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
+    console.log(res.result);
+    // const global = res.result.find(item => item.name === 'global');
+    // const globalRes = await Action.devGetProperties(userAppDetail.value?.id, global.value.objectId);
+
+    // console.log(globalRes.result);
+
+    globalVariableData.value = res.result.filter(item => item.name.startsWith('__UserGlobal__')).map((item: { name: any; value: { type: any; value: any; }; }) => {
+        const name = item.name;
+        return {
+            type: item.value.type ?? '未初始化',
+            name,
+            val: item.value.value
+        };
+    });
+}
+
 const breakpointCallback = async (_event: any, data: IBreakpoint) => {
     console.log(data, 'breakpoint');
     if (breakpointData.value.line === data.line && breakpointData.value.url === data.url) {
@@ -113,18 +153,9 @@ const breakpointCallback = async (_event: any, data: IBreakpoint) => {
     ) {
         console.log(breakpointData.value);
 
+        getLoaclVariable();
+        getGlobalVariable();
 
-        const scopeChain = breakpointData.value.scopeChain[0].object.objectId;
-        const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
-        console.log(res.result);
-        devVariableData.value = res.result.map((item: { name: any; value: { type: any; value: any; }; }) => {
-            const name = item.name;
-            return {
-                type: item.value.type ?? '未初始化',
-                name,
-                val: item.value.value
-            };
-        });
     }
 };
 
@@ -174,10 +205,16 @@ async function devResume() {
  * 底部tab激活状态
  */
 const bottomTabsActiveName = ref('run-logs');
+
 /**
  * 调试变量列表
  */
 const devVariableData = ref([]);
+
+/**
+ * 全局变量列表
+ */
+const globalVariableData = ref([]);
 
 /**
  * 是否处于调试状态
