@@ -136,10 +136,16 @@ class Action {
         return UserAppManage.shareUserAppToPlaza(appId);
     }
 
+    /**
+     * 导入广场引用到本地应用
+     */
     static async appPlazasToLocal(app: any) {
         return UserAppManage.appPlazasToLocal(app);
     }
 
+    /**
+     * 获取广场应用
+     */
     static async getAppPlazas() {
         return getPlazas();
     }

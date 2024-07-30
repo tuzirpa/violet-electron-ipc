@@ -320,12 +320,12 @@ export default class UserApp {
     shellExeCmd(cmds: string[], stdCallback?: (data: string) => void) {
         const cmd = cmds[0];
         const args = cmds.slice(1);
-        console.log('执行命令', cmd, args);
         this.lastRunLogId = Date.now() + '_' + uuid();
         const child = spawn(cmd, args, {
             cwd: this.appDir,
             env: {
-                RUN_LOG_ID: this.lastRunLogId
+                RUN_LOG_ID: this.lastRunLogId,
+                TUZI_ENV: 'app'
             }
         });
         child.stdout.on('data', (data) => {

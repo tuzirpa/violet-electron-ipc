@@ -86,24 +86,24 @@ export const checkError = (directives: DirectiveData[], file: OpenFile) => {
             if (!Object.prototype.hasOwnProperty.call(directive.inputs, key)) {
                 break;
             }
-            const input = directive.inputs[key];
-            if (input.addConfig.type === 'variable') {
-                const varItem = vars.find((item) => item.name === input.value);
-                if (!varItem) {
-                    errors.push(`变量${input.value}未定义`);
-                }
-            } else {
-                const varNames = String(input.value).match(/\${.*?}/g);
-                varNames?.forEach((varName) => {
-                    varName = varName.substring(2, varName.length - 1);
-                    //从 ${表达式} 中提取出表达式变量
+            // const input = directive.inputs[key];
+            // if (input.addConfig.type === 'variable') {
+            //     const varItem = vars.find((item) => item.name === input.value);
+            //     if (!varItem) {
+            //         errors.push(`变量${input.value}未定义`);
+            //     }
+            // } else if(input.type === 'array'){
+            //     const varNames = String(input.value).match(/\${.*?}/g);
+            //     varNames?.forEach((varName) => {
+            //         varName = varName.substring(2, varName.length - 1);
+            //         //从 ${表达式} 中提取出表达式变量
 
-                    const varItem = vars.find((item) => item.name === varName);
-                    if (!varItem) {
-                        errors.push(`变量${varName}未定义`);
-                    }
-                });
-            }
+            //         const varItem = vars.find((item) => item.name === varName);
+            //         if (!varItem) {
+            //             errors.push(`变量${varName}未定义`);
+            //         }
+            //     });
+            // }
         }
         if (errors.length > 0) {
             directive.error = errors.join('\n');

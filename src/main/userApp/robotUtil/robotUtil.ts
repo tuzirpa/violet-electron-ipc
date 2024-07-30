@@ -1,5 +1,5 @@
 import type { Block } from '../types';
-import { sendLog, sendStepLog, olog } from './commonUtil';
+import { sendLog, olog } from './commonUtil';
 import fs from 'fs';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -30,18 +30,12 @@ function forRobotUtil(obj: any) {
                 obj[key] = async function aaa(...args: any[]) {
                     const blockInfo = args[args.length - 1] as Block;
                     try {
-                        sendStepLog(
-                            JSON.stringify({
-                                level: 'info',
-                                time: Date.now(),
-                                message: `执行指令${blockInfo.directiveDisplayName}`,
-                                data: blockInfo
-                            })
-                        );
+                        console['runStep'](`执行指令${blockInfo.directiveDisplayName}`);
+
                         const result = await (value as Function).apply(this, args);
                         return result;
                     } catch (error: any) {
-                        olog(error);
+                        // olog(error);
                         console.error(
                             'error',
                             `执行指令 ${blockInfo.directiveDisplayName} 异常: ${error.message}`,

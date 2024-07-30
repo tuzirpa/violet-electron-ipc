@@ -3,7 +3,7 @@ import { Action } from '@renderer/lib/action';
 import { ElMessage } from 'element-plus';
 import type { Block, LogLevel } from 'src/main/userApp/types';
 import type { WorkStatus } from 'src/main/userApp/WorkStatusConf';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 /**
  * 当前打开应用工作状态
@@ -59,7 +59,26 @@ export function closeRightFiles(fileName: string) {
  * 运行日志
  */
 export const runLogs = ref<{ level: LogLevel; message: string; time: number; data: Block }[]>([]);
-console.log(runLogs, 'runLogs11');
+
+/**
+ * 运行日志过滤器
+ */
+export const runLogsFilter = ref<string[]>(['info', 'warn', 'error', 'debug', 'fatalError']);
+
+export const levelMap = {
+    debug: '调试',
+    info: '信息',
+    warn: '警告',
+    error: '错误',
+    fatalError: '致命'
+};
+
+export const showRunLogs = computed(() => {
+    const logs = runLogs.value.filter((item) => runLogsFilter.value.includes(item.level));
+    console.log(logs, 'logs');
+
+    return logs;
+});
 
 window.electron.ipcRenderer.on('run-logs', (_event, log) => {
     console.log(log, 'run-logs');

@@ -6,14 +6,18 @@ import fs from 'fs';
 export const olog = console.log;
 export const oerror = console.error;
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
-    olog(
-        `robotUtilLog-` +
-            `${encodeURIComponent(JSON.stringify({ level, time: Date.now(), message, data, error }))}`
-    );
+    if (process.env.TUZI_ENV === 'app') {
+        olog(
+            `robotUtilLog-` +
+                `${encodeURIComponent(JSON.stringify({ level, time: Date.now(), message, data, error }))}`
+        );
+    }
 };
 
 export const sendStepLog = (message: string) => {
-    olog(`robotUtilRunStep-` + `${encodeURIComponent(message)}`);
+    if (process.env.TUZI_ENV === 'app') {
+        olog(`robotUtilRunStep-` + `${encodeURIComponent(message)}`);
+    }
 };
 
 export function typeToCode(inputItem: DirectiveInput) {
@@ -134,7 +138,11 @@ export function setLogFile(filePath: string) {
             `[${levelStr}] [${_block.flowName}:(行: ${_block.blockLine})] [${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}]:` +
             message;
         logFileWriteStream.write(content + '\n');
-        sendLog(level, message, _block);
+        if (process.env.TUZI_ENV === 'app') {
+            sendLog(level, message, _block);
+        } else {
+            olog(content);
+        }
     }
     console.log = function () {
         log.call(this, 'info', globalThis._block, ...arguments);
@@ -159,5 +167,16 @@ export function setLogFile(filePath: string) {
         const errorMsg = args.shift();
         const errorObj = args.shift();
         log.call(this, 'fatalError', block, errorMsg + errorObj.stack);
+    };
+    // @ts-ignore
+    console['runStep'] = function () {
+        log.call(this, 'debug', globalThis._block, ...arguments);
+        const content = JSON.stringify({
+            level: 'info',
+            time: Date.now(),
+            message: `执行指令${globalThis._block.directiveDisplayName}`,
+            data: globalThis._block
+        });
+        sendStepLog(content);
     };
 }

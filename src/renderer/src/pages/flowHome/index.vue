@@ -4,19 +4,19 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { Column, ElAutoResizer, ElButton, ElDialog, ElLoading, ElMessage, ElMessageBox, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
+import { Column, ElAutoResizer, ElButton, ElCheckbox, ElCheckboxGroup, ElDialog, ElIcon, ElLoading, ElMessage, ElMessageBox, ElOption, ElPopover, ElSelect, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { errorDirectives } from './components/FlowEditStore';
-import { closeFile, curWorkStatus, handleRunLogsContextMenu, runLogs } from './indexvue';
+import { closeFile, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs, runLogsFilter, showRunLogs } from './indexvue';
 import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
 import CodeEdit from './components/CodeEdit.vue';
 import type Flow from 'src/main/userApp/Flow';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { DeleteFilled } from '@element-plus/icons-vue'
+import { DeleteFilled, Filter } from '@element-plus/icons-vue'
 
 
 const route = useRoute();
@@ -255,12 +255,40 @@ const runLogsColumns: Column<any>[] = [
         key: 'level',
         title: '消息类型',
         dataKey: 'level',
-        width: 80,
+        width: 100,
         align: 'center',
+        headerCellRenderer: () => (
+            <div class="flex justify-center items-center w-full">
+                <div class="mr-2">消息类型</div>
+                <ElPopover trigger="click" {...{ width: 200 }}>
+                    {{
+                        default: () => (
+                            <div class="filter-wrapper">
+                                <div class="filter-group">
+                                    <ElCheckboxGroup v-model={runLogsFilter.value}>
+                                        <ElCheckbox label="信息" value="info" />
+                                        <ElCheckbox label="警告" value="warn" />
+                                        <ElCheckbox label="错误" value="error" />
+                                        <ElCheckbox label="调试" value="debug" />
+                                        <ElCheckbox label="致命错误" value="fatalError" />
+                                    </ElCheckboxGroup>
+                                </div>
+                            </div>
+                        ),
+                        reference: () => (
+                            <ElIcon class="cursor-pointer">
+                                <Filter />
+                            </ElIcon>
+                        ),
+                    }}
+                </ElPopover>
+
+            </div>
+        ),
         cellRenderer: ({ cellData: level }) => (
-            <>
-                {level}
-            </>
+            <div>
+                {levelMap[level]}
+            </div>
         )
     },
     {
@@ -481,7 +509,7 @@ async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) 
                                         <el-auto-resizer>
                                             <template #default="{ height, width }">
                                                 <ElTableV2 :columns="runLogsColumns" :row-class="runLogsRowClassName"
-                                                    @row-event-handlers="handleRowEvent" :data="runLogs" :width="width"
+                                                    @row-event-handlers="handleRowEvent" :data="showRunLogs" :width="width"
                                                     :height="height">
                                                     <template #empty>
                                                         <div class="flex justify-center items-center pt-3 text-gray-400">

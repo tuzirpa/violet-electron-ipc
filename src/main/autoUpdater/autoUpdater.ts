@@ -47,18 +47,18 @@ export async function autoUpdateInit(mainWin: BrowserWindow) {
         logger.info('下载完毕！提示安装更新');
         logger.info(res);
 
-        autoUpdater.quitAndInstall();
+        // autoUpdater.quitAndInstall();
         //dialog 想要使用，必须在BrowserWindow创建之后
-        // dialog
-        //   .showMessageBox({
-        //     title: '升级提示！',
-        //     message: '已为您下载最新应用，点击确定马上替换为最新版本！',
-        //   })
-        //   .then(() => {
-        //     logger.info('退出应用，安装开始！');
-        //     //重启应用并在下载后安装更新。 它只应在发出 update-downloaded 后方可被调用。
-        //     autoUpdater.quitAndInstall();
-        //   })
+        dialog
+            .showMessageBox({
+                title: '升级提示！',
+                message: '已为您下载最新应用，点击确定马上替换为最新版本！'
+            })
+            .then(() => {
+                logger.info('退出应用，安装开始！');
+                //重启应用并在下载后安装更新。 它只应在发出 update-downloaded 后方可被调用。
+                autoUpdater.quitAndInstall();
+            });
     });
 }
 

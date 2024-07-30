@@ -29,8 +29,14 @@ function varClick() {
 
 function varSelectValChange(variable: FlowVariable) {
     varShow.value = false;
-    model.value = variable.name;
-    popoverRef.value.hide();
+    if (props.inputItem.addConfig.multiple) {
+        let val = model.value + ',' + variable.name;
+        val.startsWith(',') && (val = val.substring(1));
+        model.value = val;
+    } else {
+        model.value = variable.name;
+        popoverRef.value.hide();
+    }
     emit('inputValueChange', variable, props.inputItem);
 }
 

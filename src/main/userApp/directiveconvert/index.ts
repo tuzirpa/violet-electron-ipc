@@ -22,7 +22,7 @@ const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
             if (input.type === 'variable') {
                 codeValue = input.value;
             } else if (input.type === 'array') {
-                codeValue = `[${input.value.join(',')}]`;
+                codeValue = `[${input.value}]`;
             } else {
                 codeValue = typeToCode(input);
             }

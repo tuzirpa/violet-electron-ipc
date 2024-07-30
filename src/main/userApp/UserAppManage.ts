@@ -80,6 +80,9 @@ export class UserAppManage {
                 if (filename.startsWith('logs')) {
                     return false;
                 }
+                if (filename.startsWith('main.js')) {
+                    return false;
+                }
                 if (filename.startsWith('package.json')) {
                     return false;
                 }
