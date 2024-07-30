@@ -212,7 +212,18 @@ export class UserAppManage {
         if (!flowSave) {
             throw new Error('流程不存在或已删除');
         }
+        flowSave.aliasName = flow.aliasName;
         flowSave.blocks = flow.blocks;
+        flowSave.save();
+        return flowSave;
+    }
+    saveFlowAliName(appId: string, flow: Flow) {
+        const userApp = this.findUserApp(appId);
+        const flowSave = userApp.findFlow(flow.name);
+        if (!flowSave) {
+            throw new Error('流程不存在或已删除');
+        }
+        flowSave.aliasName = flow.aliasName;
         flowSave.save();
         return flowSave;
     }

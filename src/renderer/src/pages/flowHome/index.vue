@@ -16,7 +16,7 @@ import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
 import CodeEdit from './components/CodeEdit.vue';
 import type Flow from 'src/main/userApp/Flow';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { DeleteFilled, Filter } from '@element-plus/icons-vue'
+import { DeleteFilled, Filter, Edit, CopyDocument } from '@element-plus/icons-vue'
 
 
 const route = useRoute();
@@ -423,17 +423,49 @@ async function onBackHome() {
 async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) {
     showContextMenu(e, [
         {
+            icon: <el-icon><CopyDocument /></el-icon>,
+            label: '复制流程名',
+            shortcut: '',
+            disabled: flow.name === 'main.flow',
+            onClick: async () => {
+                console.log('复制流程名', flow.name);
+                await navigator.clipboard.writeText(flow.name);
+                ElMessage.success('复制成功');
+            }
+        },
+        {
             icon: <el-icon><DeleteFilled /></el-icon>,
             label: '删除流程',
-            shortcut: 'Del',
+            shortcut: '',
             disabled: flow.name === 'main.flow',
             onClick: async () => {
                 console.log('删除流程', flow.name);
-                const res = await ElMessageBox.confirm('确认删除该流程吗？');
+                const res = await ElMessageBox.confirm(`确认删除 [${flow.aliasName}] 该流程吗？`);
                 console.log(res);
 
                 if (res === 'confirm') {
                     deleteSubFlow(flow);
+                }
+            }
+        },
+        {
+            icon: <ElIcon><Edit /></ElIcon>,
+            label: '重命名',
+            shortcut: '',
+            disabled: flow.name === 'main.flow',
+            onClick: async () => {
+                const res = await ElMessageBox.prompt('请输入新的流程名称', {
+                    inputValue: flow.aliasName,
+                    inputType: 'text',
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消'
+                });
+
+                if (res.action === 'confirm') {
+                    console.log(res.value, 'newName');
+                    flow.aliasName = res.value;
+                    await Action.saveFlowAliName(userAppDetail.value?.id ?? '', flow);
+                    ElMessage.success('重命名成功');
                 }
             }
         }
@@ -614,9 +646,15 @@ async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) 
                                     v-for="(flow, index) in userAppDetail?.flows" @click="curActiveFlowIndex = index"
                                     @dblclick="openFlowByName(flow.name)"
                                     @contextmenu="handleFlowContextMenu($event, flow, index)" :key="index">
-                                    <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200"
+                                    <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200 truncate"
                                         :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
-                                        {{ flow.aliasName }}
+                                        <el-popover placement="bottom-end" effect="dark" :show-after="1000"
+                                            :showArrow="false" :width="400" trigger="hover" :content="flow.aliasName">
+                                            <template #reference>
+                                                <span class="m-2">{{ flow.aliasName }}</span>
+                                            </template>
+                                        </el-popover>
+
                                     </div>
                                 </div>
                             </div>

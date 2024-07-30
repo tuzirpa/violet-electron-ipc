@@ -170,6 +170,13 @@ class Action {
         return UserAppManage.saveFlow(appId, flow);
     }
 
+    /**
+     * 保存流程名称
+     */
+    static async saveFlowAliName(appId: string, flow: Flow) {
+        return UserAppManage.saveFlowAliName(appId, flow);
+    }
+
     static async installPackage(appId: string) {
         return UserAppManage.installPackage(appId);
     }

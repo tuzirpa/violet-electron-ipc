@@ -4,7 +4,8 @@ import { DirectiveData, OpenFile } from './types';
 import type { FlowVariable } from 'src/main/userApp/types';
 import { errorDirectives } from './FlowEditStore';
 import { closeFile, closeOtherFiles, closeRightFiles } from '../indexvue';
-import { Folder } from '@element-plus/icons-vue';
+import { Folder, CopyDocument } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 
 export const showContextFlowMenu = (event: MouseEvent, file: OpenFile) => {
     showContextMenu(event, [
@@ -32,6 +33,20 @@ export const showContextFlowMenu = (event: MouseEvent, file: OpenFile) => {
             },
             icon: '',
             shortcut: ''
+        },
+        {
+            icon: (
+                <el-icon>
+                    <CopyDocument />
+                </el-icon>
+            ),
+            label: '复制流程名',
+            shortcut: '',
+            disabled: file.name === 'main.flow',
+            onClick: async () => {
+                await navigator.clipboard.writeText(file.name);
+                ElMessage.success('复制成功');
+            }
         },
         {
             label: '在文件夹中打开',

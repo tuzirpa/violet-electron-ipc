@@ -56,7 +56,7 @@ function start() {
         if (import.meta.env.DEV) {
             setTimeout(() => {
                 mainWindow.webContents.openDevTools();
-            }, 3000);
+            }, 5000);
         } else {
             console.log('生产环境下，启用自动更新');
             autoUpdateInit(mainWindow);

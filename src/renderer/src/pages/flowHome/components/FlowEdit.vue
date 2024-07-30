@@ -915,8 +915,14 @@ defineExpose({
                         v-for="file in openFiles" :key="file.name" :class="{ 'bg-white': file.name === curOpenFile.name }"
                         @click="curWorkStatus.activeFlow = file.name; emitHistoryChange()"
                         @contextmenu="showContextFlowMenu($event, file)">
-                        <div class="flow-name text-sm">
-                            {{ file.aliasName }}
+                        <div class="flow-name text-sm max-w-40 truncate">
+                            <!-- {{ file.aliasName }} -->
+                            <el-popover placement="bottom-start" effect="dark" :show-after="1000" :showArrow="false"
+                                :width="400" trigger="hover" :content="file.aliasName">
+                                <template #reference>
+                                    <span class="m-2">{{ file.aliasName }}</span>
+                                </template>
+                            </el-popover>
                         </div>
                         <div class="flow-edit ml-1" v-show="file.edit">
                             *
