@@ -1,6 +1,6 @@
 {
     "name": "tuzu_rpa",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "description": "一个可以搭积木方式编程的自动化Rpa软件",
     "main": "./out/main/index.js",
     "author": "tuzirpa.vtool.vip",
@@ -36,6 +36,7 @@
         "node-machine-id": "^1.1.12",
         "puppeteer": "^22.11.1",
         "qiniu": "^7.12.0",
+        "tuzu_rpa": "file:",
         "unplugin-vue-setup-extend-plus": "^1.0.1",
         "uuid": "^9.0.1",
         "ws": "^8.17.0"

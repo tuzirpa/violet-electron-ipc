@@ -14,7 +14,7 @@ import { getRandom } from '../utils/RandomUtils';
 import { getDeviceID } from '../utils/divice';
 import { submitFeedback } from '../api/feedback';
 import { WorkStatus } from '../userApp/WorkStatusConf';
-import { AppVariable, FlowVariable } from '../userApp/types';
+import { AppVariable } from '../userApp/types';
 
 class Action {
     /**

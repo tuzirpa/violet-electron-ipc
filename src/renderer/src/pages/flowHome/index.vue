@@ -498,6 +498,7 @@ async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) 
 function saveGlobalVariable(gvars: AppVariable[]) {
     console.log(gvars, 'globalVariableData');
     if (userAppDetail.value?.id) {
+        userAppDetail.value.globalVariables = gvars;
         Action.saveGlobalVariables(userAppDetail.value.id, gvars);
     }
 }

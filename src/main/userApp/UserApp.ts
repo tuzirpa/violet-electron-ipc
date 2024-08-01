@@ -7,7 +7,7 @@ import StepWindow from '../window/StepWindow';
 import { WindowManage } from '../window/WindowManage';
 import Flow from './Flow';
 import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs';
-import { AppVariable, FlowVariable, LogMessage } from './types';
+import { AppVariable, LogMessage } from './types';
 import basePackagePath from '../../../resources/node_modules.zip?asset&asarUnpack';
 
 import commonUtilContent from './robotUtil/commonUtil.ts?raw';

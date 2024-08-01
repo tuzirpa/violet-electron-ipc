@@ -8,7 +8,7 @@ import { uploadFileToQiniu } from '../utils/qiniuUtils';
 import { appPlazaAdd, getDownloadUrl } from '../api/appplaza';
 import { downloadFileWithResume } from '../utils/download';
 import { WorkStatus } from './WorkStatusConf';
-import { AppVariable, FlowVariable } from './types';
+import { AppVariable } from './types';
 
 /**
  * 广场的应用

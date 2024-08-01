@@ -33,15 +33,17 @@ const appGlobalVariables = computed(() => {
     return globalVariables;
 })
 
-let edit = false;
+let editIndex = -1;
 
 function handleClick(row: AppVariable) {
-    edit = true;
+
     globalVariableForm.value = {
         name: row.name,
         value: row.value,
         comment: row.comment ?? ''
     };
+    const gvarIndex = props.userAppDetail.globalVariables.findIndex(item => item.name === globalVariableForm.value.name);
+    editIndex = gvarIndex;
     globalVariableDialogVisible.value = true;
 }
 
@@ -57,24 +59,21 @@ function handleDelete(row: AppVariable) {
 function addGlobalVariable() {
     const gvars: AppVariable[] = [];
     gvars.push(...props.userAppDetail.globalVariables);
-    if (edit) {
-        const gvarIndex = gvars.findIndex(item => item.name === globalVariableForm.value.name);
-        if (gvarIndex > -1) {
-            gvars[gvarIndex].name = globalVariableForm.value.name;
-            gvars[gvarIndex].value = globalVariableForm.value.value;
-            gvars[gvarIndex].comment = globalVariableForm.value.comment;
-            console.log(gvars);
+    if (editIndex > -1) {
+        gvars[editIndex].name = globalVariableForm.value.name;
+        gvars[editIndex].value = globalVariableForm.value.value;
+        gvars[editIndex].comment = globalVariableForm.value.comment;
+        console.log(gvars);
 
-            emit('updateGlobalVariable', gvars);
-            globalVariableDialogVisible.value = false;
-            edit = false;
-            globalVariableForm.value = {
-                name: '',
-                value: '',
-                comment: ''
-            }
-            return;
+        emit('updateGlobalVariable', gvars);
+        globalVariableDialogVisible.value = false;
+        editIndex = -1;
+        globalVariableForm.value = {
+            name: '',
+            value: '',
+            comment: ''
         }
+        return;
     }
     gvars.push({
         name: globalVariableForm.value.name,
