@@ -14,6 +14,7 @@ import { getRandom } from '../utils/RandomUtils';
 import { getDeviceID } from '../utils/divice';
 import { submitFeedback } from '../api/feedback';
 import { WorkStatus } from '../userApp/WorkStatusConf';
+import { AppVariable, FlowVariable } from '../userApp/types';
 
 class Action {
     /**
@@ -126,6 +127,13 @@ class Action {
      */
     static async newUserApp(name: string) {
         return UserAppManage.newUserApp(name);
+    }
+
+    /**
+     * 保存全局变量
+     */
+    static async saveGlobalVariables(appId: string, globalVariables: AppVariable[]) {
+        return UserAppManage.saveGlobalVariables(appId, globalVariables);
     }
 
     /**

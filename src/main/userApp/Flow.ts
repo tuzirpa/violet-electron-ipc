@@ -110,7 +110,7 @@ export default class Flow {
         }
         content.push(`    ${this.isMainFlow ? '//主流程无需返回值' : 'return {returnVal};'}`);
         content.push('  } catch (error) {');
-        content.push(`    fatalError(error,__filename);`);
+        content.push(`    fatalError(error,__filename);process.exit(1);`);
         content.push('  }');
         content.push('};');
 

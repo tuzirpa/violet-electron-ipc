@@ -27,6 +27,11 @@ export function typeToCode(inputItem: DirectiveInput) {
         return `Number(String(\`${inputItem.value}\`))`;
     } else if (inputItem.type === 'boolean') {
         return `String(\`${inputItem.value}\`).toLowerCase() == 'true'`;
+    } else if (inputItem.type === 'object') {
+        if (!inputItem.enableExpression) {
+            return `Number(String(\`${inputItem.value}\`))`;
+        }
+        return `${inputItem.value}`;
     }
     return '';
 }
@@ -161,9 +166,11 @@ export function setLogFile(filePath: string) {
     };
     // @ts-ignore
     console['fatalError'] = function () {
-        oerror(...arguments);
         const args = [...arguments];
         const block = args.shift();
+        if (process.env.TUZI_ENV !== 'app') {
+            oerror(...args);
+        }
         const errorMsg = args.shift();
         const errorObj = args.shift();
         log.call(this, 'fatalError', block, errorMsg + errorObj.stack);

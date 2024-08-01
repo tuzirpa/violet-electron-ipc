@@ -8,6 +8,7 @@ import { uploadFileToQiniu } from '../utils/qiniuUtils';
 import { appPlazaAdd, getDownloadUrl } from '../api/appplaza';
 import { downloadFileWithResume } from '../utils/download';
 import { WorkStatus } from './WorkStatusConf';
+import { AppVariable, FlowVariable } from './types';
 
 /**
  * 广场的应用
@@ -23,6 +24,12 @@ export type AppPlaza = {
 };
 
 export class UserAppManage {
+    saveGlobalVariables(appId: string, globalVariables: AppVariable[]) {
+        const userApp = this.findUserApp(appId);
+        userApp.saveGlobalVariables(globalVariables);
+        return userApp.globalVariables;
+    }
+
     deleteSubFlow(appId: string, flowName: string) {
         if (flowName === 'main.flow') {
             throw new Error('不能删除主流程');
@@ -90,6 +97,9 @@ export class UserAppManage {
             });
             // TODO: 上传文件到服务器
             const fileUrl = await uploadFileToQiniu(zipPath);
+            //删除压缩文件
+            fs.unlinkSync(zipPath);
+
             // TODO: 添加应用到应用广场
             const appPlaza = await appPlazaAdd({
                 fileUrl,

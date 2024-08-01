@@ -1,9 +1,10 @@
 <template>
     <div>
         <!-- 遮挡层 -->
-        <div class="context-menu-mask" v-show="showMenu" @mousedown="showMenu = false"></div>
-        <div v-show="showMenu" ref="menu" class="context-menu rounded w-56 shadow-xl border-gray-200 border"
-            :style="{ top: `${menuY}px`, left: `${menuX}px` }">
+        <!-- <div class="context-menu-mask" v-show="showMenu" @mousedown="showMenu = false"></div> -->
+        <div v-show="showMenu" ref="menu" @blur="showMenu = false"
+            class="context-menu rounded w-56 shadow-xl outline-none border-gray-200 border"
+            :style="{ top: `${menuY}px`, left: `${menuX}px` }" tabindex="-1">
 
             <div class="group w-full h-10 flex flex-row justify-between items-center p-1
              hover:bg-gray-100  rounded gap-2" :class="{ disabled: item.disabled }" @click.stop="handleItemClick(item)"
@@ -43,9 +44,12 @@ export default {
             this.menuX = event.pageX;
             this.menuY = event.pageY;
 
+
             this.menuItems = menuItems;
             this.showMenu = true;
+
             await this.$nextTick();
+            this.menuRef?.focus();
             let { width, height } = this.menuRef!.getBoundingClientRect();
             // const width = this.menuRef!.offsetWidth;
             // const height = this.menuRef!.offsetHeight;

@@ -101,6 +101,13 @@ export const checkError = (directives: DirectiveData[], file: OpenFile) => {
             if (!Object.prototype.hasOwnProperty.call(directive.inputs, key)) {
                 break;
             }
+            const input = directive.inputs[key];
+            if (input.addConfig.type === 'variable') {
+                const varItem = vars.find((item) => item.name === input.value);
+                if (input.addConfig.required && !varItem) {
+                    errors.push(`变量${input.value}未定义`);
+                }
+            }
             // const input = directive.inputs[key];
             // if (input.addConfig.type === 'variable') {
             //     const varItem = vars.find((item) => item.name === input.value);

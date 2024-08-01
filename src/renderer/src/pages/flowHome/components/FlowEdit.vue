@@ -89,6 +89,9 @@ const openFiles = computed<OpenFile[]>(() => {
     return opFiles;
 });
 
+const aaa = new Set();
+const editFiles = ref(aaa);
+
 
 const curOpenFile = ref<OpenFile>(files.value[0]);
 const curBlocks = ref([curOpenFile.value.blocks[0]]);
@@ -608,7 +611,10 @@ function directiveShowContextMenu(event: any, block: DirectiveData) {
         {
             label: '编辑',
             onClick: () => {
-                console.log('编辑');
+                editBlock(
+                    curBlocks.value[0],
+                    curOpenFile.value.blocks.findIndex((item) => item.id === curBlocks.value[0].id)
+                );
             },
             icon: 'icon-bianji',
             shortcut: 'F2'
@@ -751,7 +757,8 @@ const saveFlowDebounce = (() => {
     let st: any;
     return function () {
         clearTimeout(st);
-        curOpenFile.value.edit = true;
+        editFiles.value.add(curOpenFile.value.name);
+
         st = setTimeout(() => {
             const saveObj: any = JSON.parse(JSON.stringify(curOpenFile.value));
             saveObj.blocks = saveObj.blocks.map((item) => {
@@ -764,7 +771,7 @@ const saveFlowDebounce = (() => {
             Action.saveFlow(props.appInfo.id, saveObj);
 
             checkError(curOpenFile.value.blocks, curOpenFile.value);
-            curOpenFile.value.edit = false;
+            editFiles.value.delete(curOpenFile.value.name);
         }, 1000);
     }
 })();
@@ -924,7 +931,7 @@ defineExpose({
                                 </template>
                             </el-popover>
                         </div>
-                        <div class="flow-edit ml-1" v-show="file.edit">
+                        <div class="flow-edit ml-1" v-show="editFiles.has(file.name)">
                             *
                         </div>
                     </div>

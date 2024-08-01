@@ -2,8 +2,14 @@ import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlu
 import { Action } from '@renderer/lib/action';
 import { ElMessage } from 'element-plus';
 import type { Block, LogLevel } from 'src/main/userApp/types';
+import type UserApp from 'src/main/userApp/UserApp';
 import type { WorkStatus } from 'src/main/userApp/WorkStatusConf';
 import { computed, ref } from 'vue';
+
+/**
+ * 当前打开的应用
+ */
+export const curUserApp = ref<UserApp>(null as any);
 
 /**
  * 当前打开应用工作状态

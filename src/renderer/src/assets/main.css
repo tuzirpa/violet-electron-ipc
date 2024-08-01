@@ -1,5 +1,4 @@
 @import './base.css';
-@import './context-menu.less';
 
 @tailwind base;
 @tailwind components;

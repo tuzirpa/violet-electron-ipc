@@ -15,7 +15,7 @@ export type DataType =
     | 'variable'
     | 'object';
 
-export interface FlowVariable {
+export interface AppVariable {
     /**
      * 变量名称
      */
@@ -25,10 +25,16 @@ export interface FlowVariable {
      */
     type: string;
     /**
+     * value值
+     */
+    value?: any;
+    /**
      * 变量描述
      */
     comment?: string;
+}
 
+export interface FlowVariable extends AppVariable {
     /**
      * 是否在当前指令之后
      */
@@ -43,6 +49,7 @@ export type AddConfigInputType =
     | 'checkbox'
     | 'textarea'
     | 'filePath'
+    | 'object'
     | 'variable';
 
 export type AddConfigOnputType = 'variable';
@@ -146,10 +153,16 @@ export interface DirectiveInput {
      * 对应变量类型的描述
      */
     typeDisplay?: string;
+
     /**
      * 输入类型
      */
     type: DataType;
+
+    /**
+     * 是否启用表达式
+     */
+    enableExpression?: boolean;
 
     addConfig: AddConfig<AddConfigInputType>;
 }

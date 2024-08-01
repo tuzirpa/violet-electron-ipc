@@ -4,19 +4,22 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { Column, ElAutoResizer, ElButton, ElCheckbox, ElCheckboxGroup, ElDialog, ElIcon, ElLoading, ElMessage, ElMessageBox, ElOption, ElPopover, ElSelect, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
+import { Column, ElAutoResizer, ElCheckbox, ElCheckboxGroup, ElDialog, ElIcon, ElLoading, ElMessage, ElMessageBox, ElPopover, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { errorDirectives } from './components/FlowEditStore';
-import { closeFile, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs, runLogsFilter, showRunLogs } from './indexvue';
+import { closeFile, curUserApp, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs, runLogsFilter, showRunLogs } from './indexvue';
 import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
 import CodeEdit from './components/CodeEdit.vue';
 import type Flow from 'src/main/userApp/Flow';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { DeleteFilled, Filter, Edit, CopyDocument } from '@element-plus/icons-vue'
+import { DeleteFilled, Filter, Edit, CopyDocument } from '@element-plus/icons-vue';
+import GlobalVariable from './components/GlobalVariable.vue';
+import type { AppVariable } from 'src/main/userApp/types';
+
 
 
 const route = useRoute();
@@ -24,7 +27,6 @@ const id = route.query.appId as string;
 
 // 定义变量
 const userAppDetail = ref<UserApp>();
-
 
 async function getAppDetail() {
     // 获取应用详情
@@ -63,10 +65,16 @@ const curActiveFlowIndex = ref(-1);
 const loading = ref(true);
 
 async function init() {
+    //获取应用工作状态
     curWorkStatus.value = await Action.openUserApp(id);
     console.log(curWorkStatus.value, 'workStatus');
 
     await getAppDetail();
+    //全局变量暴露
+    if (userAppDetail.value) {
+        curUserApp.value = userAppDetail.value;
+    }
+
     loading.value = false;
 }
 init();
@@ -125,7 +133,7 @@ async function getGlobalVariable() {
 
     // console.log(globalRes.result);
 
-    globalVariableData.value = res.result.filter(item => item.name.startsWith('__UserGlobal__')).map((item: { name: any; value: { type: any; value: any; }; }) => {
+    globalVariableData.value = res.result.filter(item => item.name.startsWith('_GLOBAL_')).map((item: { name: any; value: { type: any; value: any; }; }) => {
         const name = item.name;
         return {
             type: item.value.type ?? '未初始化',
@@ -214,7 +222,8 @@ const devVariableData = ref([]);
 /**
  * 全局变量列表
  */
-const globalVariableData = ref([]);
+const globalVariableData = ref<any[]>([]);
+
 
 /**
  * 是否处于调试状态
@@ -297,27 +306,27 @@ const runLogsColumns: Column<any>[] = [
         headerCellRenderer: () => (
             <div class="flex justify-center items-center w-full">
                 <div class="mr-2">消息类型</div>
-                <ElPopover trigger="click" {...{ width: 200 }}>
-                    {{
-                        default: () => (
-                            <div class="filter-wrapper">
-                                <div class="filter-group">
-                                    <ElCheckboxGroup v-model={runLogsFilter.value}>
-                                        <ElCheckbox label="信息" value="info" />
-                                        <ElCheckbox label="警告" value="warn" />
-                                        <ElCheckbox label="错误" value="error" />
-                                        <ElCheckbox label="调试" value="debug" />
-                                        <ElCheckbox label="致命错误" value="fatalError" />
-                                    </ElCheckboxGroup>
-                                </div>
+                <ElPopover trigger="click" {...{ width: 100 }} v-slots={{
+                    default: () => (
+                        <div class="filter-wrapper">
+                            <div class="filter-group">
+                                <ElCheckboxGroup v-model={runLogsFilter.value}>
+                                    <ElCheckbox label="信息" value="info" />
+                                    <ElCheckbox label="警告" value="warn" />
+                                    <ElCheckbox label="错误" value="error" />
+                                    <ElCheckbox label="调试" value="debug" />
+                                    <ElCheckbox label="致命错误" value="fatalError" />
+                                </ElCheckboxGroup>
                             </div>
-                        ),
-                        reference: () => (
-                            <ElIcon class="cursor-pointer">
-                                <Filter />
-                            </ElIcon>
-                        ),
-                    }}
+                        </div>
+                    ),
+                    reference: () => (
+                        <ElIcon class="cursor-pointer">
+                            <Filter />
+                        </ElIcon>
+                    ),
+                }}>
+
                 </ElPopover>
 
             </div>
@@ -349,7 +358,8 @@ const runLogsColumns: Column<any>[] = [
         width: 150,
         align: Alignment.CENTER,
         cellRenderer: ({ cellData: message, rowData }) => (
-            <div class="flex justify-center items-center h-full w-full" onContextmenu={(e: MouseEvent) => { handleRunLogsContextMenu(rowData, 4, e) }}>
+            <div class="flex justify-center items-center h-full w-full"
+                onContextmenu={(e: MouseEvent) => { handleRunLogsContextMenu(rowData, 4, e) }}>
                 <span class="truncate flex-1 w-0">{message}</span>
                 <div class="cursor-pointer" onclick={() => { viewDetailsLogMessage(message) }}>查看详情</div>
             </div>
@@ -456,6 +466,15 @@ async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) 
             onClick: async () => {
                 const res = await ElMessageBox.prompt('请输入新的流程名称', {
                     inputValue: flow.aliasName,
+                    inputValidator: (val) => {
+                        if (val === null || val.length < 1) {
+                            return '名称不能为空';
+                        }
+                        if (val.length > 200) {
+                            return '最多可输入200个字符';
+                        }
+                        return true;
+                    },
                     inputType: 'text',
                     confirmButtonText: '确定',
                     cancelButtonText: '取消'
@@ -463,6 +482,10 @@ async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) 
 
                 if (res.action === 'confirm') {
                     console.log(res.value, 'newName');
+                    if (!res.value) {
+                        ElMessage.error('名称不能为空');
+                        return;
+                    }
                     flow.aliasName = res.value;
                     await Action.saveFlowAliName(userAppDetail.value?.id ?? '', flow);
                     ElMessage.success('重命名成功');
@@ -470,6 +493,13 @@ async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) 
             }
         }
     ])
+}
+
+function saveGlobalVariable(gvars: AppVariable[]) {
+    console.log(gvars, 'globalVariableData');
+    if (userAppDetail.value?.id) {
+        Action.saveGlobalVariables(userAppDetail.value.id, gvars);
+    }
 }
 
 // 添加逻辑
@@ -661,16 +691,9 @@ async function handleFlowContextMenu(e: MouseEvent, flow: Flow, _index: number) 
 
                         </div>
                         <BoxDraggable class="left-sidebar border-t" :height="400" :min-height="100" :resize-top="true">
-                            <div class="viewbox">
-                                <div class="flex flex-row justify-between p-2">
-                                    <div>全局变量</div>
-                                    <div class="global-variable-list">
-                                        <div class="hover:bg-slate-100" link>搜索</div>
-                                        <ElButton link>新增</ElButton>
-                                        <ElButton link>菜单</ElButton>
-                                    </div>
-                                </div>
-                            </div>
+                            <GlobalVariable v-if="userAppDetail" :userAppDetail="userAppDetail"
+                                :global-variable-data="globalVariableData"
+                                @updateGlobalVariable="(data) => saveGlobalVariable(data)"></GlobalVariable>
                         </BoxDraggable>
                     </BoxDraggable>
                 </div>

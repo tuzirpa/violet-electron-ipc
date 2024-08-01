@@ -85,7 +85,7 @@ function jsonFomat() {
 </script>
 
 <template>
-  <view>
+  <view class="code-edit">
     <view class="save-test">
       <el-button @click="jsonFomat">json格式化</el-button>
     </view>
@@ -100,5 +100,13 @@ function jsonFomat() {
   margin: 10rpx 0;
   display: flex;
   justify-content: flex-end;
+}
+
+.code-edit::v-deep(.cm-scroller) {
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 8px;
+    background-color: transparent;
+  }
 }
 </style>

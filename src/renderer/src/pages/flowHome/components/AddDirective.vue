@@ -195,6 +195,11 @@ onMounted(() => {
                                             :variables="_variables" :inputItem="inputItem">
                                         </InputValueVar>
                                     </div>
+                                    <div class="relative" v-if="inputItem.addConfig.type === 'object'">
+                                        <InputValueVar @inputValueChange="inputValueChange" v-model="inputItem.value"
+                                            :variables="_variables" :inputItem="inputItem">
+                                        </InputValueVar>
+                                    </div>
                                     <div class="relative" v-if="inputItem.addConfig.type === 'variable'">
                                         <InputValueVarVariable @inputValueChange="inputValueChange"
                                             v-model="inputItem.value" :variables="_variables" :inputItem="inputItem">
