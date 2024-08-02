@@ -22,14 +22,15 @@ const searchIcon = <i class="iconfont icon-sousuo"></i>;
 const appGlobalVariables = computed(() => {
     let globalVariables: AppVariable[] = [];
     globalVariables = props.userAppDetail.globalVariables ?? [];
-    globalVariables = globalVariables.map(item => {
-        return {
-            name: item.name,
-            value: item.value,
-            type: 'string',
-            comment: item.comment
-        };
-    });
+    globalVariables = globalVariables.filter(item => globalVariableNameFilter.value.length === 0
+        || item.name.includes(globalVariableNameFilter.value)).map(item => {
+            return {
+                name: item.name,
+                value: item.value,
+                type: 'string',
+                comment: item.comment
+            };
+        });
     return globalVariables;
 })
 

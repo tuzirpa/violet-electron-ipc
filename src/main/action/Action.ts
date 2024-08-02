@@ -15,6 +15,7 @@ import { getDeviceID } from '../utils/divice';
 import { submitFeedback } from '../api/feedback';
 import { WorkStatus } from '../userApp/WorkStatusConf';
 import { AppVariable } from '../userApp/types';
+import SystemDirectivePackageManage from '../systemDirective/SystemDirectivePackageManage';
 
 class Action {
     /**
@@ -353,6 +354,28 @@ class Action {
      */
     static async submitFeekback(content: string) {
         return submitFeedback({ content });
+    }
+
+    /**
+     * 上传系统指令包
+     */
+    static async uploadNewVersionDirective(version: string, description: string) {
+        return SystemDirectivePackageManage.uploadSystemDirectivePackage(version, description);
+    }
+
+    /**
+     * 获取所有系统指令包版本
+     */
+    static async getAllVersions() {
+        return SystemDirectivePackageManage.getAllVersions();
+    }
+
+    /**
+     * 使用自定版本的系统指令
+     * @param version 版本号
+     */
+    static async useVersionSystemDirective(version: string) {
+        return SystemDirectivePackageManage.useVersionSystemDirective(version);
     }
 }
 

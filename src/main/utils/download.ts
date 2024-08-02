@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { createWriteStream } from 'fs';
+import fs, { createWriteStream } from 'fs';
 
 type ProgressRes = {
     /**
@@ -36,13 +36,12 @@ export async function downloadFileWithResume(
     let startByte = 0;
     let downloadedBytes = 0;
 
-    const fileStream = createWriteStream(outputPath);
     let startTime = Date.now();
     const response = await fetch(url);
-
     if (!response.ok) {
         throw new Error(`Failed to download file, status ${response.status}`);
     }
+
     if (progressCallback) {
         const totalBytes = parseInt(response.headers.get('content-length') || '0', 10);
         const remainingBytes = totalBytes - startByte;
@@ -63,6 +62,7 @@ export async function downloadFileWithResume(
         });
     }
 
+    const fileStream = createWriteStream(outputPath);
     const pipelinePromise = new Promise<void>((resolve, reject) => {
         response.body.pipe(fileStream);
         response.body.on('error', reject);
@@ -74,6 +74,7 @@ export async function downloadFileWithResume(
         await pipelinePromise;
         console.log(`File downloaded to ${outputPath}`);
     } catch (error) {
+        fs.unlinkSync(outputPath);
         console.error('Error downloading file:', error);
     }
 }

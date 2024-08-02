@@ -22,16 +22,16 @@ export const sendStepLog = (message: string) => {
 
 export function typeToCode(inputItem: DirectiveInput) {
     if (inputItem.type === 'string') {
-        return `String(\`${inputItem.value}\`)`;
+        return `String(\`${inputItem.value ?? ''}\`)`;
     } else if (inputItem.type === 'number') {
-        return `Number(String(\`${inputItem.value}\`))`;
+        return `Number(String(\`${inputItem.value ?? ''}\`))`;
     } else if (inputItem.type === 'boolean') {
-        return `String(\`${inputItem.value}\`).toLowerCase() == 'true'`;
+        return `String(\`${inputItem.value ?? ''}\`).toLowerCase() == 'true'`;
     } else if (inputItem.type === 'object') {
         if (!inputItem.enableExpression) {
-            return `Number(String(\`${inputItem.value}\`))`;
+            return `Number(String(\`${inputItem.value ?? ''}\`))`;
         }
-        return `${inputItem.value}`;
+        return `${inputItem.value ?? ''}`;
     }
     return '';
 }

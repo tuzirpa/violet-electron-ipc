@@ -6,12 +6,13 @@ import path from 'path';
 /**
  * 获取七牛云上传凭证
  */
-const getQiniuToken = async (keyToOverwrite: string = '') => {
+export const getQiniuToken = async (keyToOverwrite: string = '') => {
     const res = await Request.post('/user/qiniuToken', { keyToOverwrite });
     return {
         token: res.data.token,
         fileUrl: res.data.fileUrl,
-        key: res.data.key
+        key: res.data.key,
+        fileName: res.data.fileUrl.split('/').pop()
     };
 };
 
@@ -20,10 +21,22 @@ const getQiniuToken = async (keyToOverwrite: string = '') => {
  */
 export const uploadFileToQiniu = async (
     filePath: string,
+    qiniuToken?: { token: string; key: string; fileUrl: string },
     onProgress?: (percent: number) => void
-) => {
-    const fileName = path.basename(filePath);
-    const { token, key, fileUrl } = await getQiniuToken(fileName);
+): Promise<string> => {
+    let fileName: string | undefined;
+    let { token, key, fileUrl }: { token: string; key: string; fileUrl: string } = qiniuToken || {
+        token: '',
+        key: '',
+        fileUrl: ''
+    };
+    if (!qiniuToken) {
+        fileName = path.basename(filePath);
+        const res = await getQiniuToken(fileName);
+        token = res.token;
+        key = res.key;
+        fileUrl = res.fileUrl;
+    }
     const config = new qiniu.conf.Config();
     config.zone = qiniu.zone.Zone_z2;
 
