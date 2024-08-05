@@ -9,13 +9,14 @@ import User from '../api/User';
 import Captcha from '../api/Captcha';
 import { AppType } from '../userApp/UserApp';
 import { getPlazas } from '../api/appplaza';
-import { encrypt } from '../api/aes';
+import aes, { encrypt } from '../api/aes';
 import { getRandom } from '../utils/RandomUtils';
 import { getDeviceID } from '../utils/divice';
 import { submitFeedback } from '../api/feedback';
 import { WorkStatus } from '../userApp/WorkStatusConf';
 import { AppVariable } from '../userApp/types';
 import SystemDirectivePackageManage from '../systemDirective/SystemDirectivePackageManage';
+import * as lzString from 'lz-string';
 
 class Action {
     /**
@@ -89,9 +90,26 @@ class Action {
     }
 
     /**
+     * aes加密
+     * @param content 加密内容
+     */
+    static async aesEncrypt(content: string) {
+        content = lzString.compressToBase64(content);
+        // content = aes.encrypt(content);
+        return content;
+    }
+    /**
+     * aes解密
+     */
+    static async aesDecrypt(content: string) {
+        // content = aes.decrypt(content);
+        content = lzString.decompressFromBase64(content);
+        return content;
+    }
+
+    /**
      * 复制内容到粘贴板
      */
-
     static async copyToClipboard(content: string) {
         return clipboard.writeText(content);
     }
@@ -195,6 +213,26 @@ class Action {
     static async userAppDevRun(appId: string) {
         return UserAppManage.userAppDevRun(appId);
     }
+    /**
+     * 设置断点
+     */
+
+    static async setBreakPoint(appId: string, flowName: string, stepIndex: number) {
+        return UserAppManage.setBreakPoint(appId, flowName, stepIndex);
+    }
+
+    /**
+     * 删除断点
+     */
+    static async deleteBreakPoint(appId: string, flowName: string, stepIndex: number) {
+        return UserAppManage.deleteBreakPoint(appId, flowName, stepIndex);
+    }
+
+    /**
+     *
+     * @param appId
+     * @returns
+     */
     static async devStepOver(appId: string) {
         return UserAppManage.devStepOver(appId);
     }

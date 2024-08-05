@@ -26,6 +26,24 @@ export type AppType = 'myCreate' | 'into' | '';
  * 应用类
  */
 export default class UserApp {
+    deleteBreakPoint(flowName: string, stepIndex: number) {
+        if (this.#devNodeJs) {
+            const flow = this.findFlow(flowName);
+            if (flow) {
+                const breakpoint = flow.step2Breakpoint(stepIndex);
+                this.#devNodeJs.deleteBreakPoint(breakpoint);
+            }
+        }
+    }
+    setBreakPoint(flowName: string, stepIndex: number) {
+        if (this.#devNodeJs) {
+            const flow = this.findFlow(flowName);
+            if (flow) {
+                const breakpoint = flow.step2Breakpoint(stepIndex);
+                this.#devNodeJs.setBreakpoint(breakpoint);
+            }
+        }
+    }
     deleteSubFlow(flowName: string) {
         const flow = this.flows.find((flow) => flow.name === flowName);
         if (flow) {
@@ -346,12 +364,7 @@ export default class UserApp {
     get breakpoints() {
         const breakpoints: IBreakpoint[] = [];
         this.flows.forEach((flow) => {
-            flow.breakpoints.forEach((breakpoint) => {
-                breakpoints.push({
-                    url: `file:///${this.appDir}/${flow.name}.js`.replace(/\\/g, '/'),
-                    line: breakpoint
-                });
-            });
+            breakpoints.push(...flow.breakpoints);
         });
         return breakpoints;
     }

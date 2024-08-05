@@ -2,6 +2,7 @@ import fs from 'fs';
 import { DirectiveTree } from './types';
 import path, { join } from 'path';
 import { convertDirective } from './directiveconvert';
+import { IBreakpoint } from './devuserapp/DevNodeJs';
 
 export default class Flow {
     delete() {
@@ -25,17 +26,30 @@ export default class Flow {
     }
 
     get breakpoints() {
-        const breakpoints: number[] = [];
+        const breakpoints: IBreakpoint[] = [];
         this.blocks.forEach((block, index) => {
             const breakpoint = block.breakpoint;
             if (breakpoint) {
-                breakpoints.push(index + Flow.headLinkCount);
+                breakpoints.push(this.step2Breakpoint(index));
             }
         });
         return breakpoints;
     }
+
     get jsFilePath() {
         return join(this.appDir, `${this.name}.js`);
+    }
+
+    /**
+     * 步骤索引转换成断点行号
+     * @param index 步骤的索引
+     * @returns 断点行号
+     */
+    step2Breakpoint(index: number): IBreakpoint {
+        return {
+            url: `file:///${this.appDir}/${this.name}.js`.replace(/\\/g, '/'),
+            line: index + Flow.headLinkCount
+        };
     }
 
     init() {

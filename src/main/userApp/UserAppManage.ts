@@ -24,6 +24,14 @@ export type AppPlaza = {
 };
 
 export class UserAppManage {
+    deleteBreakPoint(appId: string, flowName: string, stepIndex: number) {
+        const userApp = this.findUserApp(appId);
+        return userApp.deleteBreakPoint(flowName, stepIndex);
+    }
+    setBreakPoint(appId: string, flowName: string, stepIndex: number) {
+        const userApp = this.findUserApp(appId);
+        return userApp.setBreakPoint(flowName, stepIndex);
+    }
     saveGlobalVariables(appId: string, globalVariables: AppVariable[]) {
         const userApp = this.findUserApp(appId);
         userApp.saveGlobalVariables(globalVariables);

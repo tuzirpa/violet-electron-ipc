@@ -73,11 +73,7 @@ async function askUpdate(version) {
         })
     );
     if (skip && version === ver) return;
-    const fUpdate = true;
-    if (fUpdate) {
-        autoUpdater.downloadUpdate();
-        return;
-    }
+
     if (auto) {
         // 不再询问 直接下载更新
         autoUpdater.downloadUpdate();

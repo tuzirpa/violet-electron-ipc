@@ -70,7 +70,7 @@ const files = computed<OpenFile[]>(() => {
             name: item.name,
             aliasName: item.aliasName ?? item.name,
             filePath: item.filePath,
-            historys: [{ saveName: '初始加载', data: blocks }],
+            historys: [{ saveName: '初始加载', data: JSON.parse(JSON.stringify(blocks)) }],
             curHistoryIndex: 0,
             blocks: blocks
         };
@@ -254,6 +254,13 @@ function foldClick(blockParam: DirectiveData, _index: any) {
  */
 function breakpointClick(blockParam: DirectiveData, _index: any) {
     blockParam.breakpoint = !blockParam.breakpoint;
+    if (blockParam.breakpoint) {
+        //断点
+        Action.setBreakPoint(props.appInfo.id, curOpenFile.value.name, _index);
+    } else {
+        //取消断点
+        Action.deleteBreakPoint(props.appInfo.id, curOpenFile.value.name, _index);
+    }
     saveCurFlow('设置断点');
 }
 
@@ -492,9 +499,10 @@ function addBlock(directive: DirectiveTree, index?: number) {
  * 复制选中的块
  */
 async function copyBlocks() {
-    let text = '//tuziRpa\n';
-    text += JSON.stringify(curBlocks.value);
-    await navigator.clipboard.writeText(text);
+    let textHead = '//tuziRpa';
+    let text = JSON.stringify(curBlocks.value);
+    const textEncrypt = await Action.aesEncrypt(text);
+    await Action.copyToClipboard(`${textHead}${textEncrypt}`);
     ElMessage.success('复制成功');
 }
 
@@ -504,6 +512,7 @@ async function copyBlocks() {
 async function allBlocks() {
     curBlocks.value = curOpenFile.value.blocks;
 }
+
 
 /**
  * 粘贴选中的块
@@ -517,8 +526,8 @@ async function pasteBlocks() {
         return;
     }
     clipboardText = clipboardText.replace('//tuziRpa', '');
+    clipboardText = await Action.aesDecrypt(clipboardText);
     console.log(clipboardText, '粘贴内容');
-
     const clipboardBlocks = JSON.parse(clipboardText);
     const newBlocks = clipboardBlocks.map((block) => {
         block.id = uuid();
@@ -791,6 +800,8 @@ async function saveCurFlow(saveName?: string) {
         saveName: saveName || '未命名',
         data: JSON.parse(JSON.stringify(saveObj.blocks))
     });
+    console.log(history, '历史记录');
+
 
     if (history.length > 20) {
         history.shift();

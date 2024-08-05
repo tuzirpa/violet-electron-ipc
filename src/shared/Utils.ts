@@ -21,3 +21,12 @@ export function sleepRandom(minTime: number, maxTime: number) {
 export function uuid() {
     return randomUUID().replace(/-/g, '');
 }
+
+/**
+ * 深拷贝对象 不拷贝原型链
+ * @param obj 对象
+ * @returns
+ */
+export function copyObject(obj: any) {
+    return JSON.parse(JSON.stringify(obj));
+}

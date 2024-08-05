@@ -3,6 +3,7 @@ import { WebSocket } from 'ws';
 export interface IBreakpoint {
     url: string;
     line: number;
+    id?: string;
     scopeChain?: any[];
 }
 
@@ -27,6 +28,17 @@ export interface IExecutionThrown {
 }
 
 export class DevNodeJs {
+    async deleteBreakPoint(breakpoint: IBreakpoint) {
+        const creBreakpointIndex = this.breakpoints.findIndex(
+            (value) => breakpoint.url === value.url && breakpoint.line === value.line
+        );
+        if (creBreakpointIndex > -1) {
+            await this.sendCommand('Debugger.removeBreakpoint', {
+                breakpointId: this.breakpoints[creBreakpointIndex].id
+            });
+            this.breakpoints.splice(creBreakpointIndex, 1);
+        }
+    }
     async getProperties(objectId: string) {
         const data = await this.sendCommand('Runtime.getProperties', {
             objectId,
@@ -70,7 +82,7 @@ export class DevNodeJs {
 
             await this.sendCommand('Debugger.enable', {});
             await this.sendCommand('Runtime.enable', {});
-            this.setBreakpoint();
+            this.setBreakpoints();
         });
 
         ws.on('message', (data) => {
@@ -161,14 +173,30 @@ export class DevNodeJs {
         });
     }
 
-    async setBreakpoint() {
+    /**
+     * 设置单个断点
+     * @param breakpoint {url: string, line: number}
+     */
+    async setBreakpoint(breakpoint: IBreakpoint) {
+        const res = await this.sendCommand('Debugger.setBreakpointByUrl', {
+            url: breakpoint.url,
+            lineNumber: breakpoint.line
+        });
+        breakpoint.id = res.result.breakpointId;
+        this.breakpoints.push(breakpoint);
+    }
+
+    async setBreakpoints() {
         const setBreakpointPromises = this.breakpoints.map((value) => {
             return this.sendCommand('Debugger.setBreakpointByUrl', {
                 url: value.url,
                 lineNumber: value.line
             });
         });
-        await Promise.all(setBreakpointPromises);
+        const res = await Promise.all(setBreakpointPromises);
+        res.forEach((value, index) => {
+            this.breakpoints[index].id = value.result.breakpointId;
+        });
     }
 
     onBreakpoint(borakpointBackCall: (breakpoint: IBreakpoint) => void) {
