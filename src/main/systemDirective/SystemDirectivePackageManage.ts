@@ -12,7 +12,6 @@ import {
 } from '../api/systemDirective';
 import { downloadFileWithResume } from '../utils/download';
 import { WindowManage } from '../window/WindowManage';
-import { uuid } from '@shared/Utils';
 
 export class SystemDirectivePackageManage {
     versions: SystemDirectiveVersion[] = [];

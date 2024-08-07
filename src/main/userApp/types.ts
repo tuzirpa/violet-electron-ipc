@@ -1,3 +1,13 @@
+export type FlowError = {
+    flowName: string;
+    flowAliasName?: string;
+    line: number;
+    message: string;
+    messageObject: any;
+    ruleId: string | null;
+    errorLevel: string;
+};
+
 export type LogMessage = {
     level: LogLevel;
     time: number;

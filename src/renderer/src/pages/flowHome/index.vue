@@ -10,7 +10,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
-import { errorDirectives } from './components/FlowEditStore';
+import { curFlowErrors } from './components/FlowEditStore';
 import { closeFile, curUserApp, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs, runLogsFilter, showRunLogs } from './indexvue';
 import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
 import CodeEdit from './components/CodeEdit.vue';
@@ -111,12 +111,14 @@ async function getLoaclVariable() {
     const scopeChain = localScopeChain.object.objectId;
     const res = await Action.devGetProperties(userAppDetail.value?.id, scopeChain);
     console.log(res.result);
-    devVariableData.value = res.result.map((item: { name: any; value: { type: any; value: any; }; }) => {
+    devVariableData.value = res.result.map((item: any) => {
         const name = item.name;
+        const type = item.value.type === 'object' ? item.value.className : (item.value.type ?? '未初始化');
+        const value = item.value.type === 'object' ? `Object<${item.value.preview.description}>` : item.value.value;
         return {
-            type: item.value.type ?? '未初始化',
+            type: type,
             name,
-            val: item.value.value
+            val: value
         };
     });
 }
@@ -381,7 +383,7 @@ const runLogsColumns: Column<any>[] = [
 
             // }
             return (<>
-                {data?.flowName}
+                {data?.aliasName}
             </>)
         }
     },
@@ -623,47 +625,38 @@ function saveGlobalVariable(gvars: AppVariable[]) {
                                     </div>
                                 </el-tab-pane>
                                 <el-tab-pane label="调试变量" name="dev-variable">
-                                    <el-table :data="devVariableData" style="
+                                    <el-table :data="[...devVariableData, ...globalVariableData]" :border="true" style="
                                         width: 100%;
                                         height: calc(var(--draggable-height) - 60px);
                                     ">
                                         <el-table-column prop="name" label="变量名" width="180" />
-                                        <el-table-column prop="val" label="变量值" width="180" />
-                                        <el-table-column prop="type" label="变量类型" />
+                                        <el-table-column prop="val" label="变量值" />
+                                        <el-table-column prop="type" label="变量类型" width="180" />
                                     </el-table>
                                 </el-tab-pane>
                                 <el-tab-pane class="error-list" label="错误列表" name="error-list">
                                     <template #label>
-                                        <div class="error-list-title" :class="{ 'cornerMark': errorDirectives.length }">错误列表
+                                        <div class="error-list-title" :class="{ 'cornerMark': curFlowErrors.length }">
+                                            错误/警告列表
                                         </div>
                                     </template>
-                                    <ElTable :data="errorDirectives" style="
-                                        width: 100%;
-                                        height: calc(var(--draggable-height) - 60px);
-                                    ">
-                                        <ElTableColumn label="流程名" width="180">
-                                            <template #default="scope">
-                                                {{ scope.row.file.name }}
-                                            </template>
+                                    <ElTable :data="curFlowErrors" :row-class-name="({ row }) => row.errorLevel"
+                                        style="width: 100%;height: calc(var(--draggable-height) - 60px);">
+                                        <ElTableColumn label="流程名" prop="flowAliasName" width="180">
+
                                         </ElTableColumn>
-                                        <el-table-column label="错误指令" width="180">
-                                            <template #default="scope">
-                                                {{ scope.row.directive.displayName }}
-                                            </template>
-                                        </el-table-column>
-                                        <el-table-column label="错误描述">
-                                            <template #default="scope">
-                                                {{ scope.row.directive.error }}
-                                            </template>
-                                        </el-table-column>
-                                        <el-table-column prop="line" label="行号" width="180">
+
+                                        <ElTableColumn label="错误描述" prop="message">
+
+                                        </ElTableColumn>
+                                        <ElTableColumn prop="line" label="行号" width="180">
                                             <template #default="scope">
                                                 <a class="cursor-pointer underline decoration-1 text-blue-500"
-                                                    @click="flowEditRef?.scrollIntoRow(scope.row.file.name, scope.row.line)">
+                                                    @click="flowEditRef?.scrollIntoRow(scope.row.flowName, scope.row.line)">
                                                     {{ scope.row.line }}
                                                 </a>
                                             </template>
-                                        </el-table-column>
+                                        </ElTableColumn>
                                     </ElTable>
                                 </el-tab-pane>
                             </el-tabs>

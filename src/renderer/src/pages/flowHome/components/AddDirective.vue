@@ -68,7 +68,6 @@ nextTick(() => {
                 }
             }
         }
-        console.log(advancedNum.value, '高级参数数量');
     }, 300);
 });
 

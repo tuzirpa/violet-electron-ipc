@@ -9,7 +9,7 @@ import User from '../api/User';
 import Captcha from '../api/Captcha';
 import { AppType } from '../userApp/UserApp';
 import { getPlazas } from '../api/appplaza';
-import aes, { encrypt } from '../api/aes';
+import { encrypt } from '../api/aes';
 import { getRandom } from '../utils/RandomUtils';
 import { getDeviceID } from '../utils/divice';
 import { submitFeedback } from '../api/feedback';
@@ -213,6 +213,14 @@ class Action {
     static async userAppDevRun(appId: string) {
         return UserAppManage.userAppDevRun(appId);
     }
+
+    /**
+     * 检查userApp代码错误
+     */
+    static async lintError(appId: string) {
+        return UserAppManage.lintError(appId);
+    }
+
     /**
      * 设置断点
      */

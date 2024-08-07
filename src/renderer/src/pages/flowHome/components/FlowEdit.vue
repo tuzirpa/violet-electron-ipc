@@ -13,6 +13,7 @@ import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { Action } from '@renderer/lib/action';
 import { showContextFlowMenu, checkError } from './FlowEditOps';
+import { curFlowErrors } from './FlowEditStore';
 import { DirectiveData, OpenFile } from './types'
 import { curWorkStatus } from '../indexvue'
 
@@ -155,6 +156,9 @@ const blocks = computed(() => {
     let pdLvn = 0;
     curOpenFile.value.blocks.forEach((block, index) => {
         block.commentShow = commentCompute(block);
+        const errorObj = curFlowErrors.value.find((item) => curOpenFile.value.name === item.flowName && item.line === index + 1);
+        block.error = errorObj?.message || '';
+        block.errorLevel = errorObj?.errorLevel;
 
         curOpenFile.value.blocks[index].pdLvn = pdLvn;
         //是否有折叠
@@ -773,13 +777,14 @@ const saveFlowDebounce = (() => {
             saveObj.blocks = saveObj.blocks.map((item) => {
                 delete item.commentShow;
                 delete item.foldDesc;
+                delete item.error;
                 return item;
             });
             console.log(saveObj, '保存流程');
 
             Action.saveFlow(props.appInfo.id, saveObj);
 
-            checkError(curOpenFile.value.blocks, curOpenFile.value);
+            checkError(props.appInfo.id);
             editFiles.value.delete(curOpenFile.value.name);
         }, 1000);
     }
@@ -852,12 +857,13 @@ const redo = () => {
 };
 
 async function scrollIntoRow(flowName: string, rowNum: number) {
-    openFiles.value.forEach((file) => {
-        if (file.name === flowName) {
-            // curOpenFile.value = file;
-            curWorkStatus.value.activeFlow = file.name;
-        }
-    });
+    //判断当前文件是否打开，未打开给他打开，然后滚动到指定行
+    const opened = curWorkStatus.value.openedFlows.includes(flowName);
+    if (!opened) {
+        curWorkStatus.value.openedFlows.push(flowName);
+    }
+    curWorkStatus.value.activeFlow = flowName;
+
     await nextTick();
     document.getElementById(`row-${rowNum}`)?.scrollIntoView({
         behavior: 'smooth',
@@ -912,9 +918,10 @@ function initHandleWheel() {
 }
 onMounted(() => {
     initHandleWheel();
+    checkError(props.appInfo.id);
 });
 
-checkError(curOpenFile.value.blocks, curOpenFile.value);
+
 
 defineExpose({
     undo,
@@ -959,7 +966,7 @@ defineExpose({
                     <div class="flex justify-between items-center row-number w-20" v-show="!block.hide"
                         v-for="(block, index) in blocks" :key="`row-${index + 1}`" :id="`row-${index + 1}`">
                         <div class="text-center h-16 flex items-center pl-2">
-                            <div @click="breakpointClick(block, index)" :class="{ 'text-red-500': block.error }">
+                            <div @click="breakpointClick(block, index)" :class="block.errorLevel">
                                 <el-tooltip v-if="block.error" class="box-item" :show-arrow="false" effect="dark"
                                     :content="block.error" placement="bottom-start">
                                     {{ index + 1 }}
@@ -985,7 +992,7 @@ defineExpose({
                     @dragenter="flowEditDragEnter" @dragover="flowEditDragOver" @dragleave="flowEditDragLeave">
                     <template v-if="blocks.length > 0">
                         <div class="directive-block" v-for="(element, index) in blocks" :data-id="element.id"
-                            :class="{ 'bg-red-200/60': index + 1 === breakpointData.line, 'border-red-500 border-l': element.error }"
+                            :class="[`border-${element.errorLevel} border-l`, index + 1 === breakpointData.line ? 'bg-red-200/60' : '']"
                             :key="element.id" draggable="true" @dragstart="blockDragStart(element, index)"
                             @contextmenu="directiveShowContextMenu($event, element)">
                             <div class="row flex items-center" :class="{ 'text-gray-400/50': element.disabled }">
@@ -1113,5 +1120,21 @@ defineExpose({
     border-radius: 9999px;
     background-color: #f0f0f0;
     padding: 2px 4px;
+}
+
+.error {
+    color: red;
+}
+
+.border-error {
+    border-color: red;
+}
+
+.warning {
+    color: #ff9900;
+}
+
+.border-warning {
+    border-color: #ff9900;
 }
 </style>

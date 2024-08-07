@@ -59,8 +59,6 @@ function localVariablesFilter(variable: FlowVariable) {
     if (variableFilter.value.includes('recommended')) {
         show = show && props.inputItem.addConfig.filtersType === variable.type;
     }
-    console.log(varSelectVal.value, variable.name, variable.comment);
-
     return show &&
         (varSelectVal.value.length === 0
             || variable.name.includes(varSelectVal.value)

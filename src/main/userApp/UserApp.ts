@@ -7,7 +7,7 @@ import StepWindow from '../window/StepWindow';
 import { WindowManage } from '../window/WindowManage';
 import Flow from './Flow';
 import { DevNodeJs, IBreakpoint, IExecutionThrown } from './devuserapp/DevNodeJs';
-import { AppVariable, LogMessage } from './types';
+import { AppVariable, FlowError, LogMessage } from './types';
 import basePackagePath from '../../../resources/node_modules.zip?asset&asarUnpack';
 
 import commonUtilContent from './robotUtil/commonUtil.ts?raw';
@@ -19,6 +19,7 @@ import startApiServer from './apiserver';
 import { Conf } from 'electron-conf/main';
 import { WorkStatus } from './WorkStatusConf';
 import { getFlowNum } from '../utils/fileUtils';
+import { lintFiles } from '../utils/flowEslintUtils';
 
 export type AppType = 'myCreate' | 'into' | '';
 
@@ -624,5 +625,45 @@ export default class UserApp {
             this.#lastLogsOutIndex = this.#logsData.length;
             this._sendRunLogs(data);
         });
+    }
+
+    async lintError() {
+        // 代码检查
+        const files = this.flows.map((flow) => flow.jsFilePath);
+        const globals = { _block: true };
+        this.globalVariables.forEach((globalVar) => {
+            globals[`_GLOBAL_${globalVar.name}`] = true;
+        });
+        const lintResult = await lintFiles(files, globals);
+        console.log(lintResult);
+        const errorList: FlowError[] = [];
+        lintResult.forEach((result) => {
+            const flow = this.flows.find((flow) => flow.jsFilePath === result.filePath);
+            if (!flow) {
+                return;
+            }
+            const messages = result.messages
+                .filter((item) => item.line - Flow.headLinkCount > 0)
+                .map((message) => {
+                    const line = message.line - Flow.headLinkCount;
+                    message.line = line;
+                    return message;
+                });
+            messages.forEach((message) => {
+                const msg = message.message;
+                const aMsg = msg.split('is');
+                const varName = aMsg[0];
+                errorList.push({
+                    flowName: flow.name,
+                    flowAliasName: flow.aliasName,
+                    line: message.line,
+                    message: `${varName} ${message.ruleId === 'no-undef' ? '未定义' : '未使用'}`,
+                    ruleId: message.ruleId,
+                    errorLevel: message.ruleId === 'no-undef' ? 'error' : 'warning',
+                    messageObject: message
+                });
+            });
+        });
+        return errorList;
     }
 }

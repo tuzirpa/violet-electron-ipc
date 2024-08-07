@@ -6,6 +6,7 @@ export type DirectiveData = DirectiveTree & {
     pdLvn: number;
     commentShow?: string;
     error?: string;
+    errorLevel?: string;
 };
 
 export type OpenFile = {

@@ -14,7 +14,7 @@ export default class Flow {
     }
 
     blocks: DirectiveTree[] = [];
-    static headLinkCount = 8;
+    static headLinkCount = 7;
 
     constructor(
         public appDir: string,
@@ -82,14 +82,13 @@ export default class Flow {
     public async convert() {
         let content = ['//流程自动生成'];
         content.push(`let robotUtilAll = require('tuzirobot');`);
-        content.push(`let fs = require('fs');`);
-        content.push(`robotUtil = robotUtilAll.default;`);
+        content.push(`let robotUtil = robotUtilAll.default;`);
         content.push(`const generateBlock = robotUtilAll.generateBlock;`);
         content.push(`const fatalError = robotUtilAll.fatalError;`);
         content.push(
             `module.exports = async function (${this.isMainFlow ? '' : '{ _callParams }'}) {`
         );
-        content.push(`  try { let returnVal = [];//流程返回值`);
+        content.push(`  try { let _returnVal = [];//流程返回值`);
         let flowControlBlock = 0;
         for (let index = 0; index < this.blocks.length; index++) {
             const block = this.blocks[index];
@@ -122,7 +121,7 @@ export default class Flow {
 
             content.push(jsCode);
         }
-        content.push(`    ${this.isMainFlow ? '//主流程无需返回值' : 'return {returnVal};'}`);
+        content.push(`    return { _returnVal };`);
         content.push('  } catch (error) {');
         content.push(`    fatalError(error,__filename);process.exit(1);`);
         content.push('  }');

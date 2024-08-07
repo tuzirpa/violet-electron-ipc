@@ -24,6 +24,14 @@ export type AppPlaza = {
 };
 
 export class UserAppManage {
+    /**
+     * 扫描本地应用
+     */
+    lintError(appId: string) {
+        const userApp = this.findUserApp(appId);
+        return userApp.lintError();
+    }
+
     deleteBreakPoint(appId: string, flowName: string, stepIndex: number) {
         const userApp = this.findUserApp(appId);
         return userApp.deleteBreakPoint(flowName, stepIndex);

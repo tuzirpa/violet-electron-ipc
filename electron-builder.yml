@@ -44,6 +44,6 @@ appImage:
 npmRebuild: false
 publish:
     provider: generic
-    url: https://gitee.com/lwd1314_admin/tuzi-robot_releases/releases/download/latest/
+    url: https://tuzirpa-p.vtool.vip/update/
 electronDownload:
     mirror: https://npmmirror.com/mirrors/electron/
