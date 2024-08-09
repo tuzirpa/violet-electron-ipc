@@ -29,7 +29,8 @@ body {
     -webkit-app-region: drag;
 }
 
-.non-draggable {
+.non-draggable,
+.el-overlay-dialog {
     -webkit-app-region: no-drag;
 }
 

@@ -66,7 +66,7 @@ function loadSystemDirective() {
     extDirectivesJson.forEach((directive) => {
         loadDirevtive(extendDirective, directive);
     });
-    allDirectives.push(extendDirective);
+    allDirectives.push(...extendDirective.children);
 }
 
 let loadExtendDirectiveLoaded = false;
@@ -134,12 +134,12 @@ export function reloadDirective() {
     //清空指令列表
     allDirectives = [];
     loadSystemDirectiveLoaded = false;
-    loadExtendDirectiveLoaded = false;
 
     //加载系统指令
     loadSystemDirective();
 
     //加载扩展指令
+    loadExtendDirectiveLoaded = false;
     loadExtendDirective();
 }
 

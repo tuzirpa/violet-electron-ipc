@@ -3,7 +3,7 @@ import type { DirectiveInput, DirectiveTree, FlowVariable } from 'src/main/userA
 import InputValueVar from './InputValueVar.vue';
 import OutputValueVar from './OutputValueVar.vue';
 import InputValueVarVariable from './InputValueVarVariable.vue';
-import { getCurrentInstance, nextTick, onMounted, ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { ElInput, ElSelect, ElTooltip } from 'element-plus';
 
 // 添加逻辑
@@ -139,10 +139,10 @@ function inputItemFilters(directive: DirectiveTree, inputItem: DirectiveInput) {
     return true;
 }
 
-const curInstance = getCurrentInstance();
-onMounted(() => {
-    console.log(curInstance);
-});
+// const curInstance = getCurrentInstance();
+// onMounted(() => {
+//     console.log('onMounted', curInstance);
+// });
 </script>
 
 <template>

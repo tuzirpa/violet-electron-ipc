@@ -1,4 +1,4 @@
-import { createApp } from 'vue';
+import { createApp, Directive } from 'vue';
 import ElementPlus from 'element-plus';
 import App from './App.vue';
 import router from './routers';
@@ -25,5 +25,24 @@ app.use(ElementPlus, {
 });
 
 app.use(ContextMenuPlugin);
+
+function rememberScrollDirective(): Directive {
+    const scrollData = {};
+    return {
+        mounted(_el, binding) {
+            if (typeof binding.value !== 'string') {
+                throw new Error('v-rememberScroll 指令值必须为字符串');
+            }
+        },
+        beforeUpdate(el, binding) {
+            binding.value && (scrollData[binding.oldValue] = el.scrollTop);
+        },
+        updated(el, binding) {
+            binding.value && (el.scrollTop = scrollData[binding.value] || 0);
+        }
+    };
+}
+
+app.directive('rememberScroll', rememberScrollDirective());
 
 app.mount('#app');

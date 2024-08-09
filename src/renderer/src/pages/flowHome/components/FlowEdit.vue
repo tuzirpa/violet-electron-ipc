@@ -13,9 +13,9 @@ import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { Action } from '@renderer/lib/action';
 import { showContextFlowMenu, checkError } from './FlowEditOps';
-import { curFlowErrors } from './FlowEditStore';
+import { curShowFlowErrors } from './FlowEditStore';
 import { DirectiveData, OpenFile } from './types'
-import { curWorkStatus } from '../indexvue'
+import { closeFile, curWorkStatus } from '../indexvue'
 
 const props = defineProps<{
     flows: Flow[];
@@ -156,7 +156,7 @@ const blocks = computed(() => {
     let pdLvn = 0;
     curOpenFile.value.blocks.forEach((block, index) => {
         block.commentShow = commentCompute(block);
-        const errorObj = curFlowErrors.value.find((item) => curOpenFile.value.name === item.flowName && item.line === index + 1);
+        const errorObj = curShowFlowErrors.value.find((item) => curOpenFile.value.name === item.flowName && item.line === index + 1);
         block.error = errorObj?.message || '';
         block.errorLevel = errorObj?.errorLevel;
 
@@ -452,10 +452,13 @@ function variablesCompute(_directive: DirectiveTree, index: number) {
         for (const key in outputs) {
             if (Object.prototype.hasOwnProperty.call(outputs, key)) {
                 const output = outputs[key];
+                console.log(output, '输出');
+
                 variablesTemp.push({
                     name: output.name,
                     type: output.type,
-                    comment: output.display,
+                    display: output.display,
+                    typeDetails: output.typeDetails,
                     before: itemIndex < index
                 });
             }
@@ -936,14 +939,15 @@ defineExpose({
         <div class="flow-header flex items-center gap-2 bg-gray-100">
             <el-scrollbar :noresize="true" ref="filesScrollbarRef" id="files">
                 <div class="files flex items-center shrink-0">
-                    <div class="file w-30 flex py-2 px-4 cursor-pointer shrink-0 hover:bg-white/60"
-                        v-for="file in openFiles" :key="file.name" :class="{ 'bg-white': file.name === curOpenFile.name }"
+                    <div class="file relative group w-30 flex py-2 px-4 cursor-pointer border border-transparent shrink-0 hover:bg-white/60 hover:border-white/60"
+                        v-for="file in openFiles" :key="file.name"
+                        :class="{ 'bg-white border-white': file.name === curOpenFile.name }"
                         @click="curWorkStatus.activeFlow = file.name; emitHistoryChange()"
                         @contextmenu="showContextFlowMenu($event, file)">
                         <div class="flow-name text-sm max-w-40 truncate">
                             <!-- {{ file.aliasName }} -->
                             <el-popover placement="bottom-start" effect="dark" :show-after="1000" :showArrow="false"
-                                :width="400" trigger="hover" :content="file.aliasName">
+                                trigger="hover" :content="file.aliasName">
                                 <template #reference>
                                     <span class="m-2">{{ file.aliasName }}</span>
                                 </template>
@@ -951,6 +955,13 @@ defineExpose({
                         </div>
                         <div class="flow-edit ml-1" v-show="editFiles.has(file.name)">
                             *
+                        </div>
+
+                        <div v-if="file.name !== 'main.flow'" class="close-btn hidden group-hover:flex hover:bg-gray-200 rounded justify-center items-center w-6 h-6
+                            absolute top-0 right-0 cursor-pointer text-red-500" @click="closeFile(file.name);">
+                            <el-icon>
+                                <Close />
+                            </el-icon>
                         </div>
                     </div>
                     <div class="file w-30 flex py-2 px-4 cursor-pointer shrink-0 hover:bg-white/60" @click="newSubFlow">
@@ -960,7 +971,7 @@ defineExpose({
             </el-scrollbar>
         </div>
         <div class="viewbox relative">
-            <div class="flex flex-row overflow-auto flex-1">
+            <div class="flex flex-row overflow-auto flex-1" v-rememberScroll="curOpenFile.name">
                 <div class="col-number flex flex-col items-center mt-2 pb-10 border-r border-gray-300"
                     v-if="blocks.length > 0">
                     <div class="flex justify-between items-center row-number w-20" v-show="!block.hide"

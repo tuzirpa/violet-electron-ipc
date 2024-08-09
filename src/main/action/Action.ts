@@ -272,6 +272,7 @@ class Action {
      * @returns 用户应用指令列表
      */
     static async getDirectives() {
+        // await new Promise((resolve) => setTimeout(resolve, 3000));
         return useDirective();
     }
     static async reloadDirective() {

@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import BtnTip from '@renderer/components/BtnTip.vue';
 import { ElButton, ElDialog, ElInput, ElMessage, ElPopover, ElTree } from 'element-plus';
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import type { DirectiveTree } from 'src/main/userApp/types';
 import { dragData } from '../dragVar';
 import { useDirective, reloadDirective, directiveLoading } from '../directive';
@@ -32,7 +32,8 @@ watch(width, (newVal) => {
     }
 })
 
-const data = useDirective();
+let data = useDirective();
+
 
 const defaultProps = {
     children: 'children',
@@ -146,6 +147,7 @@ async function useAppointVersionSystemDirective(item: SystemDirectiveVersion) {
                         <div class="version-list flex flex-col gap-2 max-h-80 overflow-auto">
                             <ElButton v-if="loginUserInfo.isAdmin" type="primary" link size="small"
                                 @click="dialogVisible = true">上传新版本</ElButton>
+                            <ElButton type="primary" link size="small" @click="reloadDirective">重载本地指令</ElButton>
                             <div v-for="(item, _index) in allVersions"
                                 class="version-item group flex justify-between items-center gap-1 cursor-pointer p-2">
                                 <el-popover placement="top" title="版本描述" :show-after="500" :width="200" trigger="hover">

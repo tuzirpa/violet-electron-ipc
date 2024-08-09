@@ -5,18 +5,18 @@ import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
 import { Column, ElAutoResizer, ElCheckbox, ElCheckboxGroup, ElDialog, ElIcon, ElLoading, ElMessage, ElMessageBox, ElPopover, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
-import { curFlowErrors } from './components/FlowEditStore';
-import { closeFile, curUserApp, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs, runLogsFilter, showRunLogs } from './indexvue';
+import { curFlowErrors, curFlowErrorsFilter, curShowFlowErrors } from './components/FlowEditStore';
+import { closeFile, curUserApp, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs, runLogsFilter, showRunLogs, startRunLogs } from './indexvue';
 import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
 import CodeEdit from './components/CodeEdit.vue';
 import type Flow from 'src/main/userApp/Flow';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { DeleteFilled, Filter, Edit, CopyDocument } from '@element-plus/icons-vue';
+import { DeleteFilled, Filter, Edit, CopyDocument, FullScreen } from '@element-plus/icons-vue';
 import GlobalVariable from './components/GlobalVariable.vue';
 import type { AppVariable } from 'src/main/userApp/types';
 
@@ -28,18 +28,26 @@ const id = route.query.appId as string;
 // 定义变量
 const userAppDetail = ref<UserApp>();
 
+const instance = getCurrentInstance();
+
 async function getAppDetail() {
     // 获取应用详情
     // 这里应该调用后端接口获取应用详情
     const res = await Action.getUserApp(id);
     userAppDetail.value = res;
-    runLogs.value = [];
+
+    // 开始监听运行日志, 销毁后停止监听
+    onUnmounted(startRunLogs(), instance);
+
     console.log(userAppDetail.value, 'userAppDetail');
     if (userAppDetail.value?.flows && userAppDetail.value.flows.length > 0) {
         curActiveFlowIndex.value = 0;
     }
-
 }
+
+onMounted(() => {
+    init();
+});
 
 async function newSubFlow(subFlow: any) {
     await getAppDetail();
@@ -77,13 +85,13 @@ async function init() {
 
     loading.value = false;
 }
-init();
 
-async function installPackage() {
+
+/* async function installPackage() {
     if (userAppDetail.value?.id) {
         await Action.installPackage(userAppDetail.value?.id);
     }
-}
+} */
 
 async function run() {
     if (userAppDetail.value?.id) {
@@ -359,11 +367,14 @@ const runLogsColumns: Column<any>[] = [
         headerClass: 'log-message',
         width: 150,
         align: Alignment.CENTER,
-        cellRenderer: ({ cellData: message, rowData }) => (
-            <div class="flex justify-center items-center h-full w-full"
-                onContextmenu={(e: MouseEvent) => { handleRunLogsContextMenu(rowData, 4, e) }}>
+        cellRenderer: ({ cellData: message }) => (
+            <div class="flex justify-center group items-center h-full w-full">
                 <span class="truncate flex-1 w-0">{message}</span>
-                <div class="cursor-pointer" onclick={() => { viewDetailsLogMessage(message) }}>查看详情</div>
+                <div class="cursor-pointer" onclick={() => { viewDetailsLogMessage(message) }}>
+                    <ElIcon class="text-gray-400 hidden group-hover:block">
+                        <el-icon><FullScreen /></el-icon>
+                    </ElIcon>
+                </div>
             </div>
         )
     },
@@ -383,7 +394,7 @@ const runLogsColumns: Column<any>[] = [
 
             // }
             return (<>
-                {data?.aliasName}
+                {data?.flowName}
             </>)
         }
     },
@@ -530,7 +541,7 @@ function saveGlobalVariable(gvars: AppVariable[]) {
                                 <i class="iconfont icon-bianji opacity-30 group-hover:opacity-100"></i>
                             </div>
                         </el-tooltip>
-                        <BtnTip class="btn-item" :icon="'icon-baocun'" :text="'保存'"></BtnTip>
+                        <!-- <BtnTip class="btn-item" :icon="'icon-baocun'" :text="'保存'"></BtnTip> -->
                         <div class="border-r border-gray-200 border-solid w-1 py-3"></div>
                     </div>
                     <div class="btn-group flex justify-end items-center p-1 gap-2 text-gray-900">
@@ -542,10 +553,10 @@ function saveGlobalVariable(gvars: AppVariable[]) {
 
                         <!-- <BtnTip :icon="'icon-zhedie'" :text="'折叠'"></BtnTip> -->
                         <template v-if="!isDev">
-                            <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
+                            <!--   <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :icon="'icon-tiaoshi'"
                                 :text="'安装依赖包'" @click="installPackage">
                                 安装包
-                            </BtnTip>
+                            </BtnTip> -->
                             <BtnTip class="bg-slate-400/20 rounded" :class="{ 'text-gray-300': isRun || isDev }"
                                 :icon-class="'text-green-500'" :icon="'icon-yunxing'" :text="'运行流程'" @click="run">
                                 运行
@@ -561,12 +572,12 @@ function saveGlobalVariable(gvars: AppVariable[]) {
                                 继续
                             </BtnTip>
                             <BtnTip class="bg-slate-400/20 rounded" :icon-class="'text-green-500'" :text="'下一步'"
-                                :icon="'icon-nextstep'" @click="devStepOver">
+                                :icon="'icon-xiayibu'" @click="devStepOver">
                                 下一步
                             </BtnTip>
                         </template>
-                        <BtnTip class="bg-slate-400/20 rounded text-gray-300" :icon-class="'text-green-500'"
-                            :icon="'icon-stop'" :text="'停止'" @click="devStop" :class="{ 'text-red-600 ': isDev || isRun }">
+                        <BtnTip class="bg-slate-400/20 rounded text-gray-300" :icon="'icon-stop'" :text="'停止'"
+                            @click="devStop" :class="{ 'text-red-600': isDev || isRun }">
                             停止
                         </BtnTip>
                     </div>
@@ -608,7 +619,7 @@ function saveGlobalVariable(gvars: AppVariable[]) {
                                     <div style="width: 100%;
                                                 height: calc(var(--draggable-height) - 60px);
                                             ">
-                                        <el-auto-resizer>
+                                        <el-auto-resizer @contextmenu="handleRunLogsContextMenu($event)">
                                             <template #default="{ height, width }">
                                                 <ElTableV2 :columns="runLogsColumns" :row-class="runLogsRowClassName"
                                                     @row-event-handlers="handleRowEvent" :data="showRunLogs" :width="width"
@@ -636,11 +647,23 @@ function saveGlobalVariable(gvars: AppVariable[]) {
                                 </el-tab-pane>
                                 <el-tab-pane class="error-list" label="错误列表" name="error-list">
                                     <template #label>
-                                        <div class="error-list-title" :class="{ 'cornerMark': curFlowErrors.length }">
+                                        <div class="error-list-title flex items-center gap-2"
+                                            :class="{ 'cornerMark': curFlowErrors.length }">
                                             错误/警告列表
+                                            <ElPopover trigger="click">
+                                                <ElCheckboxGroup v-model="curFlowErrorsFilter">
+                                                    <ElCheckbox label="警告" value="warning" />
+                                                    <ElCheckbox label="错误" value="error" />
+                                                </ElCheckboxGroup>
+                                                <template #reference>
+                                                    <ElIcon class="cursor-pointer w-4 h-4 hover:bg-gray-200">
+                                                        <Filter />
+                                                    </ElIcon>
+                                                </template>
+                                            </ElPopover>
                                         </div>
                                     </template>
-                                    <ElTable :data="curFlowErrors" :row-class-name="({ row }) => row.errorLevel"
+                                    <ElTable :data="curShowFlowErrors" :row-class-name="({ row }) => row.errorLevel"
                                         style="width: 100%;height: calc(var(--draggable-height) - 60px);">
                                         <ElTableColumn label="流程名" prop="flowAliasName" width="180">
 
@@ -670,16 +693,14 @@ function saveGlobalVariable(gvars: AppVariable[]) {
                                     v-for="(flow, index) in userAppDetail?.flows" @click="curActiveFlowIndex = index"
                                     @dblclick="openFlowByName(flow.name)"
                                     @contextmenu="handleFlowContextMenu($event, flow, index)" :key="index">
-                                    <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200 truncate"
-                                        :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
-                                        <el-popover placement="bottom-end" effect="dark" :show-after="1000"
-                                            :showArrow="false" :width="400" trigger="hover" :content="flow.aliasName">
-                                            <template #reference>
-                                                <span class="m-2">{{ flow.aliasName }}</span>
-                                            </template>
-                                        </el-popover>
+                                    <el-tooltip placement="bottom-start" effect="dark" :show-after="1000" :showArrow="false"
+                                        trigger="hover" :content="flow.aliasName">
+                                        <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200 truncate"
+                                            :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
+                                            <span class="m-2">{{ flow.aliasName }}</span>
+                                        </div>
+                                    </el-tooltip>
 
-                                    </div>
                                 </div>
                             </div>
 

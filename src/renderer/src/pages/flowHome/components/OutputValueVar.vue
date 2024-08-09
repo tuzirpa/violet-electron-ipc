@@ -57,11 +57,11 @@ const { width: varWidth } = useElementSize(inputRef);
                                 ">
                                 <div class="item" @click="varSelectValChange(variable.name)" v-if="variable.before">
                                     {{ variable.name }}
-                                    ({{ variable.comment }})
+                                    ({{ variable.display }})
                                 </div>
                                 <div class="item text-gray-300" v-else>
                                     {{ variable.name }}
-                                    ({{ variable.comment }}) - <span class="text-red-500">不可用在指令之后</span>
+                                    ({{ variable.display }}) - <span class="text-red-500">不可用在指令之后</span>
                                 </div>
                             </div>
                         </template>

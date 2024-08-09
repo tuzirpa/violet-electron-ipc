@@ -28,7 +28,7 @@ const appGlobalVariables = computed(() => {
                 name: item.name,
                 value: item.value,
                 type: 'string',
-                comment: item.comment
+                display: item.display
             };
         });
     return globalVariables;
@@ -41,7 +41,7 @@ function handleClick(row: AppVariable) {
     globalVariableForm.value = {
         name: row.name,
         value: row.value,
-        comment: row.comment ?? ''
+        display: row.display ?? ''
     };
     const gvarIndex = props.userAppDetail.globalVariables.findIndex(item => item.name === globalVariableForm.value.name);
     editIndex = gvarIndex;
@@ -63,7 +63,7 @@ function addGlobalVariable() {
     if (editIndex > -1) {
         gvars[editIndex].name = globalVariableForm.value.name;
         gvars[editIndex].value = globalVariableForm.value.value;
-        gvars[editIndex].comment = globalVariableForm.value.comment;
+        gvars[editIndex].display = globalVariableForm.value.display;
         console.log(gvars);
 
         emit('updateGlobalVariable', gvars);
@@ -72,7 +72,7 @@ function addGlobalVariable() {
         globalVariableForm.value = {
             name: '',
             value: '',
-            comment: ''
+            display: ''
         }
         return;
     }
@@ -80,7 +80,7 @@ function addGlobalVariable() {
         name: globalVariableForm.value.name,
         value: globalVariableForm.value.value,
         type: 'string',
-        comment: globalVariableForm.value.comment
+        display: globalVariableForm.value.display
     });
     globalVariableDialogVisible.value = false;
     emit('updateGlobalVariable', gvars);
@@ -88,7 +88,7 @@ function addGlobalVariable() {
     globalVariableForm.value = {
         name: '',
         value: '',
-        comment: ''
+        display: ''
     }
 }
 
@@ -97,7 +97,7 @@ const globalVariableDialogVisible = ref(false);
 const globalVariableForm = ref({
     name: '',
     value: '',
-    comment: ''
+    display: ''
 });
 
 const globalVariableRules = {
@@ -109,7 +109,7 @@ const globalVariableRules = {
         { required: false, message: '请输入全局变量值', trigger: 'blur' },
         { min: 1, max: 1000, message: '全局变量值长度在 1 到 1000 个字符', trigger: 'blur' }
     ],
-    comment: [
+    display: [
         { required: false, message: '请输入全局变量注释', trigger: 'blur' },
         { min: 1, max: 100, message: '全局变量注释长度在 1 到 100 个字符', trigger: 'blur' }
     ]
@@ -155,8 +155,8 @@ const globalVariableRules = {
                     <ElFormItem label="默认值" prop="value">
                         <ElInput v-model="globalVariableForm.value" placeholder="请输入全局变量值"></ElInput>
                     </ElFormItem>
-                    <ElFormItem label="注释" prop="comment">
-                        <ElInput v-model="globalVariableForm.comment" placeholder="请输入全局变量注释"></ElInput>
+                    <ElFormItem label="注释" prop="display">
+                        <ElInput v-model="globalVariableForm.display" placeholder="请输入全局变量注释"></ElInput>
                     </ElFormItem>
                 </ElForm>
             </div>

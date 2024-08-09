@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, protocol } from 'electron';
-import { electronApp, optimizer } from '@electron-toolkit/utils';
+import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import Action from './action/Action';
 import MethodsUtils from '@shared/MethodsUtils';
 import { registerAssetsProtocol } from './serve';
@@ -13,6 +13,20 @@ import { autoUpdateInit } from './autoUpdater/autoUpdater';
 
 let mainWindow: BrowserWindow;
 const gotTheLock = app.isPackaged ? app.requestSingleInstanceLock() : true; //仅生产环境生效
+
+if (!is.dev) {
+    for (let i = 0; i < process.argv.length; i++) {
+        const arg = process.argv[i];
+        if (
+            arg.indexOf('--inspect') !== -1 ||
+            arg.indexOf('--inspect-brk') !== -1 ||
+            arg.indexOf('--remote-debugging-port') !== -1
+        ) {
+            //调试启动此程序不启动
+            throw new Error('调试启动此程序不启动');
+        }
+    }
+}
 
 if (!gotTheLock) {
     app.quit();

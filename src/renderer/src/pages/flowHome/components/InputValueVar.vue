@@ -5,6 +5,7 @@ import { ref, unref } from 'vue';
 import { Action } from '@renderer/lib/action'
 import { useElementSize } from '@vueuse/core'
 import { curUserApp } from '../indexvue';
+import VariableItem from './VariableItem.vue';
 // import { typeDisplay } from '../directiveConfig';
 
 // 添加逻辑
@@ -33,16 +34,24 @@ function varClick() {
     unref(popoverRef).popperRef?.delayHide?.()
 }
 
-function varSelectValChange(val: AppVariable, isGlobal: boolean = false) {
+function varSelectValChange(val: AppVariable, isGlobal: boolean = false, keys: string[] = []) {
     console.log(val, cursorPos.value);
     varShow.value = false;
     let valName = isGlobal ? `_GLOBAL_${val.name}` : val.name;
     const tValue = (model.value ?? '');
 
     if (props.inputItem.enableExpression) {
-        valName = `${valName}`;
+        if (keys.length > 0) {
+            valName = `${valName}${keys.slice(1).map(key => `['${key}']`).join('')}`;
+        } else {
+            valName = `${valName}`;
+        }
     } else {
-        valName = `\${${valName}}`;
+        if (keys.length > 0) {
+            valName = `\${${valName}${keys.slice(1).map(key => `['${key}']`).join('')}}`;
+        } else {
+            valName = `\${${valName}}`;
+        }
     }
     model.value = tValue.substring(0, cursorPos.value) + valName + tValue.substring(cursorPos.value);
     popoverRef.value.hide();
@@ -80,7 +89,7 @@ function localVariablesFilter(variable: FlowVariable) {
     return show &&
         (varSelectVal.value.length === 0
             || variable.name.includes(varSelectVal.value)
-            || variable.comment?.includes(varSelectVal.value));;
+            || variable.display?.includes(varSelectVal.value));;
 }
 
 function enableExpressionToggle() {
@@ -92,10 +101,11 @@ function enableExpressionToggle() {
     }
 }
 
+
 </script>
 
 <template>
-    <div class="relative flex gap-1 items-center">
+    <div class="relative tracking-wider flex gap-1 items-center">
         <el-popover placement="top-start" title="点击切换模式" :width="400" trigger="hover" v-if="inputItem.type === 'object'">
             <div class="flex flex-col gap-2 text-xs">
                 <div class="flex items-center gap-2">
@@ -160,29 +170,27 @@ function enableExpressionToggle() {
                 <div class="viewbox min-h-10 max-h-60 overflow-y-auto">
                     <div class="wrapbox">
                         <template v-for="variable in variables">
-                            <div class="hover:bg-gray-100 p-1 cursor-pointer rounded"
-                                v-show="localVariablesFilter(variable)">
-                                <div class="item" @click="varSelectValChange(variable)" v-if="variable.before">
-                                    {{ variable.name }}
-                                    ({{ variable.comment }})
-                                </div>
-                                <div class="item text-gray-300" v-else>
-                                    {{ variable.name }}
-                                    ({{ variable.comment }}) - <span class="text-red-500">不可用在指令之后</span>
-                                </div>
+                            <div class="cursor-pointer rounded" v-show="localVariablesFilter(variable)">
+                                <VariableItem :variable="variable"
+                                    @varSelectValChange="(val, keys) => varSelectValChange(val, false, keys)">
+                                </VariableItem>
                             </div>
                         </template>
                         <template v-for="variable in curUserApp.globalVariables">
-                            <div class="hover:bg-gray-100 p-1 cursor-pointer rounded" v-show="variableFilter.includes('global') &&
+                            <div class="hover:bg-gray-100 flex items-center p-1 cursor-pointer rounded" v-show="variableFilter.includes('global') &&
                                 (varSelectVal.length === 0
                                     || variable.name.includes(varSelectVal)
-                                    || variable.comment?.includes(varSelectVal))
+                                    || variable.display?.includes(varSelectVal))
                                 ">
-                                <div class="item" @click="varSelectValChange(variable, true)">
+                                <VariableItem :variable="(variable as any)" :is-global="true"
+                                    @varSelectValChange="(val, keys) => varSelectValChange(val, true, keys)">
+                                </VariableItem>
+                                <el-tag type="primary">全局变量</el-tag>
+                                <!-- <div class="item" @click="varSelectValChange(variable, true)">
                                     {{ variable.name }}
-                                    ({{ variable.comment }})
+                                    ({{ variable.display }})
                                     <el-tag type="primary">全局变量</el-tag>
-                                </div>
+                                </div> -->
                             </div>
                         </template>
                     </div>

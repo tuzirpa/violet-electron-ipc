@@ -2,6 +2,7 @@
 import type { AppVariable, DirectiveInput, FlowVariable } from 'src/main/userApp/types';
 import { ElInput } from 'element-plus';
 import { ref, unref } from 'vue';
+import VariableItem from './VariableItem.vue';
 import { useElementSize } from '@vueuse/core';
 import { curUserApp } from '../indexvue'
 
@@ -28,15 +29,21 @@ function varClick() {
     unref(popoverRef).popperRef?.delayHide?.()
 }
 
-function varSelectValChange(variable: AppVariable, isGlobal: boolean = false) {
+function varSelectValChange(variable: AppVariable, isGlobal: boolean = false, keys: string[] = []) {
     varShow.value = false;
     const valName = isGlobal ? `_GLOBAL_${variable.name}` : variable.name;
+    let valKey = '';
+    if (keys.length > 0) {
+        valKey = `${valName}${keys.slice(1).map(key => `['${key}']`).join('')}`;
+    } else {
+        valKey = valName;
+    }
     if (props.inputItem.addConfig.multiple) {
-        let val = model.value + ',' + valName;
+        let val = model.value + ',' + valKey;
         val.startsWith(',') && (val = val.substring(1));
         model.value = val;
     } else {
-        model.value = valName;
+        model.value = valKey;
         popoverRef.value.hide();
     }
     emit('inputValueChange', variable, props.inputItem);
@@ -62,7 +69,7 @@ function localVariablesFilter(variable: FlowVariable) {
     return show &&
         (varSelectVal.value.length === 0
             || variable.name.includes(varSelectVal.value)
-            || variable.comment?.includes(varSelectVal.value));;
+            || variable.display?.includes(varSelectVal.value));;
 }
 
 </script>
@@ -96,24 +103,19 @@ function localVariablesFilter(variable: FlowVariable) {
                         <template v-for="variable in variables">
                             <div class="hover:bg-gray-100 p-1 cursor-pointer rounded"
                                 v-show="localVariablesFilter(variable)">
-                                <div class="item" @click="varSelectValChange(variable)" v-if="variable.before">
-                                    {{ variable.name }}
-                                    ({{ variable.comment }})
-                                </div>
-                                <div class="item text-gray-300" v-else>
-                                    {{ variable.name }}
-                                    ({{ variable.comment }}) - <span class="text-red-500">不可用在指令之后</span>
-                                </div>
+                                <VariableItem :variable="variable"
+                                    @varSelectValChange="(val, keys) => varSelectValChange(val, false, keys)">
+                                </VariableItem>
                             </div>
                         </template>
                         <template v-for="variable in curUserApp.globalVariables">
                             <div class="hover:bg-gray-100 p-1 cursor-pointer rounded" v-show="varSelectVal.length === 0
                                 || variable.name.includes(varSelectVal)
-                                || variable.comment?.includes(varSelectVal)
+                                || variable.display?.includes(varSelectVal)
                                 ">
                                 <div class="item" @click="varSelectValChange(variable, true)">
                                     {{ variable.name }}
-                                    ({{ variable.comment }})
+                                    ({{ variable.display }})
                                     <el-tag type="primary">全局变量</el-tag>
                                 </div>
                             </div>

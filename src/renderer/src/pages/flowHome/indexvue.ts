@@ -1,6 +1,4 @@
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { Action } from '@renderer/lib/action';
-import { ElMessage } from 'element-plus';
 import type { Block, LogLevel } from 'src/main/userApp/types';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { WorkStatus } from 'src/main/userApp/WorkStatusConf';
@@ -69,7 +67,7 @@ export const runLogs = ref<{ level: LogLevel; message: string; time: number; dat
 /**
  * 运行日志过滤器
  */
-export const runLogsFilter = ref<string[]>(['info', 'warn', 'error', 'debug', 'fatalError']);
+export const runLogsFilter = ref<string[]>(['info', 'warn', 'error', 'fatalError']);
 
 export const levelMap = {
     debug: '调试',
@@ -86,37 +84,34 @@ export const showRunLogs = computed(() => {
     return logs;
 });
 
-window.electron.ipcRenderer.on('run-logs', (_event, log) => {
-    console.log(log, 'run-logs');
-    if (Array.isArray(log)) {
-        log.forEach((item) => {
-            item.time = new Date(item.time).toLocaleString();
-        });
-        //倒序
-        log.reverse();
-        runLogs.value.unshift(...log);
-    } else {
-        log.time = new Date(log.time).toLocaleString();
-        runLogs.value.unshift(log);
-    }
-});
+export function startRunLogs() {
+    window.electron.ipcRenderer.on('run-logs', (_event, log) => {
+        console.log(log, 'run-logs');
+        if (Array.isArray(log)) {
+            log.forEach((item) => {
+                item.time = new Date(item.time).toLocaleString();
+            });
+            //倒序
+            log.reverse();
+            runLogs.value.unshift(...log);
+        } else {
+            log.time = new Date(log.time).toLocaleString();
+            runLogs.value.unshift(log);
+        }
+    });
+    return () => {
+        console.log('移除监听');
+
+        window.electron.ipcRenderer.removeAllListeners('run-logs');
+    };
+}
 
 /**
  * 运行日志右键菜单
  * @param event 鼠标右键事件
  */
-export const handleRunLogsContextMenu = (row: any, _column: any, event: MouseEvent) => {
+export const handleRunLogsContextMenu = (event: MouseEvent) => {
     showContextMenu(event, [
-        {
-            label: '复制内容',
-            onClick: async () => {
-                await Action.copyToClipboard(row.message);
-                ElMessage.success('复制成功');
-            },
-            icon: 'icon-fuzhi',
-            shortcut: ''
-        },
-
         {
             label: '清空运行日志',
             onClick: () => {

@@ -5,7 +5,7 @@ export type FlowError = {
     message: string;
     messageObject: any;
     ruleId: string | null;
-    errorLevel: string;
+    errorLevel: 'error' | 'warning';
 };
 
 export type LogMessage = {
@@ -38,10 +38,16 @@ export interface AppVariable {
      * value值
      */
     value?: any;
+
     /**
      * 变量描述
      */
-    comment?: string;
+    display?: string;
+
+    /**
+     * 输出类型详情
+     */
+    typeDetails?: OutputTypeDetails[];
 }
 
 export interface FlowVariable extends AppVariable {
@@ -192,7 +198,32 @@ export interface DirectiveOutput {
      */
     type: string;
 
+    /**
+     * 输出类型详情
+     */
+    typeDetails?: OutputTypeDetails[];
+
     addConfig?: AddConfig<AddConfigOnputType>;
+}
+
+/**
+ * 输出类型详情
+ */
+export interface OutputTypeDetails {
+    /**
+     * 输出类型详情名称
+     */
+    key: string;
+    /**
+     * 输出类型
+     */
+    type: string;
+    /**
+     * 输出类型显示名称
+     */
+    display: string;
+
+    typeDetails?: OutputTypeDetails[];
 }
 
 /**
