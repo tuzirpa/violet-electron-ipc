@@ -1,14 +1,14 @@
 <script setup lang="tsx">
 import { computed, ref } from 'vue';
 import type { AppVariable } from 'src/main/userApp/types';
-import type UserApp from 'src/main/userApp/UserApp';
 import { ElInput, ElButton, ElDialog, ElForm, ElFormItem } from 'element-plus';
+import { MainUserApp } from './types';
 
 
 // 添加逻辑
 
 const props = defineProps<{
-    userAppDetail: UserApp,
+    userAppDetail: MainUserApp,
     globalVariableData: any[]
 }>();
 

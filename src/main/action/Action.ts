@@ -2,23 +2,69 @@ import { app, clipboard, dialog, shell } from 'electron';
 import { getMachineCode, getRegStatus, verifyToken } from '../reg';
 import Flow from '../userApp/Flow';
 import UserAppManage from '../userApp/UserAppManage';
-import { reloadDirective, useDirective } from '../userApp/directive/directive';
+import {
+    getDirectiveAddConfig,
+    getOutputTypeDetails,
+    reloadDirective,
+    useDirective
+} from '../userApp/directive/directive';
 import { WindowManage, WindowNameType } from '../window/WindowManage';
 import { AppConfig } from '../config/appConfig';
 import User from '../api/User';
 import Captcha from '../api/Captcha';
-import { AppType } from '../userApp/UserApp';
 import { getPlazas } from '../api/appplaza';
-import { encrypt } from '../api/aes';
+import aes, { encrypt } from '../api/aes';
 import { getRandom } from '../utils/RandomUtils';
 import { getDeviceID } from '../utils/divice';
 import { submitFeedback } from '../api/feedback';
 import { WorkStatus } from '../userApp/WorkStatusConf';
-import { AppVariable } from '../userApp/types';
+import { AppVariable, ElementLibrary } from '../userApp/types';
 import SystemDirectivePackageManage from '../systemDirective/SystemDirectivePackageManage';
 import * as lzString from 'lz-string';
 
+import nodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
+import tuziChromeEvbitonment from '../nodeEnvironment/TuziChromeEvbitonment';
+import type { AppType } from '../userApp/UserApp';
+import { browserManage } from '../browser/BrowserManage';
+
 class Action {
+    static async deleteElementLibraryInfo(appId: string, elementInfo: ElementLibrary) {
+        return UserAppManage.deleteElementLibraryInfo(appId, elementInfo);
+    }
+    static async saveElementLibraryInfo(appId: string, elementInfo: ElementLibrary) {
+        return UserAppManage.saveElementLibraryInfo(appId, elementInfo);
+    }
+    static async checkElementByWsUrl(wsUrl: string, pageUrl: string, elementInfo: ElementLibrary) {
+        return browserManage.checkElementByWsUrl(wsUrl, pageUrl, elementInfo);
+    }
+    static async addElementLibrary(userAppId: string, elementLibrary: ElementLibrary) {
+        return UserAppManage.addElementLibrary(userAppId, elementLibrary);
+    }
+
+    static async getElementByWsUrl(wsUrl: string, pageUrl: string) {
+        return browserManage.getElement(wsUrl, pageUrl);
+    }
+
+    /**
+     * 获取当前运行的浏览器列表
+     * @returns 浏览器列表
+     */
+    static async getBrowsers() {
+        return browserManage.getBrowsers();
+    }
+
+    static async init() {
+        nodeEvbitonment.autoInstallNode();
+        tuziChromeEvbitonment.autoInstall();
+    }
+
+    static async getOutputTypeDetails(directiveKey: string, name: string) {
+        return getOutputTypeDetails(directiveKey, name);
+    }
+    static async getAddConfig(directiveKey: string, key: string) {
+        return getDirectiveAddConfig(directiveKey, key);
+    }
+
     /**
      * 最小化窗口
      * @param name 窗口名称
@@ -93,16 +139,22 @@ class Action {
      * aes加密
      * @param content 加密内容
      */
-    static async aesEncrypt(content: string) {
+    static async aesEncrypt(content: string, password?: string) {
         content = lzString.compressToBase64(content);
-        // content = aes.encrypt(content);
+        if (password) {
+            content = aes.encrypt(content, password);
+        }
         return content;
     }
+
     /**
      * aes解密
      */
-    static async aesDecrypt(content: string) {
-        // content = aes.decrypt(content);
+    static async aesDecrypt(content: string, password?: string) {
+        if (password) {
+            content = aes.decrypt(content, password);
+        }
+
         content = lzString.decompressFromBase64(content);
         return content;
     }

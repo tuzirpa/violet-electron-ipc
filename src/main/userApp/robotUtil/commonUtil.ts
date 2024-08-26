@@ -7,16 +7,22 @@ export const olog = console.log;
 export const oerror = console.error;
 export const sendLog = (level: LogLevel = 'info', message: string, data: Block, error?: Error) => {
     if (process.env.TUZI_ENV === 'app') {
-        olog(
-            `robotUtilLog-` +
-                `${encodeURIComponent(JSON.stringify({ level, time: Date.now(), message, data, error }))}`
-        );
+        // olog(
+        //     `robotUtilLog-` +
+        //         `${encodeURIComponent(JSON.stringify({ level, time: Date.now(), message, data, error }))}`
+        // );
+        if (process.send) {
+            process.send({ type: 'log', data: { level, time: Date.now(), message, data, error } });
+        }
     }
 };
 
-export const sendStepLog = (message: string) => {
+export const sendStepLog = (message: any) => {
     if (process.env.TUZI_ENV === 'app') {
-        olog(`robotUtilRunStep-` + `${encodeURIComponent(message)}`);
+        // olog(`robotUtilRunStep-` + `${encodeURIComponent(message)}`);
+        if (process.send) {
+            process.send({ type: 'step', data: message });
+        }
     }
 };
 
@@ -48,6 +54,31 @@ declare const curApp: {
  */
 export function getCurApp() {
     return curApp;
+}
+
+/**
+ * 兔子RPA软件信息
+ */
+declare const _tuziAppInfo: {
+    /**
+     * 版本
+     */
+    VSERION: string;
+    /**
+     * 安装目录
+     */
+    INSTALL_DIR: string;
+    /**
+     * 用户目录
+     */
+    USER_DIR: string;
+};
+
+/**
+ * 获取当前运行的应用信息
+ */
+export function getTuziAppInfo() {
+    return _tuziAppInfo;
 }
 
 /**
@@ -166,24 +197,17 @@ export function setLogFile(filePath: string) {
     };
     // @ts-ignore
     console['fatalError'] = function () {
-        const args = [...arguments];
-        const block = args.shift();
-        if (process.env.TUZI_ENV !== 'app') {
-            oerror(...args);
-        }
-        const errorMsg = args.shift();
-        const errorObj = args.shift();
-        log.call(this, 'fatalError', block, errorMsg + errorObj.stack);
+        log.call(this, 'fatalError', globalThis._block, ...arguments);
     };
     // @ts-ignore
     console['runStep'] = function () {
         log.call(this, 'debug', globalThis._block, ...arguments);
-        const content = JSON.stringify({
+        const content = {
             level: 'info',
             time: Date.now(),
             message: `执行指令${globalThis._block.directiveDisplayName}`,
             data: globalThis._block
-        });
+        };
         sendStepLog(content);
     };
 }

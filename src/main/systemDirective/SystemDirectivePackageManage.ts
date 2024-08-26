@@ -38,7 +38,7 @@ export class SystemDirectivePackageManage {
             });
         }
         //解压并覆盖当前系统指令包
-        unzip(this.getZipFilePath(version), join(UserApp.userAppLocalDir, `system`));
+        await unzip(this.getZipFilePath(version), join(UserApp.userAppLocalDir, `system`));
     }
 
     /**

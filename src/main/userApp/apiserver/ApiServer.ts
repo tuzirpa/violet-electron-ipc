@@ -69,8 +69,17 @@ export class ApiServer {
                     }
                 });
                 break;
+            case 'dialog.openDirectory':
+                //选择目录
+                dialog.showOpenDialog({ properties: ['openDirectory'] }).then((result) => {
+                    if (result.canceled) {
+                        this.sendRes(ws, { id, result: '' }, 0);
+                    } else {
+                        this.sendRes(ws, { id, result: result.filePaths });
+                    }
+                });
+                break;
             case 'dialog.prompt':
-                //选择文件
                 const promptId = uuid();
                 const win = new PromptWindow(promptId, params.placeholder);
                 win.show();

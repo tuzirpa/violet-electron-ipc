@@ -1,4 +1,4 @@
-import { DirectiveTree } from '../types';
+import { AddConfig, AddConfigInputType, DirectiveTree, OutputTypeDetails } from '../types';
 import UserApp from '../UserApp';
 import { join } from 'path';
 
@@ -8,6 +8,9 @@ export const directiveToCodeMap = new Map<
 >();
 
 let allDirectives: DirectiveTree[] = [];
+const allDirectivesAddConfig = new Map<string, AddConfig<AddConfigInputType> | null>();
+
+const allTypeDetails = new Map<string, OutputTypeDetails[] | undefined>();
 
 let loadSystemDirectiveLoaded = false;
 function loadSystemDirective() {
@@ -52,12 +55,30 @@ function loadSystemDirective() {
             } catch (error: any) {
                 throw new Error(`系统指令${directive.localFile}加载失败：${error.message}`);
             }
-            const directiveTree = directiveModule.config;
+            const directiveTree = directiveModule.config as DirectiveTree;
             directiveTree.key = directiveTree.key || directiveTree.name;
             directiveTree.key = `system.${directiveTree.key}`;
             if (directiveTree.toCode) {
-                directiveToCodeMap.set(directiveTree.name, directiveTree.toCode);
+                directiveToCodeMap.set(directiveTree.key, directiveTree.toCode);
                 console.log(directiveTree.name + ' 有自己的toCode ' + directiveTree.key);
+            }
+            for (const key in directiveTree.inputs) {
+                if (Object.prototype.hasOwnProperty.call(directiveTree.inputs, key)) {
+                    const input = directiveTree.inputs[key];
+                    allDirectivesAddConfig.set(
+                        `${directiveTree.key}.${key}`,
+                        input.addConfig ?? null
+                    );
+                    //@ts-ignore
+                    delete input.addConfig;
+                }
+            }
+            for (const key in directiveTree.outputs) {
+                if (Object.prototype.hasOwnProperty.call(directiveTree.outputs, key)) {
+                    const output = directiveTree.outputs[key];
+                    allTypeDetails.set(`${directiveTree.key}.${key}`, output.typeDetails);
+                    delete output.typeDetails;
+                }
             }
 
             directiveGroup.children?.push(directiveTree);
@@ -112,10 +133,39 @@ function loadExtendDirective() {
                 throw new Error(`扩展指令${directive.name}加载失败：${error.message}`);
             }
             const directiveTree = directiveModule.config as DirectiveTree;
-            directiveTree.name = `extend.${directiveTree.name}`;
+
+            directiveTree.key = `extend.${directiveTree.name}`;
             if (directiveTree.toCode) {
-                directiveToCodeMap.set(directiveTree.name, directiveTree.toCode);
+                directiveToCodeMap.set(directiveTree.key, directiveTree.toCode);
                 console.log(directiveTree.name + ' 有自己的toCode ');
+            }
+
+            /**
+             * 输入项的addConfig 存入allDirectivesAddConfig, 做到只在编辑中使用，保存源代码不要 addConfig
+             */
+            for (const key in directiveTree.inputs) {
+                if (Object.prototype.hasOwnProperty.call(directiveTree.inputs, key)) {
+                    const input = directiveTree.inputs[key];
+                    allDirectivesAddConfig.set(
+                        `${directiveTree.key}.${key}`,
+                        input.addConfig ?? null
+                    );
+                    //@ts-ignore
+                    delete input.addConfig;
+                }
+            }
+
+            /**
+             * 输出项的typeDetails 存入allTypeDetails, 做到只在编辑中使用，保存源代码不要 typeDetails
+             */
+            for (const key in directiveTree.outputs) {
+                if (Object.prototype.hasOwnProperty.call(directiveTree.outputs, key)) {
+                    const output = directiveTree.outputs[key];
+                    if (output.typeDetails) {
+                        allTypeDetails.set(`${directiveTree.key}.${key}`, output.typeDetails);
+                        delete output.typeDetails;
+                    }
+                }
             }
 
             directiveGroup.children?.push(directiveTree);
@@ -151,4 +201,18 @@ export function useDirective() {
         reloadDirective();
     }
     return allDirectives;
+}
+
+export function getDirectiveAddConfig(directiveKey: string, key: string) {
+    const addConfig = allDirectivesAddConfig.get(`${directiveKey}.${key}`);
+    if (!addConfig) {
+        console.warn(`找不到指令${directiveKey}.${key}的addConfig`);
+        throw new Error(`找不到指令${directiveKey}.${key}的addConfig`);
+    }
+    return addConfig;
+}
+
+export function getOutputTypeDetails(directiveKey: string, name: string) {
+    const typeDetails = allTypeDetails.get(`${directiveKey}.${name}`);
+    return typeDetails;
 }

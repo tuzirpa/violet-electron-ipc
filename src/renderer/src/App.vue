@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
 import Update from './components/Update.vue';
+import AppStatus from './components/AppStatus.vue';
+import { Action } from '@renderer/lib/action';
 // 添加逻辑
 
+function init() {
+    Action.init();
+}
+init();
 
 </script>
 
 <template>
-    <div class="app viewbox">
+    <div class="app viewbox flex">
         <router-view v-slot="{ Component }">
             <!-- 使用任何自定义过渡和回退到 `fade` -->
             <transition name="fade" mode="out-in">
@@ -15,6 +21,7 @@ import Update from './components/Update.vue';
             </transition>
         </router-view>
         <Update></Update>
+        <AppStatus class="h-6 bg-blue-400 text-white"></AppStatus>
     </div>
 </template>
 

@@ -439,38 +439,41 @@ function blockDbClick(_event: MouseEvent, block: DirectiveData, index: number) {
 
 /**
  * 计算变量列表
- * @param _directive 指令
+ * @param directive 指令
  * @param index 
  */
-function variablesCompute(_directive: DirectiveTree, index: number) {
+async function variablesCompute(_directive: DirectiveTree, index: number) {
     const variablesTemp: FlowVariable[] = [];
     // 获取当前指令之前的指令
     const beforeBlocks = curOpenFile.value.blocks;
-    beforeBlocks.forEach((item, itemIndex) => {
+    for (let i = 0; i < beforeBlocks.length; i++) {
+        const item = beforeBlocks[i];
+        const itemIndex = i;
         // 获取指令的输出
         const outputs = item.outputs || {};
         for (const key in outputs) {
             if (Object.prototype.hasOwnProperty.call(outputs, key)) {
                 const output = outputs[key];
-                console.log(output, '输出');
 
+                const typeDetails = await Action.getOutputTypeDetails(item.key ?? item.name, key);
+                console.log(output, '输出', typeDetails);
                 variablesTemp.push({
                     name: output.name,
                     type: output.type,
                     display: output.display,
-                    typeDetails: output.typeDetails,
+                    typeDetails: typeDetails,
                     before: itemIndex < index
                 });
             }
         }
-    });
+    }
     variables.value = variablesTemp;
 }
 
 
-function editBlock(block: DirectiveData, index: number) {
+async function editBlock(block: DirectiveData, index: number) {
     directiveAddTemp.value = JSON.parse(JSON.stringify(block));
-    variablesCompute(block, index);
+    await variablesCompute(block, index);
     addTempIndex.value = index;
     addTempDialogVisible.value = true;
 }
@@ -480,7 +483,7 @@ function editBlock(block: DirectiveData, index: number) {
  * @param directive 指令
  * @param index 插入的位置
  */
-function addBlock(directive: DirectiveTree, index?: number) {
+async function addBlock(directive: DirectiveTree, index?: number) {
     //获取当前选中的最后块位置
     if (index === undefined) {
         if (curBlocks.value.length === 0) {
@@ -497,7 +500,7 @@ function addBlock(directive: DirectiveTree, index?: number) {
     addTempIndex.value = index;
 
     //计算当前指令能用的变量列表
-    variablesCompute(directive, index);
+    await variablesCompute(directive, index);
 
     addTempDialogVisible.value = true;
 }
@@ -695,6 +698,7 @@ function addBlockTemp() {
             }
         }
     }
+
     if (hasError) {
         return;
     }
@@ -712,10 +716,12 @@ function addBlockTemp() {
         //判断如果添加的是控制流程开始需要自动添加控制流程结束
 
         if (addDirective.isControl && addDirective.name === 'flowControl.if') {
+
             const controlEnd: DirectiveData = {
                 id: uuid(),
                 pdLvn: 0,
                 name: 'flowControl.if.end',
+                key: 'system.flowControl.if.end',
                 displayName: 'End If',
                 comment: '结束条件判断',
                 isControl: false,
@@ -730,6 +736,7 @@ function addBlockTemp() {
                 id: uuid(),
                 pdLvn: 0,
                 name: 'flowControl.for.end',
+                key: 'system.flowControl.for.end',
                 displayName: '循环结束标记',
                 comment: '表示循环区域的尾部',
                 isControl: false,
@@ -859,20 +866,31 @@ const redo = () => {
     emitHistoryChange();
 };
 
+const editScrollNode = ref<HTMLElement>();
 async function scrollIntoRow(flowName: string, rowNum: number) {
     //判断当前文件是否打开，未打开给他打开，然后滚动到指定行
     const opened = curWorkStatus.value.openedFlows.includes(flowName);
     if (!opened) {
         curWorkStatus.value.openedFlows.push(flowName);
     }
-    curWorkStatus.value.activeFlow = flowName;
-
+    if (curWorkStatus.value.activeFlow !== flowName) {
+        curWorkStatus.value.activeFlow = flowName;
+    }
     await nextTick();
-    document.getElementById(`row-${rowNum}`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center'
+    // await new Promise((resolve) => { setTimeout(resolve, 3000); });
+    // document.getElementById(`row-${rowNum}`)?.scrollIntoView({
+    //     behavior: 'smooth',
+    //     block: 'center',
+    //     inline: 'center'
+    // });
+    // curBlocks.value = [curOpenFile.value.blocks[rowNum - 1]];
+
+    let top = document.getElementById(`row-${rowNum}`)?.offsetTop ?? 0;
+    top = top > 100 ? top - 100 : top;
+    editScrollNode.value?.scrollTo({
+        top,
     });
+
     curBlocks.value = [curOpenFile.value.blocks[rowNum - 1]];
 }
 
@@ -958,7 +976,7 @@ defineExpose({
                         </div>
 
                         <div v-if="file.name !== 'main.flow'" class="close-btn hidden group-hover:flex hover:bg-gray-200 rounded justify-center items-center w-6 h-6
-                            absolute top-0 right-0 cursor-pointer text-red-500" @click="closeFile(file.name);">
+                            absolute top-0 right-0 cursor-pointer text-red-500" @click.stop="closeFile(file.name);">
                             <el-icon>
                                 <Close />
                             </el-icon>
@@ -971,7 +989,7 @@ defineExpose({
             </el-scrollbar>
         </div>
         <div class="viewbox relative">
-            <div class="flex flex-row overflow-auto flex-1" v-rememberScroll="curOpenFile.name">
+            <div class="flex flex-row overflow-auto flex-1" ref="editScrollNode" v-rememberScroll="curOpenFile.name">
                 <div class="col-number flex flex-col items-center mt-2 pb-10 border-r border-gray-300"
                     v-if="blocks.length > 0">
                     <div class="flex justify-between items-center row-number w-20" v-show="!block.hide"

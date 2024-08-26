@@ -17,6 +17,7 @@ export default class StepWindow extends BrowserWindow {
                 sandbox: false,
                 contextIsolation: false
             },
+            skipTaskbar: true,
             frame: false,
             show: false,
             x,
@@ -27,6 +28,7 @@ export default class StepWindow extends BrowserWindow {
         if (import.meta.env.DEV) {
             this.webContents.openDevTools();
         }
+
         this.setAlwaysOnTop(true, 'floating');
     }
 }

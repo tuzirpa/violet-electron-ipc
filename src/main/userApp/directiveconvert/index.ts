@@ -1,6 +1,10 @@
 import Flow from '../Flow';
 import { typeToCode } from '../directive/convertUtils';
-import { directiveToCodeMap } from '../directive/directive';
+import {
+    directiveToCodeMap,
+    getDirectiveAddConfig,
+    getOutputTypeDetails
+} from '../directive/directive';
 import { Block, DirectiveTree } from '../types';
 
 const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
@@ -18,7 +22,6 @@ const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
         inputKeys.forEach((key) => {
             const input = directive.inputs[key];
             let codeValue = '';
-
             if (input.type === 'variable') {
                 codeValue = input.value;
             } else if (input.type === 'array') {
@@ -56,7 +59,7 @@ const defaultToCode = (directive: DirectiveTree, blockCode: string) => {
 };
 
 export async function convertDirective(directive: DirectiveTree, index: number, flow: Flow) {
-    let toCode = directiveToCodeMap.get(directive.name);
+    let toCode = directiveToCodeMap.get(directive.key ?? directive.name);
     toCode = toCode || directive.toCode;
     const block: Block = {
         blockLine: index + 1,
@@ -77,7 +80,27 @@ export async function convertDirective(directive: DirectiveTree, index: number, 
         retryCount
     } = block;
     const blockCode = `_block = generateBlock(${blockLine}, "${flowName}", "${directiveName}", "${directiveDisplayName}", "${failureStrategy}", ${intervalTime}, ${retryCount})`;
+
+    // 由于保存代码时不存 inputs的addConfig 和 outputs的typeDetails 字段，所以在这里补全
+    //补全 addConfig 字段
+    for (const key in directive.inputs) {
+        if (Object.prototype.hasOwnProperty.call(directive.inputs, key)) {
+            const input = directive.inputs[key];
+            input.addConfig = getDirectiveAddConfig(directive.key ?? directive.name, key);
+        }
+    }
+    //补全 typeDetails 字段
+    for (const key in directive.outputs) {
+        if (Object.prototype.hasOwnProperty.call(directive.outputs, key)) {
+            const output = directive.outputs[key];
+            output.typeDetails = getOutputTypeDetails(directive.key ?? directive.name, key);
+        }
+    }
+
     if (toCode) {
+        if (directive.key?.includes('if.end')) {
+            console.log(directive.key);
+        }
         return await toCode(directive, blockCode);
     } else {
         //统一生成代码逻辑 根据指令名生成代码

@@ -102,7 +102,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 
 <template>
     <div class="register-container">
-        <ElForm ref="registerFormRef" :model="registerForm" :rules="registerRules" label-width="80px">
+        <ElForm ref="registerFormRef" :model="registerForm" @submit.native.prevent="submitForm(registerFormRef)"
+            :rules="registerRules" label-width="80px">
             <el-form-item label="昵称" prop="username">
                 <el-input v-model="registerForm.username" placeholder="请输入用户名"></el-input>
             </el-form-item>
@@ -126,7 +127,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
             </el-form-item>
             <!-- 按钮靠右 -->
             <el-form-item class="flex">
-                <el-button class="justify-end" type="primary" @click="submitForm(registerFormRef)">注册</el-button>
+                <el-button class="justify-end" type="primary" native-type="submit">注册</el-button>
             </el-form-item>
         </ElForm>
     </div>

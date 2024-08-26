@@ -1,10 +1,10 @@
 <script setup lang="tsx">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { Action } from '@renderer/lib/action';
 import { ElButton, ElMessage, ElMessageBox } from 'element-plus';
 import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { shareUserAppToPlaza, UserAppInfo } from './MyApp';
-import { Upload } from '@element-plus/icons-vue';
+import { Upload, Share } from '@element-plus/icons-vue';
 import { loginUserInfo } from "@renderer/store/commonStore";
 
 const emit = defineEmits<{
@@ -71,23 +71,61 @@ function showContextMenuByApp(event: MouseEvent, app: UserAppInfo) {
             icon: <el-icon><Upload /></el-icon>,
             shortcut: ''
         },
-        // {
-        //     label: '分享',
-        //     onClick: () => {
-
-        //         sharedAppDialog.value.show = true;
-        //         sharedAppDialog.value.userApp = app;
-        //     },
-        //     icon: <el-icon><Share /></el-icon>,
-        //     shortcut: ''
-        // }
+        {
+            label: '分享',
+            onClick: async () => {
+                //打开应用 加载应用信息
+                await Action.openUserApp(app.id);
+                sharedAppDialog.value.userApp = await Action.getUserApp(app.id);
+                sharedAppDialog.value.show = true;
+            },
+            icon: <el-icon><Share /></el-icon>,
+            shortcut: ''
+        }
     ]);
 }
 
 const sharedAppDialog = ref({
     show: false,
-    userApp: {}
+    userApp: {} as UserAppInfo,
+    shareForm: {
+        encipher: false,
+        content: '',
+        password: '123456',
+    }
 });
+
+watch(() => sharedAppDialog.value.shareForm.password, () => {
+    if (sharedAppDialog.value.show && sharedAppDialog.value.shareForm.encipher) {
+        sharedAppDialogOpened();
+    }
+});
+
+async function sharedAppDialogOpened() {
+    let content = JSON.stringify(sharedAppDialog.value.userApp, null, 2);
+
+    if (sharedAppDialog.value.shareForm.encipher) {
+        if (!sharedAppDialog.value.shareForm.password) {
+            content = '';
+            ElMessage.error('请输入密码');
+        } else {
+            content = await Action.aesEncrypt(content, sharedAppDialog.value.shareForm.password);
+            content = content.substring(0, 1) + '1' + content.substring(1);
+        }
+    } else {
+        content = await Action.aesEncrypt(content);
+        content = content.substring(0, 1) + '0' + content.substring(1);
+    }
+
+    sharedAppDialog.value.shareForm.content = content
+}
+
+// function copyContent() {
+//     const content = sharedAppDialog.value.shareForm.content;
+//     navigator.clipboard.writeText(content);
+//     ElMessage.success('复制成功');
+// }
+
 
 defineExpose({
     newApp
@@ -114,9 +152,11 @@ defineExpose({
                     <el-button class="text-blue-400" link @click="deleteUserApp(app.id)"
                         :loading="app.deleting">删除</el-button>
                     <el-button class="text-blue-400" link @click="showContextMenuByApp($event, app)"
-                        :loading="app.deleting"><el-icon>
+                        :loading="app.deleting">
+                        <el-icon>
                             <MoreFilled />
-                        </el-icon></el-button>
+                        </el-icon>
+                    </el-button>
                 </div>
             </div>
             <div class="flex justify-center items-center flex-1" v-show="userApps.length === 0">
@@ -128,14 +168,20 @@ defineExpose({
 
         </div>
         <Teleport to="body">
-            <el-dialog v-model="sharedAppDialog.show" :title="`分享应用`" draggable>
+            <el-dialog v-model="sharedAppDialog.show" @open="sharedAppDialogOpened" :title="`分享应用`">
                 <div>
-                    <div>是否加密</div>
+                    <div>应用名称：{{ sharedAppDialog.userApp.name }}</div>
+                    <div>应用版本：{{ sharedAppDialog.userApp.version }}</div>
+                    <div>应用作者：{{ sharedAppDialog.userApp.author }}</div>
+                    <div>应用描述：{{ sharedAppDialog.userApp.description }}</div>
+                    <div>流程数：{{ sharedAppDialog.userApp.flows.length }}</div>
                 </div>
-                <div>
-                    <ElButton type="primary">保存到文件</ElButton>
-                    <ElButton type="primary">发布生成应用页</ElButton>
-                </div>
+                <template #footer>
+                    <div class="flex justify-end">
+                        <ElButton type="primary" @click="() => { ElMessage('开发中...') }">生成分享文件</ElButton>
+                        <ElButton type="primary" @click="() => { ElMessage('开发中...') }">发布生成应用页</ElButton>
+                    </div>
+                </template>
             </el-dialog>
         </Teleport>
     </div>

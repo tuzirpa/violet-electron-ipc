@@ -38,7 +38,10 @@ function rememberScrollDirective(): Directive {
             binding.value && (scrollData[binding.oldValue] = el.scrollTop);
         },
         updated(el, binding) {
-            binding.value && (el.scrollTop = scrollData[binding.value] || 0);
+            binding.value &&
+                el.scrollTo({
+                    top: scrollData[binding.value] || 0
+                });
         }
     };
 }

@@ -1,5 +1,5 @@
 import type { Block } from '../types';
-import { sendLog, olog } from './commonUtil';
+import { sendLog } from './commonUtil';
 import fs from 'fs';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -36,24 +36,15 @@ function forRobotUtil(obj: any) {
                         return result;
                     } catch (error: any) {
                         // olog(error);
-                        console.error(
-                            'error',
-                            `执行指令 ${blockInfo.directiveDisplayName} 异常: ${error.message}`,
-                            blockInfo,
-                            error
-                        );
+                        console.error(error);
                         if (blockInfo.failureStrategy === 'terminate') {
                             console.error(
-                                'error',
-                                `执行指令 ${blockInfo.directiveDisplayName} 异常,终止流程`,
-                                blockInfo
+                                `执行指令 ${blockInfo.directiveDisplayName} 异常,终止流程`
                             );
                             process.exit(1);
                         } else if (blockInfo.failureStrategy === 'ignore') {
                             console.error(
-                                'error',
-                                `执行指令 ${blockInfo.directiveDisplayName} 异常 ,忽略错误`,
-                                blockInfo
+                                `执行指令 ${blockInfo.directiveDisplayName} 异常 ,忽略错误`
                             );
                             return {};
                         } else {
@@ -61,16 +52,12 @@ function forRobotUtil(obj: any) {
 
                             if (retryCountNum > blockInfo.retryCount) {
                                 console.error(
-                                    'error',
-                                    `执行指令 ${blockInfo.directiveDisplayName} 异常 ,重试次数达到上限`,
-                                    blockInfo
+                                    `执行指令 ${blockInfo.directiveDisplayName} 异常 ,重试次数达到上限`
                                 );
                                 process.exit(1);
                             } else {
                                 console.error(
-                                    'error',
-                                    `执行指令 ${blockInfo.directiveDisplayName} 异常 ,${blockInfo.intervalTime} 秒后重试第${retryCountNum}次`,
-                                    blockInfo
+                                    `执行指令 ${blockInfo.directiveDisplayName} 异常 ,${blockInfo.intervalTime} 秒后重试第${retryCountNum}次`
                                 );
                             }
                             await sleep(blockInfo.intervalTime * 1000);
@@ -126,11 +113,11 @@ export const fatalError = (error: any, fileName: string) => {
     const curFileContent = fs.readFileSync(fileName, 'utf8');
     const lineContent = curFileContent.split('\n')[lineNumber - 1];
     const generateBlockCode = lineContent.trim().match(/generateBlock\(.*?\)/);
-    olog(error);
     if (generateBlockCode && generateBlockCode[0]) {
-        console['fatalError'](eval(generateBlockCode[0]), '致命错误,退出流程:', error);
+        globalThis._block = eval(generateBlockCode[0]);
+        console['fatalError'](error.stack);
     } else {
-        console['fatalError']('致命错误,退出流程:' + error.message, {
+        globalThis._block = {
             blockLine: -1,
             flowName: '未知流程',
             directiveName: '',
@@ -138,7 +125,8 @@ export const fatalError = (error: any, fileName: string) => {
             failureStrategy: 'terminate',
             intervalTime: 0,
             retryCount: 0
-        });
+        };
+        console['fatalError'](error.stack);
     }
 };
 

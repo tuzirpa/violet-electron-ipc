@@ -4,7 +4,7 @@ import Action from './action/Action';
 import MethodsUtils from '@shared/MethodsUtils';
 import { registerAssetsProtocol } from './serve';
 import { WindowManage } from './window/WindowManage';
-import nodeEvbitonment from './nodeEnvironment/NodeEvbitonment';
+
 import robotUtil from './userApp/robotUtil/robotUtil?modulePath';
 import robotLog from './userApp/robotUtil/commonUtil?modulePath';
 import UserApp from './userApp/UserApp';
@@ -92,7 +92,6 @@ function start() {
     app.whenReady().then(() => {
         registerAssetsProtocol();
         createWindow();
-        nodeEvbitonment.autoInstallNode();
         UserApp.init();
         // Set app user model id for windows
         electronApp.setAppUserModelId('com.tuzirpa.app');

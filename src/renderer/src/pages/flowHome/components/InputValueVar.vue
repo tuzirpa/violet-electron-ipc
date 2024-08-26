@@ -6,6 +6,7 @@ import { Action } from '@renderer/lib/action'
 import { useElementSize } from '@vueuse/core'
 import { curUserApp } from '../indexvue';
 import VariableItem from './VariableItem.vue';
+import { addElementLibrary, elementLibraryEditConfirm } from '../propertyTabs'
 // import { typeDisplay } from '../directiveConfig';
 
 // 添加逻辑
@@ -101,6 +102,18 @@ function enableExpressionToggle() {
     }
 }
 
+const activeTabsName = ref('variable');
+
+function selectCssSelector(elementInfo: any) {
+    model.value = `${elementInfo.cssSelector}`;
+    popoverRef.value.hide();
+    emit('inputValueChange', model.value, props.inputItem);
+}
+function selectXpathSelector(elementInfo: any) {
+    model.value = `${elementInfo.xPath}`;
+    popoverRef.value.hide();
+    emit('inputValueChange', model.value, props.inputItem);
+}
 
 </script>
 
@@ -134,10 +147,11 @@ function enableExpressionToggle() {
 
 
         <div ref="inputRef" class="flex-1">
-            <div class="flex items-center gap-2" v-if="inputItem.addConfig.type === 'textarea'">
-                <el-input ref="valInputRef" type="textarea" v-model="model"
-                    :placeholder="inputItem.addConfig?.placeholder"></el-input>
-                <div class="text-blue-500 text-sm cursor-pointer w-20" ref="buttonRef" @click="varClick">使用变量</div>
+            <div class="flex  items-center gap-2" v-if="inputItem.addConfig.type === 'textarea'">
+                <el-input class="flex-1" ref="valInputRef" type="textarea" v-model="model"
+                    :autosize="{ minRows: 1, maxRows: 10 }" :placeholder="inputItem.addConfig?.placeholder"></el-input>
+                <div class="text-blue-500 text-sm cursor-pointer w-auto" ref="buttonRef" @click="varClick">变量{{
+                    inputItem.addConfig.elementLibrarySupport ? '/元素库' : '' }}</div>
             </div>
             <el-input ref="valInputRef" v-else v-model="model" :placeholder="inputItem.addConfig?.placeholder">
                 <template #append>
@@ -154,10 +168,111 @@ function enableExpressionToggle() {
         </div>
 
         <el-popover ref="popoverRef" :virtual-ref="buttonRef" placement="bottom-end" :width="varWidth" trigger="click">
-            <div ref="variableSelect" filterable tabindex="-1"
+            <el-tabs v-model="activeTabsName" class="demo-tabs" v-if="inputItem.addConfig.elementLibrarySupport">
+                <el-tab-pane label="变量" name="variable">
+                    <div ref="variableSelect" filterable tabindex="-1"
+                        class="active flex flex-col gap-2 mt-1 left-0 p-1 bg-white text-gray-500 text-sm border border-gray-200 border-solid rounded-md w-full">
+                        <div>
+                            <ElInput v-model="varSelectVal" placeholder="搜索关键字" clearable></ElInput>
+                            <div class="flex justify-end flex-1">
+                                <ElCheckboxGroup v-model="variableFilter">
+                                    <ElCheckbox label="全局" value="global" />
+                                    <ElCheckbox label="局部" value="local" />
+                                    <ElCheckbox label="不可用" value="notusable" />
+                                    <ElCheckbox label="推荐" value="recommended" />
+                                </ElCheckboxGroup>
+                            </div>
+                        </div>
+                        <div class="viewbox min-h-10 max-h-60 overflow-y-auto">
+                            <div class="wrapbox">
+                                <template v-for="variable in variables">
+                                    <div class="cursor-pointer rounded" v-show="localVariablesFilter(variable)">
+                                        <VariableItem :variable="variable"
+                                            @varSelectValChange="(val, keys) => varSelectValChange(val, false, keys)">
+                                        </VariableItem>
+                                    </div>
+                                </template>
+                                <template v-for="variable in curUserApp.globalVariables">
+                                    <div class="relative cursor-pointer rounded" v-show="variableFilter.includes('global') &&
+                                        (varSelectVal.length === 0
+                                            || variable.name.includes(varSelectVal)
+                                            || variable.display?.includes(varSelectVal))
+                                        ">
+                                        <VariableItem :variable="(variable as any)" :is-global="true"
+                                            @varSelectValChange="(val, keys) => varSelectValChange(val, true, keys)">
+                                        </VariableItem>
+                                        <el-tag class="absolute top-1/2 right-2 transform -translate-y-1/2"
+                                            type="primary">全局变量</el-tag>
+                                        <!-- <div class="item" @click="varSelectValChange(variable, true)">
+                                    {{ variable.name }}
+                                    ({{ variable.display }})
+                                    <el-tag type="primary">全局变量</el-tag>
+                                </div> -->
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                <el-tab-pane label="元素库" name="elementLibrary">
+                    <div filterable tabindex="-1"
+                        class="active flex flex-col gap-2 mt-1 left-0 p-1 bg-white text-gray-500 text-sm border border-gray-200 border-solid rounded-md w-full">
+                        <div>
+                            <ElInput v-model="varSelectVal" placeholder="搜索关键字" clearable></ElInput>
+                        </div>
+                        <div class="viewbox min-h-10 max-h-60 overflow-y-auto">
+                            <div @click="addElementLibrary"
+                                class="p-2 rounded flex flex-1 justify-center items-center hover:bg-gray-100 hover:text-blue-500 cursor-pointer gap-2">
+                                <el-icon>
+                                    <Plus />
+                                </el-icon>
+                                <div>去浏览器捕获元素</div>
+                            </div>
+                            <div v-for="elementInfo in curUserApp.elementLibrarys" v-show="varSelectVal.length === 0
+                                || elementInfo.name.includes(varSelectVal)
+                                || elementInfo.description?.includes(varSelectVal)"
+                                @dblclick="elementLibraryEditConfirm(elementInfo)">
+                                <el-popover :hide-after="0" placement="right" :width="300" trigger="hover">
+                                    <div class="flex flex-col gap-2">
+                                        <div v-if="elementInfo.description">
+                                            描述：{{ elementInfo.description }}
+                                        </div>
+                                        <div>
+                                            预览图：
+                                            <ElImage :src="`assets://file?path=${elementInfo.previewPath}`" alt="" />
+                                        </div>
+                                    </div>
+                                    <template #reference>
+                                        <div class="hover:bg-gray-100 flex justify-between items-center p-1 rounded">
+                                            <div class="flex gap-1 items-center">
+                                                <div>
+                                                    <div>{{ elementInfo.name }}</div>
+                                                    <div class="text-xs text-gray-400" v-if="elementInfo.description">
+                                                        {{ elementInfo.description }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="ops">
+                                                <el-button type="text"
+                                                    @click="selectCssSelector(elementInfo)">css</el-button>
+                                                <el-button type="text"
+                                                    @click="selectXpathSelector(elementInfo)">xPath</el-button>
+                                            </div>
+                                        </div>
+
+                                    </template>
+                                </el-popover>
+                            </div>
+
+                        </div>
+                    </div>
+                </el-tab-pane>
+
+            </el-tabs>
+            <div ref="variableSelect" filterable tabindex="-1" v-else
                 class="active flex flex-col gap-2 mt-1 left-0 p-1 bg-white text-gray-500 text-sm border border-gray-200 border-solid rounded-md w-full">
                 <div>
-                    <ElInput v-model="varSelectVal" placeholder="搜索变量"></ElInput>
+                    <ElInput v-model="varSelectVal" placeholder="搜索关键字" clearable></ElInput>
                     <div class="flex justify-end flex-1">
                         <ElCheckboxGroup v-model="variableFilter">
                             <ElCheckbox label="全局" value="global" />
@@ -177,7 +292,7 @@ function enableExpressionToggle() {
                             </div>
                         </template>
                         <template v-for="variable in curUserApp.globalVariables">
-                            <div class="hover:bg-gray-100 flex items-center p-1 cursor-pointer rounded" v-show="variableFilter.includes('global') &&
+                            <div class="relative cursor-pointer rounded" v-show="variableFilter.includes('global') &&
                                 (varSelectVal.length === 0
                                     || variable.name.includes(varSelectVal)
                                     || variable.display?.includes(varSelectVal))
@@ -185,7 +300,8 @@ function enableExpressionToggle() {
                                 <VariableItem :variable="(variable as any)" :is-global="true"
                                     @varSelectValChange="(val, keys) => varSelectValChange(val, true, keys)">
                                 </VariableItem>
-                                <el-tag type="primary">全局变量</el-tag>
+                                <el-tag class="absolute top-1/2 right-2 transform -translate-y-1/2"
+                                    type="primary">全局变量</el-tag>
                                 <!-- <div class="item" @click="varSelectValChange(variable, true)">
                                     {{ variable.name }}
                                     ({{ variable.display }})
@@ -196,6 +312,7 @@ function enableExpressionToggle() {
                     </div>
                 </div>
             </div>
+
         </el-popover>
     </div>
 </template>

@@ -21,6 +21,8 @@ export const curWorkStatus = ref<WorkStatus>({
  * 关闭已打开的流程
  */
 export function closeFile(fileName: string) {
+    console.log(fileName, 'fileName');
+
     const index = curWorkStatus.value.openedFlows.findIndex((item) => item === fileName);
     curWorkStatus.value.openedFlows = curWorkStatus.value.openedFlows.filter(
         (item) => item !== fileName
@@ -29,6 +31,10 @@ export function closeFile(fileName: string) {
         curWorkStatus.value.openedFlows[
             Math.min(curWorkStatus.value.openedFlows.length - 1, index)
         ];
+    console.log(curWorkStatus.value.activeFlow);
+    setTimeout(() => {
+        console.log(curWorkStatus.value.activeFlow);
+    }, 1000);
 }
 
 /**
@@ -69,6 +75,11 @@ export const runLogs = ref<{ level: LogLevel; message: string; time: number; dat
  */
 export const runLogsFilter = ref<string[]>(['info', 'warn', 'error', 'fatalError']);
 
+/**
+ * 运行日志内容过滤器
+ */
+export const runLogsContentFilter = ref<string>('');
+
 export const levelMap = {
     debug: '调试',
     info: '信息',
@@ -78,7 +89,22 @@ export const levelMap = {
 };
 
 export const showRunLogs = computed(() => {
-    const logs = runLogs.value.filter((item) => runLogsFilter.value.includes(item.level));
+    let logs = runLogs.value
+        .filter((item) => runLogsFilter.value.includes(item.level))
+        .filter(
+            (item) =>
+                !runLogsContentFilter.value || item.message.includes(runLogsContentFilter.value)
+        );
+    if (runLogsContentFilter.value) {
+        logs = logs.map((item) => {
+            const reg = new RegExp(runLogsContentFilter.value, 'gi');
+            const message = item.message.replace(
+                reg,
+                `<span style="color:red">${runLogsContentFilter.value}</span>`
+            );
+            return { ...item, message };
+        });
+    }
     console.log(logs, 'logs');
 
     return logs;

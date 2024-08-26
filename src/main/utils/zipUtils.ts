@@ -1,7 +1,9 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import os from 'os';
 import AdmZip from 'adm-zip';
+import unzipMudulePath from './unzip?modulePath';
+import { utilityProcess } from 'electron';
 
 /**
  * 解压.zip文件到目标文件夹
@@ -30,18 +32,29 @@ export function zip(
  * @param {string} zipFilePath - 压缩文件的路径
  * @param {string} targetFolder - 目标文件夹路径
  */
-export function unzip(zipFilePath: string, targetFolder: string): void {
-    try {
-        // 创建一个新的 AdmZip 实例
-        const zip = new AdmZip(zipFilePath);
+export function unzip(zipFilePath: string, targetFolder: string) {
+    return unzipPromise(zipFilePath, targetFolder);
+}
 
-        // 解压缩 ZIP 文件到指定目录
-        zip.extractAllTo(targetFolder, /*overwrite*/ true);
-
-        console.log('ZIP 文件解压缩完成。');
-    } catch (error) {
-        console.error('解压缩过程中发生错误:', error);
-    }
+/**
+ * 解压.zip文件到目标文件夹
+ * @param {string} zipFilePath - 压缩文件的路径
+ * @param {string} targetFolder - 目标文件夹路径
+ */
+export function unzipPromise(zipFilePath: string, targetFolder: string) {
+    return new Promise((resolve, reject) => {
+        const child = utilityProcess.fork(unzipMudulePath, [zipFilePath, targetFolder], {
+            stdio: 'inherit'
+        });
+        child.on('exit', (code) => {
+            console.log(code, 'code');
+            if (code === 0) {
+                resolve(true);
+            } else {
+                reject(new Error('解压缩过程中发生错误'));
+            }
+        });
+    });
 }
 
 /**

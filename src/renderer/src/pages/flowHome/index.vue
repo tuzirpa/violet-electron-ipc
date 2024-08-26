@@ -4,14 +4,17 @@ import BoxDraggable from '@renderer/components/BoxDraggable.vue';
 import DirectiveTree from './components/DirectiveTree.vue';
 import FlowEdit from './components/FlowEdit.vue';
 import BtnTip from '@renderer/components/BtnTip.vue';
-import { Column, ElAutoResizer, ElCheckbox, ElCheckboxGroup, ElDialog, ElIcon, ElLoading, ElMessage, ElMessageBox, ElPopover, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
+import { Column, ElAutoResizer, ElCheckbox, ElCheckboxGroup, ElDialog, ElIcon, ElInput, ElLoading, ElMessage, ElMessageBox, ElPopover, ElTable, ElTableColumn, ElTableV2 } from 'element-plus';
 import { ref, onMounted, onUnmounted, getCurrentInstance } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Action } from '@renderer/lib/action';
 import type UserApp from 'src/main/userApp/UserApp';
 import type { IBreakpoint } from 'src/main/userApp/devuserapp/DevNodeJs';
 import { curFlowErrors, curFlowErrorsFilter, curShowFlowErrors } from './components/FlowEditStore';
-import { closeFile, curUserApp, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs, runLogsFilter, showRunLogs, startRunLogs } from './indexvue';
+import {
+    closeFile, curUserApp, curWorkStatus, handleRunLogsContextMenu, levelMap, runLogs,
+    runLogsFilter, runLogsContentFilter, showRunLogs, startRunLogs
+} from './indexvue';
 import { Alignment } from 'element-plus/es/components/table-v2/src/constants';
 import CodeEdit from './components/CodeEdit.vue';
 import type Flow from 'src/main/userApp/Flow';
@@ -19,7 +22,8 @@ import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlu
 import { DeleteFilled, Filter, Edit, CopyDocument, FullScreen } from '@element-plus/icons-vue';
 import GlobalVariable from './components/GlobalVariable.vue';
 import type { AppVariable } from 'src/main/userApp/types';
-
+import { addElementLibrary, elementLibraryEditConfirm, propertyTabList, propertyTabsActiveName } from './propertyTabs';
+import PropertyTabs from './components/PropertyTabs.vue';
 
 
 const route = useRoute();
@@ -367,9 +371,17 @@ const runLogsColumns: Column<any>[] = [
         headerClass: 'log-message',
         width: 150,
         align: Alignment.CENTER,
+        headerCellRenderer: () => (
+            <div class="flex justify-center items-center w-full">
+                <div class="mr-2">日志内容</div>
+                <div class="w-1/2">
+                    <ElInput v-model={runLogsContentFilter.value} placeholder="输入关键字进行过滤" />
+                </div>
+            </div>
+        ),
         cellRenderer: ({ cellData: message }) => (
             <div class="flex justify-center group items-center h-full w-full">
-                <span class="truncate flex-1 w-0">{message}</span>
+                <span class="truncate flex-1 w-0" v-html={message}></span>
                 <div class="cursor-pointer" onclick={() => { viewDetailsLogMessage(message) }}>
                     <ElIcon class="text-gray-400 hidden group-hover:block">
                         <el-icon><FullScreen /></el-icon>
@@ -687,24 +699,71 @@ function saveGlobalVariable(gvars: AppVariable[]) {
                     </div>
                     <BoxDraggable class="border-l viewbox" :width="250" :resize-left="true">
                         <div class="property-edit flex-1 p-2 gap-1 flex flex-col overflow-hidden">
-                            <div>流程</div>
-                            <div class="flow-list-container flex flex-col gap-1  overflow-auto">
-                                <div class="flow-list flex flex-1 cursor-pointer"
+                            <div class="property-edit-title flex gap-1 items-center">
+                                <div class="px-2 py-1 rounded"
+                                    :class="{ 'bg-slate-100 font-bold': propertyTabsActiveName === item.name }"
+                                    v-for="(item, _index) in propertyTabList" @click="propertyTabsActiveName = item.name">{{
+                                        item.label }}</div>
+
+                            </div>
+
+                            <div class="flow-list-container flex flex-col gap-1 overflow-auto"
+                                v-show="propertyTabsActiveName === 'flow'">
+                                <div class="flow-list flex flex-1 group rounded hover:bg-slate-200"
+                                    :class="{ 'bg-slate-100': curActiveFlowIndex === index }"
                                     v-for="(flow, index) in userAppDetail?.flows" @click="curActiveFlowIndex = index"
                                     @dblclick="openFlowByName(flow.name)"
                                     @contextmenu="handleFlowContextMenu($event, flow, index)" :key="index">
                                     <el-tooltip placement="bottom-start" effect="dark" :show-after="1000" :showArrow="false"
                                         trigger="hover" :content="flow.aliasName">
-                                        <div class="flow-item flex-1 pl-6 p-2 rounded hover:bg-slate-200 truncate"
-                                            :class="{ 'bg-slate-100': curActiveFlowIndex === index }">
+                                        <div class="flow-item flex-1 pl-6 p-2  truncate">
                                             <span class="m-2">{{ flow.aliasName }}</span>
                                         </div>
                                     </el-tooltip>
+                                    <el-button class="text-blue-400 hidden group-hover:block mr-1" link
+                                        @click="handleFlowContextMenu($event, flow, index)">
+                                        <el-icon>
+                                            <MoreFilled />
+                                        </el-icon>
+                                    </el-button>
+                                </div>
+                            </div>
+                            <div class="flow-list-container flex flex-col gap-1 overflow-auto"
+                                v-if="propertyTabsActiveName === 'elementLibrary' && userAppDetail && userAppDetail.elementLibrarys.length > 0">
+                                <div @click="addElementLibrary"
+                                    class="p-2 rounded flex flex-1 justify-center items-center hover:bg-gray-100 hover:text-blue-500 cursor-pointer gap-2">
+                                    <el-icon>
+                                        <Plus />
+                                    </el-icon>
+                                    <div>去浏览器捕获元素</div>
+                                </div>
+                                <div class="flow-list flex flex-1 group rounded hover:bg-slate-200"
+                                    @dblclick="elementLibraryEditConfirm(element)"
+                                    v-for="(element, index) in userAppDetail?.elementLibrarys" :key="index">
+                                    <el-tooltip placement="bottom-start" effect="dark" :show-after="1000" :showArrow="false"
+                                        trigger="hover" :content="element.description">
+                                        <div class="flow-item flex-1 pl-6 p-2  truncate">
+                                            <span class="m-2">{{ element.name }}</span>
+                                        </div>
+                                    </el-tooltip>
+                                    <el-button class="text-blue-400 hidden group-hover:block mr-1" link>
+                                        <el-icon>
+                                            <MoreFilled />
+                                        </el-icon>
+                                    </el-button>
+                                </div>
 
+                            </div>
+                            <div class="flex flex-1 justify-center items-center"
+                                v-if="propertyTabsActiveName === 'elementLibrary' && userAppDetail && userAppDetail.elementLibrarys.length === 0">
+                                <div class="text-center text-gray-400">
+                                    还没有元素库 <span class="text-blue-500 hover:cursor-pointer"
+                                        @click="addElementLibrary">点我去浏览器选择元素</span>
                                 </div>
                             </div>
 
                         </div>
+
                         <BoxDraggable class="left-sidebar border-t" :height="400" :min-height="100" :resize-top="true">
                             <GlobalVariable v-if="userAppDetail" :userAppDetail="userAppDetail"
                                 :global-variable-data="globalVariableData"
@@ -717,6 +776,7 @@ function saveGlobalVariable(gvars: AppVariable[]) {
         <ElDialog v-model="logDetailVisible" :title="'日志详情'">
             <CodeEdit :code="code"></CodeEdit>
         </ElDialog>
+        <PropertyTabs></PropertyTabs>
     </div>
 </template>
 

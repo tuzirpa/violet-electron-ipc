@@ -4,6 +4,7 @@ import InputValueVar from './InputValueVar.vue';
 import OutputValueVar from './OutputValueVar.vue';
 import InputValueVarVariable from './InputValueVarVariable.vue';
 import { nextTick, ref } from 'vue';
+import { Action } from '@renderer/lib/action'
 import { ElInput, ElSelect, ElTooltip } from 'element-plus';
 
 // 添加逻辑
@@ -14,6 +15,10 @@ const props = defineProps<{
 
 const _directive = ref(props.directive);
 const _variables = ref(props.variables);
+
+
+console.log(_directive.value.inputs);
+
 
 
 _directive.value.failureStrategy = _directive.value.failureStrategy || 'terminate';
@@ -32,7 +37,15 @@ function groupClick(group: any) {
 const advancedNum = ref(0);
 
 
-nextTick(() => {
+nextTick(async () => {
+
+    for (const key in _directive.value.inputs) {
+        if (Object.prototype.hasOwnProperty.call(_directive.value.inputs, key)) {
+            const input = _directive.value.inputs[key];
+            const addConfig = await Action.getAddConfig(_directive.value.key ?? _directive.value.name, key);
+            input.addConfig = addConfig;
+        }
+    }
     setTimeout(() => {
 
         //输入变量处理

@@ -142,7 +142,8 @@ setTimeout(() => {
                     </div>
                     <div class="form-content h-72">
                         <div class="login-form" v-show="activeName === 'login'">
-                            <el-form :model="loginForm" :rules="loginRules" label-width="80px">
+                            <el-form :model="loginForm" :rules="loginRules" label-width="80px"
+                                @submit.native.prevent="login">
                                 <el-form-item label="用户名" prop="username">
                                     <el-input v-model="loginForm.username" placeholder="请输入用户名/手机号" clearable></el-input>
                                 </el-form-item>
@@ -162,7 +163,7 @@ setTimeout(() => {
                                     <!-- <ElCheckbox v-model="loginForm.autoLogin"
                                         @change="(e) => { if (e) { loginForm.remember = true } }">自动登录</ElCheckbox> -->
                                     <ElCheckbox v-model="loginForm.remember">记住登录</ElCheckbox>
-                                    <el-button class="ml-5 px-6" type="primary" @click="login">登录</el-button>
+                                    <el-button class="ml-5 px-6" type="primary" native-type="submit">登录</el-button>
                                 </el-form-item>
                             </el-form>
                         </div>

@@ -8,7 +8,7 @@ import { uploadFileToQiniu } from '../utils/qiniuUtils';
 import { appPlazaAdd, getDownloadUrl } from '../api/appplaza';
 import { downloadFileWithResume } from '../utils/download';
 import { WorkStatus } from './WorkStatusConf';
-import { AppVariable } from './types';
+import { AppVariable, ElementLibrary } from './types';
 
 /**
  * 广场的应用
@@ -24,6 +24,37 @@ export type AppPlaza = {
 };
 
 export class UserAppManage {
+    deleteElementLibraryInfo(appId: string, elementInfo: ElementLibrary) {
+        const userApp = this.findUserApp(appId);
+        const elibs = userApp.elementLibrarys.filter((item) => item.id !== elementInfo.id);
+        userApp.saveElementLibrarys(elibs);
+        return elementInfo;
+    }
+
+    saveElementLibraryInfo(appId: string, elementInfo: ElementLibrary) {
+        const userApp = this.findUserApp(appId);
+        const elibs = userApp.elementLibrarys.map((item) => {
+            if (item.id === elementInfo.id) {
+                item = elementInfo;
+            }
+            return item;
+        });
+        userApp.saveElementLibrarys(elibs);
+        return elementInfo;
+    }
+    async addElementLibrary(appId: string, elementLibrary: ElementLibrary) {
+        const userApp = this.findUserApp(appId);
+        //移动预览图
+        const previewPath = join(userApp.elementLibraryDir, `${uuid()}.png`);
+        fs.renameSync(elementLibrary.previewPath, previewPath);
+        elementLibrary.previewPath = previewPath;
+        elementLibrary.id = uuid();
+        userApp.elementLibrarys.unshift(elementLibrary);
+        //保存到磁盘
+        userApp.saveElementLibrarys(userApp.elementLibrarys);
+        return elementLibrary;
+    }
+
     /**
      * 扫描本地应用
      */
@@ -80,7 +111,7 @@ export class UserAppManage {
         const zipPath = join(userApp.appDir, `dev.zip`);
         await downloadFileWithResume(fileUrl, zipPath);
         //解压流程文件
-        unzip(zipPath, userApp.appDir);
+        await unzip(zipPath, userApp.appDir);
         //删除压缩文件
         fs.unlinkSync(zipPath);
         //保存应用
@@ -240,6 +271,19 @@ export class UserAppManage {
         }
         flowSave.aliasName = flow.aliasName;
         flowSave.blocks = flow.blocks;
+        flowSave.blocks.forEach((block) => {
+            // delete block.pdLvn;
+            delete block.isFold;
+            delete block.open;
+            delete block.hide;
+            for (const key in block.inputs) {
+                if (Object.prototype.hasOwnProperty.call(block.inputs, key)) {
+                    const input = block.inputs[key];
+                    //@ts-ignore
+                    delete input.addConfig;
+                }
+            }
+        });
         flowSave.save();
         return flowSave;
     }

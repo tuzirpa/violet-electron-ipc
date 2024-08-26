@@ -42,6 +42,7 @@ export class WindowManage {
                 contextIsolation: false
             }
         });
+        window.setMenu(null);
         this.addWindow(name, window);
         return window;
     }

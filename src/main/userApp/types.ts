@@ -1,3 +1,43 @@
+/**
+ * 元素库
+ */
+export interface ElementLibrary {
+    /**
+     * 生成id
+     */
+    id: string;
+    /**
+     * 名称
+     */
+    name: string;
+    /**
+     * 预览图路径
+     */
+    previewPath: string;
+    /**
+     * 描述
+     */
+    description?: string;
+    /**
+     * css选择器
+     */
+    cssSelector: string;
+    /**
+     * xpath
+     */
+    xPath: string;
+
+    /**
+     * 最后一次验证类型
+     */
+    lastVerifyType?: 'css' | 'xpath';
+
+    /**
+     * 是否激活
+     */
+    active?: boolean;
+}
+
 export type FlowError = {
     flowName: string;
     flowAliasName?: string;
@@ -147,6 +187,10 @@ export interface AddConfig<T> {
     limit?: {
         [key: string]: any;
     };
+    /**
+     * 是否支持元素库
+     */
+    elementLibrarySupport?: boolean;
 }
 
 /**
@@ -180,6 +224,9 @@ export interface DirectiveInput {
      */
     enableExpression?: boolean;
 
+    /**
+     * 添加字段配置，配置添加弹窗的样式
+     */
     addConfig: AddConfig<AddConfigInputType>;
 }
 

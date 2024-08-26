@@ -4,6 +4,7 @@ import fs from 'fs';
 import { downloadFileWithResume } from '../utils/download';
 import { unzip } from '../utils/zipUtils';
 import { sleep } from '@shared/Utils';
+import { WindowManage } from '../window/WindowManage';
 
 export class NodeEvbitonment {
     nodePath: string;
@@ -25,10 +26,13 @@ export class NodeEvbitonment {
     /**
      * 自动安装node环境
      */
-
     async autoInstallNode() {
         if (this.checkingTheLocalEnvironment()) {
             console.log('本地环境已安装');
+            WindowManage.mainWindow.webContents.send('app-status', {
+                name: 'node环境',
+                value: '已安装'
+            });
             return;
         }
         // 下载node环境并安装
@@ -44,38 +48,57 @@ export class NodeEvbitonment {
     }
 
     async installNode() {
-        await sleep(5000);
         // 下载node环境
         await this.downloadNode();
         await sleep(1000);
         // 解压node环境
-        this.unzipNode();
+        await this.unzipNode();
         console.log('安装nodejs成功');
         await sleep(1000);
         //重命名目录
         fs.renameSync(path.join(this.nodePath, `node-v${this.version}-win-x64`), this.nodeExeDir);
+        WindowManage.mainWindow.webContents.send('app-status', {
+            name: 'node环境',
+            value: `安装nodejs成功`
+        });
     }
     async downloadNode() {
         //下载文件
         console.log('开始下载nodejs');
+        WindowManage.mainWindow.webContents.send('app-status', {
+            name: 'node环境',
+            value: '开始下载nodejs'
+        });
         //创建临时文件
         fs.mkdirSync(path.join(this.userDataDir, 'temp'), { recursive: true });
         this.tempFile = path.join(this.userDataDir, 'temp', 'nodejs.zip');
         await downloadFileWithResume(this.nodejsUrl, this.tempFile, (progress) => {
             console.log(`下载进度：${progress.percentage}%`);
+            WindowManage.mainWindow.webContents.send('app-status', {
+                name: 'node环境',
+                value: `下载进度：${Math.floor(progress.percentage)}%`
+            });
             if (progress.percentage === 100) {
                 console.log('下载完成');
+                WindowManage.mainWindow.webContents.send('app-status', {
+                    name: 'node环境',
+                    value: `下载完成`
+                });
             }
         });
     }
-    unzipNode() {
+    async unzipNode() {
         if (!this.tempFile) {
             return;
         }
 
         // 解压文件
         console.log('开始解压nodejs');
-        unzip(this.tempFile, this.nodePath);
+        WindowManage.mainWindow.webContents.send('app-status', {
+            name: 'node环境',
+            value: `正在安装`
+        });
+        await unzip(this.tempFile, this.nodePath);
     }
 }
 

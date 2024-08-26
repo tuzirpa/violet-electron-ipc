@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import BtnTip from '@renderer/components/BtnTip.vue';
 import { ElButton, ElDialog, ElInput, ElMessage, ElPopover, ElTree } from 'element-plus';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import type { DirectiveTree } from 'src/main/userApp/types';
 import { dragData } from '../dragVar';
 import { useDirective, reloadDirective, directiveLoading } from '../directive';
