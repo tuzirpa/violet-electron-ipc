@@ -22,7 +22,6 @@ export interface BrowserInfo {
 }
 
 let captureWindow: CaptureWindow;
-
 export class BrowserManage {
     borwsers: Map<string, Browser> = new Map();
     filePath!: string;
@@ -38,6 +37,7 @@ export class BrowserManage {
         if (browser) {
             return browser;
         }
+
         browser = await puppeteer.connect({
             browserWSEndpoint: wsUrl,
             defaultViewport: null
@@ -412,7 +412,7 @@ export class BrowserManage {
     }
 
     async pageInjectUtools(page: Page) {
-        function injectFun() {
+        /* function injectFun() {
             globalThis.getCssSelector = function getCssSelector(element) {
                 if (!(element instanceof Element)) {
                     return null;
@@ -509,8 +509,11 @@ export class BrowserManage {
                 }
                 return results;
             };
-        }
-        await page.evaluate(injectFun, []);
+        } */
+        await page.evaluate(
+            "function injectFun() {\n            globalThis.getCssSelector = function getCssSelector(element) {\n                if (!(element instanceof Element)) {\n                    return null;\n                }\n\n                const getElementSelector = (el) => {\n                    if (!el) return '';\n                    let selector = el.tagName.toLowerCase();\n                    if (el.id) {\n                        let id = String(el.id);\n                        const testRes = /^\\d+$/.test(el.id);\n                        if (testRes) {\n                            id = `\\\\3${id.substring(0, 1)} ${id.substring(1)}`;\n                        }\n                        selector += `#${id}`;\n                    } else {\n                        let classList = Array.from(el.classList);\n                        if (classList.length > 0) {\n                            selector += `.${classList.join('.')}`;\n                        }\n                    }\n                    if (el.parentElement) {\n                        if (el.parentElement instanceof ShadowRoot) {\n                            return '';\n                        }\n                        selector = `${getElementSelector(el.parentElement)} > ${selector}`;\n                    }\n                    return selector;\n                };\n\n                function getElementSelector2(element) {\n                    if (element.getRootNode() instanceof ShadowRoot) {\n                        return (\n                            getElementSelector2(element.getRootNode().host) +\n                            ' >>> ' +\n                            getElementSelector(element)\n                        );\n                    } else {\n                        return getElementSelector(element);\n                    }\n                }\n\n                return getElementSelector2(element);\n            };\n\n            globalThis.__getElementXPath = function __getElementXPath(element) {\n                if (!element) return '';\n                if (element.parentNode instanceof ShadowRoot) {\n                    return '';\n                }\n\n                if (element.id) {\n                    return `//*[@id=\"${element.id}\"]`;\n                } else if (element.tagName === 'BODY') {\n                    return '/html/body';\n                } else {\n                    const sameTagSiblings = Array.from(element.parentNode.childNodes).filter(\n                        (e) => e.nodeName === element.nodeName\n                    );\n                    const idx = sameTagSiblings.indexOf(element);\n\n                    return (\n                        __getElementXPath(element.parentNode) +\n                        '/' +\n                        element.tagName.toLowerCase() +\n                        (sameTagSiblings.length > 1 ? `[${idx + 1}]` : '')\n                    );\n                }\n            };\n\n            globalThis.getElementXPath = function getElementByXPath(element) {\n                if (element.getRootNode() instanceof ShadowRoot) {\n                    return (\n                        globalThis.getElementXPath(element.getRootNode().host) +\n                        ' >>> ' +\n                        globalThis.__getElementXPath(element)\n                    );\n                } else {\n                    return globalThis.__getElementXPath(element);\n                }\n            };\n\n            globalThis.lookupElementByXPath = function lookupElementByXPath(xpath, parent) {\n                let results = [];\n                let query = document.evaluate(\n                    xpath,\n                    parent || document,\n                    null,\n                    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,\n                    null\n                );\n                for (let i = 0, length = query.snapshotLength; i < length; ++i) {\n                    results.push(query.snapshotItem(i));\n                }\n                return results;\n            };\n        };injectFun();",
+            []
+        );
     }
 
     async checkElement(wsUrl: string, pageUrl: string, elementLibrary: ElementLibrary) {
@@ -544,21 +547,31 @@ export class BrowserManage {
             const elements = await page.$$(selector);
             const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
             elements.forEach((element) => {
-                page.evaluate(async (element) => {
-                    const el = element as HTMLElement;
-                    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-                    el.style.border = '1px solid red';
-                    await sleep(500);
-                    el.style.border = '';
-                    await sleep(500);
-                    el.style.border = '1px solid red';
-                    await sleep(500);
-                    el.style.border = '';
-                    await sleep(500);
-                    el.style.border = '1px solid red';
-                    await sleep(500);
-                    el.style.border = '';
-                }, element);
+                page.evaluate(
+                    //@ts-ignore
+                    new Function(
+                        'element',
+                        `
+                        async function highlight() {
+                                const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+                                const el = element;
+                                el.style.border = '1px solid red';
+                                await sleep(500);
+                                el.style.border = '';
+                                await sleep(500);
+                                el.style.border = '1px solid red';
+                                await sleep(500);
+                                el.style.border = '';
+                                await sleep(500);
+                                el.style.border = '1px solid red';
+                                await sleep(500);
+                                el.style.border = '';
+                        }
+                        highlight();
+                        `
+                    ),
+                    element
+                );
             });
             await sleep(3000);
             // const count = await page.evaluate(async (xPath) => {

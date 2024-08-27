@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain, screen } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 import { join } from 'path';
 
 export class CaptureWindow extends BrowserWindow {

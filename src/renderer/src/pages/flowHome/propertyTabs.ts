@@ -4,7 +4,6 @@ import type { BrowserInfo } from 'src/main/browser/BrowserManage';
 import { ElementLibrary } from 'src/main/userApp/types';
 import { ref } from 'vue';
 import { curUserApp } from './indexvue';
-import { i } from 'vite/dist/node/types.d-aGj9QkWt';
 
 export const propertyTabList = ref([
     { name: 'flow', label: '流程' },

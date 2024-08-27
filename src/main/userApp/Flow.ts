@@ -121,7 +121,7 @@ export default class Flow {
 
             content.push(jsCode);
         }
-        content.push(`    return { _returnVal };`);
+        content.push(`    return { returnVal: _returnVal };`);
         content.push('  } catch (error) {');
         content.push(`    fatalError(error,__filename);process.exit(1);`);
         content.push('  }');
