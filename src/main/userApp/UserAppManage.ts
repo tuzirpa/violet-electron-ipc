@@ -24,6 +24,11 @@ export type AppPlaza = {
 };
 
 export class UserAppManage {
+    updateUserAppDescription(appId: string, description: string) {
+        const userApp = this.findUserApp(appId);
+        userApp.description = description;
+        return userApp.save();
+    }
     deleteElementLibraryInfo(appId: string, elementInfo: ElementLibrary) {
         const userApp = this.findUserApp(appId);
         const elibs = userApp.elementLibrarys.filter((item) => item.id !== elementInfo.id);

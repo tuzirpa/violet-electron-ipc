@@ -21,6 +21,7 @@ import { WorkStatus } from './WorkStatusConf';
 import { getFlowNum } from '../utils/fileUtils';
 import { lintFiles } from '../utils/flowEslintUtils';
 import fetch from 'node-fetch';
+import { AppConfig } from '../config/appConfig';
 
 export type AppType = 'myCreate' | 'into' | '';
 
@@ -169,7 +170,7 @@ export default class UserApp {
         this.appDevDir = path.join(this.appDir, 'dev');
         this.appRobotUtilDir = path.join(this.appDir, '../node_modules/tuzirobot');
         this.elementLibraryDir = path.join(this.appDir, 'elementLibrary');
-
+        this.author = AppConfig.LOGIN_USER?.userName ?? '';
         this.init();
     }
 
@@ -194,6 +195,7 @@ export default class UserApp {
         // 保存
         // 写入package.json文件
         this.packageJson.name = this.name;
+        this.packageJson.description = this.description;
         this.packageJson.type = this.type;
         fs.writeFileSync(
             path.join(this.appDir, 'package.json'),
@@ -214,6 +216,8 @@ export default class UserApp {
         const packageJsonStr = fs.readFileSync(packageJsonPath, 'utf-8');
         this.packageJson = JSON.parse(packageJsonStr);
         this.name = this.packageJson.name;
+        this.author = this.packageJson.author;
+        this.description = this.packageJson.description;
         this.type = this.packageJson.type;
 
         // this.initFlows();

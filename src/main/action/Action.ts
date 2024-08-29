@@ -22,12 +22,14 @@ import { AppVariable, ElementLibrary } from '../userApp/types';
 import SystemDirectivePackageManage from '../systemDirective/SystemDirectivePackageManage';
 import * as lzString from 'lz-string';
 
-import nodeEvbitonment from '../nodeEnvironment/NodeEvbitonment';
 import tuziChromeEvbitonment from '../nodeEnvironment/TuziChromeEvbitonment';
 import type { AppType } from '../userApp/UserApp';
 import { browserManage } from '../browser/BrowserManage';
 
 class Action {
+    static async updateUserAppDescription(appId: string, description: string) {
+        return UserAppManage.updateUserAppDescription(appId, description);
+    }
     static async deleteElementLibraryInfo(appId: string, elementInfo: ElementLibrary) {
         return UserAppManage.deleteElementLibraryInfo(appId, elementInfo);
     }
