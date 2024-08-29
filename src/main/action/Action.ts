@@ -54,7 +54,7 @@ class Action {
     }
 
     static async init() {
-        nodeEvbitonment.autoInstallNode();
+        // nodeEvbitonment.autoInstallNode();
         tuziChromeEvbitonment.autoInstall();
     }
 

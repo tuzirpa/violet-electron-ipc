@@ -722,7 +722,7 @@ function addBlockTemp() {
                 pdLvn: 0,
                 name: 'flowControl.if.end',
                 key: 'system.flowControl.if.end',
-                displayName: 'End If',
+                displayName: 'END IF',
                 comment: '结束条件判断',
                 isControl: false,
                 isControlEnd: true,

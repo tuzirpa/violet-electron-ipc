@@ -51,6 +51,9 @@ function loadSystemDirective() {
             try {
                 const modulePath = join(UserApp.userAppLocalDir, 'system', directive.localFile);
                 delete require.cache[modulePath];
+                if (modulePath.indexOf('KeyCode') >= 0) {
+                    console.log(modulePath);
+                }
                 directiveModule = require(modulePath);
             } catch (error: any) {
                 throw new Error(`系统指令${directive.localFile}加载失败：${error.message}`);

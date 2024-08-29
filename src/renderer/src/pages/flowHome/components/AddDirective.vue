@@ -223,7 +223,7 @@ function inputItemFilters(directive: DirectiveTree, inputItem: DirectiveInput) {
                                         </InputValueVar>
                                     </div>
                                     <el-select v-else-if="inputItem.addConfig.type === 'select'" v-model="inputItem.value"
-                                        placeholder="请选择" @change="optionChange($event, inputItem)"
+                                        placeholder="请选择" @change="optionChange($event, inputItem)" filterable
                                         :multiple="inputItem.addConfig.multiple">
                                         <el-option v-for="option in inputItem.addConfig.options" :key="option.value"
                                             :label="option.label" :value="option.value"></el-option>
