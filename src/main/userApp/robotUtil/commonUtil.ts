@@ -27,7 +27,7 @@ export const sendStepLog = (message: any) => {
 };
 
 export function typeToCode(inputItem: DirectiveInput) {
-    if (inputItem.type === 'string') {
+    if (inputItem.type === 'string' || inputItem.type === 'textarea') {
         return `String(\`${inputItem.value ?? ''}\`)`;
     } else if (inputItem.type === 'number') {
         return `Number(String(\`${inputItem.value ?? ''}\`))`;
@@ -35,7 +35,7 @@ export function typeToCode(inputItem: DirectiveInput) {
         return `String(\`${inputItem.value ?? ''}\`).toLowerCase() == 'true'`;
     } else if (inputItem.type === 'object') {
         if (!inputItem.enableExpression) {
-            return `Number(String(\`${inputItem.value ?? ''}\`))`;
+            return `String(\`${inputItem.value ?? ''}\`)`;
         }
         return `${inputItem.value ?? ''}`;
     }
