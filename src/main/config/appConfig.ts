@@ -11,7 +11,7 @@ export class AppConfig {
         name: 'LOGIN_USER'
     });
     static API_URL: string = import.meta.env.DEV
-        ? 'http://192.168.0.132:3232'
+        ? 'https://tuzirpa.vtool.vip'
         : 'https://tuzirpa.vtool.vip';
     static LOGIN_USER: User | null = null;
     static OFFLINE_CODE: string = '';
