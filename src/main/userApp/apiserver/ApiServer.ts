@@ -3,6 +3,7 @@ import { dialog, ipcMain } from 'electron';
 import http from 'http';
 import { PromptWindow } from '../../window/PromptWindow';
 import WebSocket from 'ws';
+import { WindowManage } from '../../window/WindowManage';
 
 export class ApiServer {
     private httpServer: http.Server;
@@ -59,6 +60,22 @@ export class ApiServer {
         { id, params, method }: { id: string; params: any; method: string }
     ) {
         switch (method) {
+            case 'dialog.promptConfirmation':
+                //选择文件
+                dialog
+                    .showMessageBox(WindowManage.mainWindow, {
+                        type: 'question',
+                        message: params.message,
+                        buttons: ['确认']
+                    })
+                    .then((result) => {
+                        if (result.response === 0) {
+                            this.sendRes(ws, { id, result: true });
+                        } else {
+                            this.sendRes(ws, { id, result: false });
+                        }
+                    });
+                break;
             case 'dialog.selectFile':
                 //选择文件
                 dialog.showOpenDialog({ properties: ['openFile'] }).then((result) => {

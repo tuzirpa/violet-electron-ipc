@@ -35,6 +35,13 @@ export class PromptWindow extends BrowserWindow {
                 * {
                     box-sizing: border-box;
                 }
+                .draggable {
+                    -webkit-app-region: drag;
+                }
+                .non-draggable {
+                    -webkit-app-region: no-drag;
+                }
+
                 body {
                     margin: 0;
                     padding: 0;
@@ -44,6 +51,8 @@ export class PromptWindow extends BrowserWindow {
                     justify-content: center;
                     align-items: center;
                     background-color: #fff;
+                    border-radius: 5px;
+                    border: 1px #ccc solid;
                 }
                 #input{
                     padding: 5px;
@@ -88,10 +97,10 @@ export class PromptWindow extends BrowserWindow {
             </style>
         </head>
         <body>
-            <div class="content-box">
-                 <div>${this.title}</div>
-                 <input type="text" id="input" placeholder="${this.placeholder}">
-                 <div class="btn-box">
+            <div class="content-box draggable">
+                 <div >${this.title}</div>
+                 <input class="non-draggable" type="text" id="input" placeholder="${this.placeholder}">
+                 <div class="btn-box non-draggable">
                     <input type="button" pr id="cancel" value="取消">
                     <input type="button" id="confirm" value="确认">
                  </div>

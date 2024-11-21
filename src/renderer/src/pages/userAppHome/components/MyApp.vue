@@ -1,11 +1,10 @@
 <script setup lang="tsx">
-import { ref, watch, computed } from "vue";
+import { Share } from '@element-plus/icons-vue';
+import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
 import { Action } from '@renderer/lib/action';
 import { ElButton, ElInput, ElMessage, ElMessageBox } from 'element-plus';
-import { showContextMenu } from '@renderer/components/contextmenu/ContextMenuPlugin';
-import { shareUserAppToPlaza, UserAppInfo } from './MyApp';
-import { Upload, Share } from '@element-plus/icons-vue';
-import { loginUserInfo } from "@renderer/store/commonStore";
+import { computed, ref, watch } from "vue";
+import { UserAppInfo } from './MyApp';
 
 const emit = defineEmits<{
     (e: 'toAppPlazas'): void
@@ -55,7 +54,8 @@ function showContextMenuByApp(event: MouseEvent, app: UserAppInfo) {
             icon: 'icon-yunxing',
             shortcut: ''
         },
-        {
+        /*
+         {
             label: '发布到示例广场',
             onClick: () => {
                 if (!loginUserInfo.value.isAdmin) {
@@ -67,6 +67,7 @@ function showContextMenuByApp(event: MouseEvent, app: UserAppInfo) {
             icon: <el-icon><Upload /></el-icon>,
             shortcut: ''
         },
+        */
         {
             label: '分享',
             onClick: async () => {
@@ -230,8 +231,8 @@ const showUserApps = computed(() => {
                 </div>
                 <div class="flex justify-center items-center flex-1" v-show="userApps.length === 0">
                     <div class="app-item flex justify-center items-center p-2 text-xl">
-                        可以<span class="text-blue-400 cursor-pointer" @click="newApp">开始创建</span>你的第一个应用，
-                        或去<span class="text-blue-400 cursor-pointer" @click="emit('toAppPlazas')">示例广场</span>下载应用
+                        可以<span class="text-blue-400 cursor-pointer" @click="newApp">开始创建</span>你的第一个应用
+                        <!--  或去<span class="text-blue-400 cursor-pointer" @click="emit('toAppPlazas')">示例广场</span>下载应用 -->
                     </div>
                 </div>
 

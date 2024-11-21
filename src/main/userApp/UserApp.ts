@@ -129,7 +129,7 @@ export default class UserApp {
     id: string;
     version: string = '1.0.0';
     type: AppType = 'myCreate';
-    main: string = 'main.flow.js';
+    main: string = 'main.js';
     author: string = '';
     license: string = '';
     description: string = '';
@@ -223,14 +223,8 @@ export default class UserApp {
         // this.initFlows();
     }
 
-    create() {
-        // 初始化
-        console.log('UserApp init');
-        // 创建本地目录
-        if (!fs.existsSync(this.appDir)) {
-            fs.mkdirSync(this.appDir, { recursive: true });
-        }
-        // 写入package.json文件
+    generatePackageJson() {
+        // 生成package.json文件
         this.packageJson = {
             id: this.id,
             name: this.name,
@@ -245,6 +239,17 @@ export default class UserApp {
             path.join(this.appDir, 'package.json'),
             JSON.stringify(this.packageJson, null, 2)
         );
+    }
+
+    create() {
+        // 初始化
+        console.log('UserApp init');
+        // 创建本地目录
+        if (!fs.existsSync(this.appDir)) {
+            fs.mkdirSync(this.appDir, { recursive: true });
+        }
+
+        this.generatePackageJson();
 
         this.generateMainJs();
 
@@ -288,7 +293,7 @@ export default class UserApp {
             });
             
             process.on("beforeExit", (code) => {
-                console.log("beforeExit");
+                console.debug("beforeExit");
                 process.exit(code);
             });
             const isDebugging = process.execArgv.some(arg => arg.startsWith('--inspect'));
@@ -346,6 +351,7 @@ export default class UserApp {
         // 加载flows
         this.initFlows();
         this.generateMainJs();
+        this.generatePackageJson();
         return this.workStatus;
     }
 

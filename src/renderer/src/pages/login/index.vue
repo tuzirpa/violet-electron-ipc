@@ -1,13 +1,13 @@
 <script setup lang="ts" name="登录">
-import { useRouter } from 'vue-router';
-import TitleBar from '../../components/TitleBar.vue';
-import { ref } from 'vue';
-import { ElButton, ElCheckbox, ElImage, ElInput, ElMessage } from 'element-plus';
+import qqImageUrl from '@renderer/assets/QQ.png';
 import { Action } from '@renderer/lib/action';
 import { isLogin, loginUserInfo } from '@renderer/store/commonStore';
-import Register from './components/register.vue';
+import { ElButton, ElCheckbox, ElImage, ElInput } from 'element-plus';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import TitleBar from '../../components/TitleBar.vue';
 import offlogin from './components/offlogin.vue';
-import qqImageUrl from '@renderer/assets/QQ.png';
+import Register from './components/register.vue';
 
 // 添加逻辑
 const router = useRouter();
@@ -38,31 +38,31 @@ const loginRules = {
 
 
 async function login() {
-
+    router.push('/userAppHome/index');
     // 登录逻辑
-    const res = await Action.userLogin(loginForm.value.username, loginForm.value.username,
-        loginForm.value.password, loginForm.value.captcha, code.value.id, loginForm.value.remember);
+    // const res = await Action.userLogin(loginForm.value.username, loginForm.value.username,
+    //     loginForm.value.password, loginForm.value.captcha, code.value.id, loginForm.value.remember);
 
-    if (res.code !== 0) {
-        ElMessage.error(res.message);
-        return;
-    }
-    if (res.code === 0) {
+    // if (res.code !== 0) {
+    //     ElMessage.error(res.message);
+    //     return;
+    // }
+    // if (res.code === 0) {
 
-        // 保存登录状态
-        const data = {} as any;
-        data.username = loginForm.value.username;
-        data.password = loginForm.value.password;
-        data.remember = loginForm.value.remember;
+    //     // 保存登录状态
+    //     const data = {} as any;
+    //     data.username = loginForm.value.username;
+    //     data.password = loginForm.value.password;
+    //     data.remember = loginForm.value.remember;
 
-        localStorage.setItem('loginForm', JSON.stringify(data));
-        // 登录成功
-        // 保存登录状态
-        // 跳转到主页
-        //@ts-ignore
-        loginUserInfo.value = await Action.getUserInfo();
-        router.push('/userAppHome/index');
-    }
+    //     localStorage.setItem('loginForm', JSON.stringify(data));
+    //     // 登录成功
+    //     // 保存登录状态
+    //     // 跳转到主页
+    //     //@ts-ignore
+    //     loginUserInfo.value = await Action.getUserInfo();
+    //     router.push('/userAppHome/index');
+    // }
 }
 
 const code = ref({ id: '', captcha: '', imaData: '' });

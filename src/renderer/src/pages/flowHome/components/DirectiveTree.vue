@@ -99,8 +99,6 @@ const versionRules = {
 };
 const allVersions = ref<SystemDirectiveVersion[]>([]);
 async function init() {
-    console.log(666);
-
     //获取版本列表
     allVersions.value = await Action.getAllVersions();
 }

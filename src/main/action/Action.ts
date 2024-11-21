@@ -468,7 +468,8 @@ class Action {
      * 获取所有系统指令包版本
      */
     static async getAllVersions() {
-        return SystemDirectivePackageManage.getAllVersions();
+        // return SystemDirectivePackageManage.getAllVersions();
+        return [];
     }
 
     /**
